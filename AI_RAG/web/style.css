@@ -1,0 +1,582 @@
+body {
+  margin: 0;
+  font-family: var(--sl-font-sans, Arial, sans-serif);
+  background: var(--sl-color-neutral-0);
+  color: var(--sl-color-neutral-900);
+  font-size: 13px;
+}
+
+/* Ensure selection behavior is compatible across browsers */
+body, * {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5em 2em 1.5em 1.5em;
+  background: var(--sl-color-neutral-100);
+  border-bottom: 1px solid var(--sl-color-neutral-200);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-title {
+  font-size: 1.5em;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.header-xyz {
+  font-size: 1.3em;
+  font-weight: 700;
+  margin-left: 1.5em;
+  color: var(--sl-color-primary-600);
+}
+
+.theme-toggle {
+  margin-left: 2em;
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  padding: 1em 0 0 0;
+  min-height: 80vh;
+}
+
+sl-tab-group {
+  width: 100%;
+}
+
+sl-tab-panel::part(base) {
+  padding-left: 1em;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.tab-panels {
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
+  margin: top 0;
+}
+
+.panel {
+  position: relative;
+  border: 5px solid #d3d3d3;
+  border-radius: 10px;
+  background: none;
+  padding: .5em 2em 1.5em 2em;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.panel_title {
+  position: absolute;
+  top: -.8em;
+  left: 1em;
+  background: #fff;
+  padding: 0 0.3em;
+  font-size: 1.1em;
+  font-weight: 500;
+  z-index: 1000;
+  border-radius: 6px;
+  color: var(--sl-color-gray-950, #333);
+}
+
+.panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+}
+
+sl-checkbox::part(form-control-help-text) {
+    display: inline;
+    margin-left: 0.5rem; /* spacing between label and help text */
+    color: #666;
+    font-size: 0.9em;
+}
+
+
+@media (max-width: 600px) {
+  .main {
+    padding: 1em 0 2em 0;
+  }
+  sl-tab-group {
+    max-width: 100vw;
+  }
+  .panel {
+    padding: 2em 0.7em 1em 0.7em;
+  }
+}
+
+
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: inherit;
+}
+a:hover {
+  color: #535bf2;
+}
+
+
+
+h1 {
+  font-size: 1.5em;
+  line-height: 1.1;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.vanilla:hover {
+  filter: drop-shadow(0 0 2em #3178c6aa);
+}
+
+
+/* Flex container for two columns */
+.fw-flex-container {
+  display: flex;
+  gap: 32px;
+  margin-top: 32px;
+}
+
+/* Style for each column */
+.fw-column1 {
+  width: 400px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 11px;
+  background: #fafafa;
+  min-height: 300px;
+}
+
+.fw-column2 {
+  width: 90%;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 11px;
+  background: #fafafa;
+  min-height: 300px;
+}
+
+/* Panel label over border, like Windows preferences panel */
+.fw-panel-label {
+  position: absolute;
+  top: -13px;
+  left: 18px;
+  background: #fff;
+  padding: 2px 8px;
+  font-size: 13px;
+  font-weight: normal;
+  color: #666;
+  border-radius: 4px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Make fw-column1 and fw-column2 relative for label positioning */
+.fw-column1, .fw-column2 {
+  position: relative;
+}
+
+/* Fields container for vertical stacking and spacing */
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+/* Custom prompt textarea styling */
+.filereader-textarea {
+  width: 100%;
+  min-height: 500px;
+  resize: vertical;
+  padding: 0;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  background-color: #fff;
+  border:none;
+}
+
+/* Save button container styling, similar to mcp_config.html */
+.save-btn-container {
+  margin-top: 1em;
+  text-align: left;
+  display: flex;
+  gap: 10px;
+}
+
+/* Use Shoelace button CSS custom properties to control size and spacing */
+#save-btn,
+#run-btn,
+#clear-btn {
+  --sl-input-height-small: 32px;
+  --sl-input-height-medium: 32px;
+  --sl-input-height-large: 32px;
+  --sl-spacing-3x-small: 0px;
+  --sl-spacing-2x-small: 0px;
+  --sl-spacing-x-small: 0px;
+  --sl-spacing-small: 2px;
+  --sl-spacing-medium: 2px;
+  --sl-button-font-size-medium: 16px;
+  width: 32px;
+  height: 32px;
+}
+
+/* Icon-only button styling */
+#save-btn::part(base),
+#run-btn::part(base),
+#clear-btn::part(base) {
+  background-color: #1473e6 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 2px 0 0 0 !important;
+  margin: 0 !important;
+}
+
+#save-btn::part(base):hover,
+#run-btn::part(base):hover,
+#clear-btn::part(base):hover {
+  background-color: #0b58b8 !important;
+}
+
+/* Force the icon size and positioning */
+#save-btn sl-icon,
+#run-btn sl-icon,
+#clear-btn sl-icon {
+  width: 18px !important;
+  height: 18px !important;
+}
+sl-button[variant="secondary"]::part(base) {
+  background-color: #eaeaea;
+  color: #222;
+  border: 1px solid #ccc;
+}
+sl-button[variant="secondary"]::part(base):hover {
+  background-color: #d5d5d5;
+}
+
+sl-input::part(form-control-label) {
+  font-size: 12px;
+}
+
+sl-input::part(input) { /* inside the input field */
+  padding: 0 6px;
+}
+
+sl-input {
+  --sl-input-height-small: 1.75rem;
+  --sl-input-height-medium: 1.75rem;
+  --sl-input-height-large: 2.75rem;
+  padding-bottom: 1em;
+  padding-top:0;
+  margin-top:0;
+}
+
+sl-select::part(form-control-label) {
+  font-size: 12px;
+}
+
+sl-textarea::part(form-control-label) {
+  font-size: 12px;
+}
+
+sl-radio-group {
+  --sl-input-label-font-size-medium: 12px;
+  padding-top: 0;
+  margin:0;
+}
+
+sl-radio-group::part(form-control) {
+  display: flex;
+  align-items:  right;
+  gap: 0rem; /* space between label and radios */
+}
+
+sl-radio-group::part(form-control-label) {
+  margin: 0;
+  padding-top: 0;
+  width: 150px;
+}
+
+sl-radio::part(label) {
+  font-size: 12px;
+}
+
+sl-radio::part(base) {
+  font-size: 12px;
+  margin: 0;
+}
+
+sl-radio {
+  display: inline-flex !important;
+  margin: 0 .5em 0 0 !important; /* tweak 4px to your taste */
+}
+
+
+
+
+/* Section divider with inline label */
+.section-divider {
+  display: flex;
+  align-items: center;
+  margin: 1.5em 0 .5em 0;
+}
+
+.section-divider hr {
+  flex: 1;
+  border: none;
+  border-top: 3px solid var(--sl-color-neutral-400);
+  margin: 0;
+}
+
+.section-divider span {
+  padding: 0 .5em;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sl-color-neutral-700);
+  white-space: nowrap;
+}
+
+/* Right column: buttons at top, then textarea */
+.fw-flex-container > .fw-column2 {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  /* Remove align-items: center to allow children to fill width */
+  background: #fff;
+
+}
+
+.fw-flex-container > .fw-column2 .fields {
+  width: 100%;
+  max-width: none;
+  display: flex;
+  flex-direction: column;
+  /* Remove align-items: center to allow textarea to fill width */
+  justify-content: center;
+}
+
+.fw-flex-container > .fw-column2 .custom-prompt-textarea {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  display: block;
+  box-sizing: border-box;
+  resize: none;
+}
+
+.fw-flex-container > .fw-column2 .save-btn-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Load Configuration group styles (from mcp_config.html) */
+.fw-load-config-group {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  margin-top: 2px;
+  justify-content: flex-start;
+  width: 100%;
+  text-align: left;
+}
+
+.fw-label-text {
+  min-width: 140px;
+  font-size: 14px;
+  color: #444;
+  text-align: right;
+  padding-right: 4px;
+}
+
+.fw-config-picker {
+  flex: 1 1 0%;
+  width: 0;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  font-size: 15px;
+  border: none;
+  background: none;
+  color: inherit;
+  box-shadow: none;
+  text-align: left;
+  margin-left: 0;
+}
+
+.fw-config-picker::part(base) {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Ensure the left column and its contents are left-aligned */
+.fw-flex-container > .fw-column1 {
+  align-items: flex-start;
+}
+
+.fw-load-config-group {
+  justify-content: flex-start;
+  width: 100%;
+  text-align: left;
+}
+
+.fw-label-text,
+.fw-config-picker {
+  text-align: left;
+  justify-self: flex-start;
+
+}
+
+.fw-config-picker,
+.fw-config-picker::part(base) {
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  flex: 1 1 0% !important;
+}
+
+/* Input/Output fields vertical stack and styling */
+.fw-io-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.fw-io-field {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Remove border from Shoelace textarea in column 2 */
+.fw-column2 sl-textarea::part(form-control),
+.fw-column2 sl-textarea::part(textarea) {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.fw-column2 sl-textarea::part(base) {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Radio group spacing */
+sl-radio-group {
+  margin-bottom: 1em;
+}
+
+/* Reduce padding inside Shoelace input fields */
+.fw-io-input {
+  --sl-input-spacing-small: 6px;
+  --sl-input-spacing-medium: 6px;
+  --sl-input-spacing-large: 6px;
+}
+
+/* Remove/hide the prefix slot that's creating extra space */
+.fw-io-input::part(prefix) {
+  display: none;
+}
+
+/* Catalog replacer rows styling */
+.fw-catalog-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.fw-catalog-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+/* Workspace status and buttons styling */
+.workspace-status {
+  margin: 15px 0;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #f0f8ff;
+}
+
+.workspace-status p {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #333;
+  font-weight: normal;
+}
+
+.workspace-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+}
+

@@ -1,0 +1,27 @@
+pattern,replacement,flags,priority,comment
+# HTML entity decoding ONLY (requested)
+&amp;,&,,11,decode ampersand entity first so &amp;lt; becomes &lt;
+&lt;,<,,12,decode less-than entity
+&gt;,>,,13,decode greater-than entity
+(?m)`([A-Za-z_][A-Za-z0-9_]*)`(?=:) ,\1,M,15,inline code backticks before colon
+(?i)<code>([A-Za-z_][A-Za-z0-9_]*)</code>,\1,,16,strip inline <code> tags
+(?m)^\.\s+?\s*,- ,18,convert dot+optional glyph bullet to dash
+(?im)^\s*back to top\s*$\n?,,,20,remove 'back to top' lines
+(?im)^\s*last update[sd]?\s*.*$\n?,,,30,remove 'last update' lines
+(?im)^.*Skip to content.*\n?,,,40,remove 'skip to content' links
+(?im)^.*Skip to main content.*\n?,,,50,remove 'skip to main content' links
+(?im)^.*Light Dark System.*\n?,,,60,remove theme toggle lines
+(?ims)^##[ \t]*(?:table of contents|contents|toc)[^\n]*\n(?:.*?)(?=^#|\Z),,,55,remove Table of Contents sections
+(?im)^\s*\*\s*\*\s*\*\s*\*$\n?,,,65,remove decorative separators
+(?m)^[ \t]*Copy[ \t]*\r?\n?,,,70,remove 'Copy' footer lines
+(?i)alt=(?:\x22[^\x22]*\x22|'[^']*'),,,80,strip alt attribute
+\r?\n,\n,,999,final normalize CRLF/LF -> LF
+\n\n\n,\n,,999,reduce 3 lines breaks to 2
+ ,,,19,remove bullet glyph
+^#+\s+((?:Table|Example)\s+\d+(?:\.\d+)*:[^\r\n]*)$,\1,M,17,drop heading hashes for Table/Example headings
+\(see [^)]*\),,Remove "see" statements in parenthesis
+
+
+replace copyright symbol with nothing
+replace smart quotes with straight quotes 
+replace curly apostrophes with straight apostrophes

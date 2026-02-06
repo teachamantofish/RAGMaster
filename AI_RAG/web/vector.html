@@ -1,0 +1,44 @@
+<section>
+  <form>
+    <!-- Flex container for two columns -->
+    <div class="fw-flex-container">
+      <!-- First column -->
+      <div class="fw-column1">
+        <div class="fw-panel-label">Vector configuration</div>
+        <div class="save-btn-container">
+          <!-- Buttons -->
+          <div style="margin: 0 0 10px 0; display: flex; flex-wrap: wrap; gap: 10px;">
+            <sl-button variant="primary" id="save-btn">
+              <sl-icon name="floppy"></sl-icon>
+            </sl-button>
+            <sl-button variant="primary" id="run-btn">
+              <sl-icon name="play-fill"></sl-icon>
+            </sl-button>
+            <sl-button variant="primary" id="clear-btn">
+              <sl-icon name="arrow-clockwise"></sl-icon>
+            </sl-button>
+            <sl-button variant="secondary" id="reload-config-btn" onclick="reloadConfigFile()">
+              <sl-icon name="arrow-repeat"></sl-icon>
+            </sl-button>
+          </div>
+        </div>
+        
+        <!-- Vector form fields go here -->
+        <label>Vector DB Host: <input type="text" name="vector_db_host"></label><br>
+        <label>Upsert Mode: <input type="checkbox" name="upsert_mode"></label><br>
+        <!-- Add more fields as needed -->
+      </div>
+
+      <!-- Second column -->
+      <div class="fw-column2">
+        <div class="fw-panel-label">File reader</div>
+        <div class="fields">
+          <sl-textarea id="vectorconfig" class="filereader-textarea" resize="auto"
+            placeholder="Loading file. . . ">
+          </sl-textarea>
+        </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</section>

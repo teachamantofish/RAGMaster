@@ -1,0 +1,264 @@
+body {
+  background-color: white !important;
+  color: black !important;
+}
+
+.md-typeset {
+  color: black !important;
+}
+
+code {
+  font-size: .75em !important;
+}
+
+.md-main__inner {
+  border-radius: 20px !important;
+}
+
+.md-sidebar__scrollwrap {
+  border-radius: 20px !important;
+}
+
+ a {
+  color: var(--spectrum-blue) !important;
+}
+
+a:hover {
+  color: var(--spectrum-blue);
+}
+
+.md-content li {
+  line-height: 1.2;
+}
+
+img {
+  margin-bottom:0 2em 3em 2em !important;
+}
+
+figcaption {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--md-typeset-color);
+  margin-top: 0.5em;
+  margin: 1em 0 0 2em !important;
+  text-align: left;
+}
+
+.md-clipboard {
+    margin-right: .7em;
+    margin-top: .7em;
+}
+
+.md-header {
+    box-shadow: none !important;
+    margin: 0;
+    padding: 0;
+}
+
+.md-header__inner {
+    margin-left: 5em;
+    padding: 0;
+}
+
+.md-main__inner {
+    background-color: var(--md-default-bg-color) !important;
+    margin: 0;
+}
+
+.md-container {
+    background-color: var(--md-primary-fg-color) !important;
+    padding: 0 5em 0 5em;
+}
+
+.md-header__topic > .md-ellipsis { /* site title */
+    font-weight: normal !important; 
+    color: #f8f7f7 !important;
+}
+
+.page-title {
+    font-size: 95% !important;
+    opacity: 0;
+    animation: fadeInTitle 2s ease-in-out forwards;
+}
+
+@keyframes fadeInTitle {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+.md-nav__item--active {
+    padding-left: 5px;
+}
+
+.md-sidebar__scrollwrap, .md-sidebar {
+    padding: 0 0 0 0 !important;
+    margin: 0 0 0 0 !important;
+}
+
+  /* Always use auto–overflow on the sidebar, not only on hover */
+  .md-sidebar--primary .md-sidebar__scrollwrap {
+    overflow-y: auto !important;
+  }
+
+  /* Bring back a thin scrollbar when needed */
+  .md-sidebar--primary .md-sidebar__scrollwrap::-webkit-scrollbar {
+    display: block !important;
+    width: var(--md-scrollbar-width);
+  }
+  .md-sidebar--primary .md-sidebar__scrollwrap::-webkit-scrollbar-thumb {
+    background-color: var(--md-scaffold-text);
+    border-radius: var(--md-radius);
+  }
+
+/* Custom styling for search highlighting */
+mark[data-md-highlight] {
+    background-color: #fffa8b !important;
+    color: #000 !important;
+    font-weight: bold !important;
+    border-radius: 2px !important;
+  }
+
+  .footer {
+    background-color:white;
+    color: black;
+    padding: 10px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+
+.md-code__content {
+    border: 1px solid #a8a7a7 !important;
+    border-radius: 5px !important;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px !important;
+    -webkit-box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px !important;
+    -moz-box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px !important;
+    margin: 1em !important;
+}
+
+/* Keyword highlighting */
+.highlight-keyword {
+    color: black;
+    background-color: transparent;
+    animation: fadeInBackground 10s ease-in-out infinite;
+    border-radius: 3px;
+    padding: 0px 2px;
+}
+
+@keyframes fadeInBackground {
+    0% {
+        background-color: transparent;
+    }
+    50% {
+        background-color: rgb(207, 225, 209);
+        font-weight: bold;
+    }
+    100% {
+        background-color: transparent; 
+    }
+}  
+
+.admonition {
+    border-radius: 5px !important;
+    border: 1px solid #a8a7a7 !important;
+    box-shadow: 4px 4px 5px 0px rgba(211, 211, 211, 0.59) !important;
+    -webkit-box-shadow: 4px 4px 5px 0px rgba(175, 173, 173, 0.59) !important;
+    -moz-box-shadow: 4px 4px 5px 0px rgba(121, 120, 120, 0.59) !important; 
+    margin: 2em 5em !important;
+}
+
+.admonition-title, .admonition > p {
+    font-weight: normal !important;
+    font-size: 16px !important;
+}
+
+strong {
+    font-weight: 600 !important;
+}
+
+/* back to top button */
+#scroll {
+  background: var(--spectrum-blue);
+  border-radius: 3rem;
+  bottom: 1.5rem;
+  box-shadow: 0 3px 0.75rem rgba(0,0,0,0.2);
+  cursor: pointer;
+  display: none;
+  height: 3.25rem;
+  position: fixed;
+  left: 10em;
+  bottom: 5em;
+  width: 3.25rem;
+  z-index: 9;
+  opacity: 0;
+  transition: opacity 2s ease;
+}
+
+#scroll span {
+  background: url("../images/topicon.png");
+  background-repeat: no-repeat;
+  display: block;
+  height: 24px;
+  left: 50%;
+  margin-left: -12px;
+  margin-top: -12px;
+  position: absolute;
+  top: 50%;
+  width: 24px;
+}
+
+#scroll:hover {
+  background-color: var(--md-misc-orange-color);
+  opacity: 1;
+  filter: "alpha(opacity=100)";
+  -ms-filter: "alpha(opacity=100)";
+}
+
+
+
+/* workflow diagram */
+/* Make the workflow div the positioning context */
+.workflow {
+  position: relative; /* Creates positioning context */
+  display: inline-block; /* Contains the size to its content */
+}
+
+.workflowgif {
+  width: 742px;
+  height: auto;      /* maintain aspect ratio */
+  max-width: none;   /* disable responsiveness */
+  min-width: 742px;  /* enforce fixed width */
+  display: block;
+}
+
+.spinning-gear {
+  width: 40px;
+  animation: spin 4s linear infinite;
+  background-color: var(--md-accent-bg-color);
+  border-radius: 50%;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.divtip {
+  display: none;
+}
+
+/* dialog {  unused 
+  background-color:  #FFF9DB;
+  color: #1a1a1a;
+  border: 1px solid #1a1a1a !important;
+  border-radius: 10px; 
+  width: 20em;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 25px 50px -12px;
+  font-size: 15px;
+  padding: 0;
+}
+
+dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0.5;
+} */

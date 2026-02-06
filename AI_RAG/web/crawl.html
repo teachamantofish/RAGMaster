@@ -1,0 +1,243 @@
+<section>
+  <form id="crawl-form">
+    <!-- Flex container for two columns -->
+    <div class="fw-flex-container">
+      <!-- First column -->
+      <div class="fw-column1">
+        <div class="fw-panel-label">Crawl configuration</div>
+        <div class="save-btn-container">
+          <!-- Buttons -->
+          <div style="margin: 0 0 10px 0; display: flex; flex-wrap: wrap; gap: 10px;">
+            <sl-button variant="primary" id="save-btn">
+              <sl-icon name="floppy"></sl-icon>
+            </sl-button>
+            <sl-button variant="primary" id="run-btn">
+              <sl-icon name="play-fill"></sl-icon>
+            </sl-button>
+            <sl-button variant="primary" id="clear-btn">
+              <sl-icon name="arrow-clockwise"></sl-icon>
+            </sl-button>
+          </div>
+        </div>
+
+        <!-- Crawl Type Selector -->
+        <sl-radio-group id="crawl_type" name="crawl_type" label="Crawl Type" value="web"
+          style="--sl-spacing-large: 1rem;">
+          <sl-radio value="web" style="display: inline-block; margin-right: 1.5rem;">Web</sl-radio>
+          <sl-radio value="git" style="display: inline-block;">GIT</sl-radio>
+        </sl-radio-group>
+
+        <!-- GIT Crawl Fields -->
+        <div class="git-fields" style="display: none;">
+          <sl-input class="fw-io-input" name="git_repo_url" label="GIT repo documentation URL" type="text"
+            placeholder="https://github.com/user/repo">
+          </sl-input>
+        </div>
+
+        <!-- Web Crawl Fields -->
+        <div class="web-fields">
+          <!-- Section 1: Crawling Behavior and Limits -->
+          <sl-input class="fw-io-input" name="max_crawl_depth" label="Max Crawl Depth" type="number" value="2" min="1"
+            help-text="">
+          </sl-input>
+
+          <sl-input class="fw-io-input" name="max_urls" label="Max URLs" type="number" value="500" min="1"
+            help-text="">
+          </sl-input>
+
+          <sl-input class="fw-io-input" name="min_content_length" label="Min Content Length" type="number" value="100"
+            min="0" help-text="">
+          </sl-input>
+
+          <sl-input class="fw-io-input" name="min_content_lines" label="Min Content Lines" type="number" value="2"
+            min="0" help-text="">
+          </sl-input>
+
+          <sl-radio-group name="include_external_domain" label="Include External Domain" value="off">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-input class="fw-io-input" name="language" label="Language" type="text" value="en">
+          </sl-input>
+
+          <sl-input class="fw-io-input" name="url_pattern_filters" label="URL Pattern Filters" rows="2"
+            help-text="">
+          </sl-input>
+
+          <div class="section-divider">
+            <hr>
+            <span>URL List Mode - Alternative to deep crawling</span>
+            <hr>
+          </div>
+
+          <sl-radio-group name="use_url_list" label="Use URL List" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-input class="fw-io-input" name="url_list_file" label="URL List File" type="text" value="crawlurls.md"
+            help-text="">
+          </sl-input>
+
+          <div class="section-divider">
+            <hr>
+            <span>Post processing options</span>
+            <hr>
+          </div>
+
+          <sl-radio-group name="custom_regex" label="Custom Regex" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-radio-group name="addlines_to_codeblocks" label="Add Lines to Code Blocks" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <div class="section-divider">
+            <hr>
+            <span>Markdown generator options</span>
+            <hr>
+          </div>
+
+          <sl-radio-group name="ignore_links" label="Ignore Links" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-radio-group name="ignore_images" label="Ignore Images" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-radio-group name="escape_html" label="Escape HTML" value="off">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-input class="fw-io-input" name="body_width" label="Body Width" type="number" value="0" min="0">
+          </sl-input>
+
+          <sl-radio-group name="skip_internal_links" label="Skip Internal Links" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-radio-group name="include_sup_sub" label="Include Sup/Sub" value="off">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-input class="fw-io-input" name="heading_style" label="Heading Style" type="text" value="ATX">
+          </sl-input>
+
+          <sl-input class="fw-io-input" name="list_style" label="List Style" type="text" value="dash">
+          </sl-input>
+
+          <sl-radio-group name="strip_comments" label="Strip Comments" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-radio-group name="preserve_tables" label="Preserve Tables" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-radio-group name="collapse_whitespace" label="Collapse Whitespace" value="off">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-radio-group name="strip_footnotes" label="Strip Footnotes" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-radio-group name="strip_code_blocks" label="Strip Code Blocks" value="off">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-radio-group name="strip_blockquotes" label="Strip Blockquotes" value="off">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-radio-group name="strip_math" label="Strip Math" value="off">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <div class="section-divider">
+            <hr>
+            <span>CrawlerRunConfig parameters</span>
+            <hr>
+          </div>
+
+          <sl-input class="fw-io-input" name="markdown_generator" label="Markdown Generator" type="text"
+            value="md_generator">
+          </sl-input>
+
+          <sl-input class="fw-io-input" name="cache_mode" label="Cache Mode" type="text" value="BYPASS">
+          </sl-input>
+
+          <sl-input class="fw-io-input" name="excluded_tags" label="Excluded Tags" rows="2"
+            help-text="">
+          </sl-input>
+
+          <sl-radio-group name="remove_forms" label="Remove Forms" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-radio-group name="remove_overlay_elements" label="Remove Overlay Elements" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-input class="fw-io-input" name="css_selector" label="CSS Selector" type="text" value=".main"
+            help-text="">
+          </sl-input>
+
+          <sl-input class="fw-io-input" name="excluded_selector" label="Excluded Selector" type="text"
+            help-text="">
+          </sl-input>
+
+          <sl-radio-group name="exclude_external_links" label="Exclude External Links" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-radio-group name="exclude_social_media_links" label="Exclude Social Media Links" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+          </sl-radio-group>
+
+          <sl-input class="fw-io-input" name="exclude_domains" label="Exclude Domains" rows="2"
+            help-text="">
+          </sl-input>
+
+          <sl-input class="fw-io-input" name="exclude_social_media_domains" label="Exclude Social Media Domains"
+            rows="2" help-text="">
+          </sl-input>
+        </div>
+        <!-- End of web-fields -->
+
+      </div>
+      <!-- Second column -->
+      <div class="fw-column2">
+    <div class="fw-panel-label">File reader</div>
+    <div class="fields">
+      <sl-textarea id="crawlconfig" class="filereader-textarea" resize="auto"
+        placeholder="Loading file. . . ">
+      </sl-textarea>
+    </div>
+      </div>
+    </div>
+  </form>
+</section>
+
+

@@ -1,0 +1,7 @@
+MD header,Level,Header Text,Token #,Cumulative # count
+"#",1,"Overview",114,726
+"##",2,"Goals",181,
+"##",2,"Architecture",0,202
+"###",3,"Decisions",202,
+"##",2,"RAG pipeline tech stack",117,
+"##",2,"Future",112,

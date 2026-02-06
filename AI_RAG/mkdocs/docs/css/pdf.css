@@ -1,0 +1,184 @@
+/* 
+make images fit. 
+add header and footer
+combine title page
+control orphans
+style heading 1
+
+
+*/
+
+
+:root {
+     --md-primary-bg-color: #f8f7f7; /* header text and icon */
+    --md-primary-bg-color--light: #ffffffb3;
+    --md-accent-fg-color--transparent: #526cfe1a;
+    --md-accent-bg-color: #fff;
+    --md-accent-bg-color--light: #ffffffb3;
+    --md-font-text: "Adobe Clean", arial, roboto, sans-serif;
+    --md-font-code: "Courier New", monospace;
+    --spectrum-blue: #0469E3;
+  } 
+
+body {
+  background-color: white !important;
+  color: black !important;
+  padding: 1em !important;
+  margin: 0 0 0 0 !important;
+}
+
+img {
+  margin: 0 0 0 0 !important;
+  padding: 0 0 0 0 !important;
+  width: 100% !important;
+}
+
+.md-container {
+  background-color: white !important;
+}
+
+/* --------------Light mode variables--------------*/
+/* --------------Light mode variables--------------*/
+/* --------------Light mode variables--------------*/
+[data-md-color-scheme="default"] {
+    --md-primary-fg-color: white;       /* Your customized header color */
+    --md-default-bg-color: #ffffff;       /* Your background color */
+    --md-typeset-color: black;          /* Main text color */
+    --md-code-bg-color: #e4e3e3;          /* Code block background */
+    --md-misc-orange-color: #d27315;
+    --md-dark-brown-color: white; /* header text and icon */
+} 
+[data-md-color-scheme="default"] .md-typeset h1, 
+[data-md-color-scheme="default"] .md-typeset h2,
+[data-md-color-scheme="default"] .md-typeset h3,
+[data-md-color-scheme="default"] .md-typeset h4,
+[data-md-color-scheme="default"] .md-typeset h5,
+[data-md-color-scheme="default"] .md-typeset h6
+{
+  color: black !important;
+  margin-top: 0 !important;
+}
+
+.md-content, .md-content__inner {
+  padding: 0 0 0 0 !important;
+  margin: 0 0 0 0 !important;
+}
+
+code {
+  font-size: .75em !important;
+}
+
+ a {
+  color: blue !important;
+}
+
+a:hover {
+  color: var(--spectrum-blue);
+}
+
+.md-content li {
+  line-height: 1.2;
+
+}
+
+figcaption {
+  font-size: 14px;
+  font-weight: bold;
+  color: black;
+  margin-top: 0.5em;
+  margin: 1em 0 0 2em !important;
+  text-align: left;
+}
+
+
+
+.md-header {
+
+    margin: 0;
+    padding: 0;
+}
+
+.md-header__inner {
+    margin-left: 0;
+    padding: 0;
+}
+
+.md-main__inner {
+    background-color: white !important;
+    margin: 0;
+}
+
+.md-container {
+    background-color: white !important;
+    padding: 0;
+}
+
+
+  .footer {
+    display: none;
+  }
+
+
+.md-code__content {
+    border: 1px solid #a8a7a7 !important;
+    border-radius: 5px !important;
+    box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px !important;
+    -webkit-box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px !important;
+    -moz-box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px !important;
+    margin: 1em !important;
+}
+
+/* Keyword highlighting */
+.highlight-keyword {
+    color: black;
+    background-color: transparent;
+    animation: fadeInBackground 10s ease-in-out infinite;
+    border-radius: 3px;
+    padding: 0px 2px;
+}
+
+.admonition {
+    border-radius: 5px !important;
+    border: 1px solid #a8a7a7 !important;
+    box-shadow: 4px 4px 5px 0px rgba(211, 211, 211, 0.59) !important;
+    -webkit-box-shadow: 4px 4px 5px 0px rgba(175, 173, 173, 0.59) !important;
+    -moz-box-shadow: 4px 4px 5px 0px rgba(121, 120, 120, 0.59) !important; 
+    margin: 2em 5em !important;
+}
+
+.admonition-title, .admonition > p {
+    font-weight: normal !important;
+    font-size: 16px !important;
+}
+
+strong {
+    font-weight: 600 !important;
+}
+
+
+/* workflow diagram */
+/* Make the workflow div the positioning context */
+.workflow {
+  position: relative; /* Creates positioning context */
+  display: inline-block; /* Contains the size to its content */
+  margin: 0 0 0 0 !important;
+  padding: 0 0 0 0 !important;
+}
+
+.workflowgif {    /* maintain aspect ratio */
+  display: block;
+  margin: 0 0 0 0 !important;
+  padding: 0 0 0 0 !important;
+}
+
+.spinning-gear {
+  width: 40px;
+  animation: spin 4s linear infinite;
+  background-color: var(--md-accent-bg-color);
+  border-radius: 50%;
+}
+
+
+.divtip {
+  display: none;
+}

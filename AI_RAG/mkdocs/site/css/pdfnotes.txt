@@ -1,0 +1,146 @@
+✅ Backend: Pandoc
+
+This exporter uses Pandoc under the hood to convert your MkDocs documentation (in Markdown) into PDF and DOCX files. Pandoc provides powerful options for page templates, including headers and footers — but they require some manual setup.
+🔧 Adding Headers and Footers (Pandoc PDF)
+
+To add headers and footers to every page of the PDF, you’ll need to:
+1. Use a Custom LaTeX Template
+
+Pandoc uses LaTeX behind the scenes to generate PDFs. You can provide a custom LaTeX template that defines headers and footers using the fancyhdr package.
+2. Steps
+
+a. Create a custom LaTeX template, e.g., custom.latex:
+
+\documentclass[11pt]{article}
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{} % clear default
+\fancyhead[L]{My Header Left}
+\fancyhead[R]{My Header Right}
+\fancyfoot[C]{Page \thepage}
+
+$if(title)$
+\title{$title$}
+$endif$
+$if(author)$
+\author{$author$}
+$endif$
+$if(date)$
+\date{$date$}
+$endif$
+
+\begin{document}
+$body$
+\end{document}
+
+b. Add this to your mkdocs.yml:
+
+plugins:
+  - exporter:
+      pdf:
+        enabled: true
+        latex_template: custom.latex
+
+Make sure the custom.latex file is in your project root or adjust the path.
+
+c. Rebuild the export:
+
+mkdocs exporter pdf
+
+📝 Notes:
+
+    You can fully control margins, font, headers, footers, and watermarks via LaTeX.
+
+    If you want different headers for even/odd pages or chapter-specific headers, that’s also possible using LaTeX logic.
+
+Would you like a complete custom.latex template tailored to MkDocs exports, with header/footer placeholders you can edit?
+
+==
+
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{fancyhdr}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{color}
+\usepackage{lastpage}
+
+% Page geometry
+\geometry{
+  a4paper,
+  total={170mm,257mm},
+  left=20mm,
+  top=25mm,
+  bottom=25mm,
+}
+
+% Header and footer setup
+\pagestyle{fancy}
+\fancyhf{} % Clear all header and footer fields
+
+% Header
+\fancyhead[L]{\textbf{Your Project Name}}
+\fancyhead[R]{\leftmark}
+
+% Footer
+\fancyfoot[L]{Generated with MkDocs Exporter}
+\fancyfoot[C]{Page \thepage\ of \pageref{LastPage}}
+\fancyfoot[R]{\today}
+
+% Section formatting
+\titleformat{\section}
+  {\normalfont\Large\bfseries}{\thesection}{1em}{}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries}{\thesubsection}{1em}{}
+
+% Title setup
+$if(title)$
+  \title{$title$}
+$endif$
+$if(author)$
+  \author{$author$}
+$endif$
+$if(date)$
+  \date{$date$}
+$endif$
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+$body$
+
+\end{document}
+
+
+===================
+
+🧠 Definitions:
+
+    Orphan: A single line of a paragraph appearing at the bottom of a page.
+
+    Widow: A single line of a paragraph appearing at the top of a page.
+
+✅ Solution: Use LaTeX line-breaking penalties
+
+Add this to your custom LaTeX template (e.g., custom.latex) before \begin{document}:
+
+\widowpenalty=10000
+\clubpenalty=10000
+\brokenpenalty=10000
+
+These commands tell LaTeX to strongly discourage breaking paragraphs in a way that would leave orphaned or widowed lines.
+
+    \widowpenalty=10000 – prevents a single line from ending up alone at the top of the next page.
+
+    \clubpenalty=10000 – prevents the first line of a paragraph from being left behind at the bottom of a page.
+
+    \brokenpenalty=10000 – discourages breaking multi-line equations and similar blocks across pages.
+
+
+

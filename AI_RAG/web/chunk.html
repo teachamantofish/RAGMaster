@@ -1,0 +1,84 @@
+<section>
+  <form>
+<!-- Flex container for two columns -->
+<div class="fw-flex-container">
+  <!-- First column -->
+  <div class="fw-column1">
+    <div class="fw-panel-label">Chunk configuration</div>
+             <div class="save-btn-container">
+          <!-- Buttons -->
+          <div style="margin: 0 0 10px 0; display: flex; flex-wrap: wrap; gap: 10px;">
+            <sl-button variant="primary" id="save-btn">
+              <sl-icon name="floppy"></sl-icon>
+            </sl-button>
+            <sl-button variant="primary" id="run-btn">
+              <sl-icon name="play-fill"></sl-icon>
+            </sl-button>
+            <sl-button variant="primary" id="clear-btn">
+              <sl-icon name="arrow-clockwise"></sl-icon>
+            </sl-button>
+          </div>
+        </div>
+
+     <div id="tokenizer-container">
+        <sl-input id="tokenizer" class="fw-io-input" label="Tokenizer" placeholder="cl100k_base">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="max-tokens-container">
+        <sl-input id="max_tokens_for_node" class="fw-io-input" label="Max Tokens for Node" placeholder="400" type="number">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+    <div class="fw-load-config-group">
+      <sl-select id="chunk_model" name="chunk_model" class="fw-config-picker" label="Chunk Model" placeholder="Select a chunk model" style="width: 100%;">
+        <sl-option value="" selected>Select a chunk model</sl-option>
+        <sl-option value="heading-safe">heading-safe</sl-option>
+        <sl-option value="greedy">greedy</sl-option>
+        <sl-option value="fixed">fixed</sl-option>
+      </sl-select>
+    </div>
+
+     <div id="code-length-container">
+        <sl-input id="code_length" class="fw-io-input" label="Code Length (lines)" placeholder="3" type="number" min="1" max="50" value="3">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="keyword-density-container">
+        <sl-input id="keyword_density" class="fw-io-input" label="Keyword Density" placeholder="0.2" type="number" step="0.01">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+      <sl-radio-group id="enable_code_extraction" size="small" label="Enable Code Extraction" name="enable_code_extraction" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+      </sl-radio-group>
+
+     <div id="output-name-container">
+        <sl-input id="output_name" class="fw-io-input" label="Output File Name" placeholder="a_chunks.json">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+    <sl-textarea id="status-display" label="Notes" placeholder="Configuration notes will appear here" readonly resize="none" rows="3"></sl-textarea>
+  </div>
+
+  <!-- Second column -->
+  <div class="fw-column2">
+    <div class="fw-panel-label">File reader</div>
+    <div class="fields">
+      <sl-textarea id="chunkconfig" class="filereader-textarea" resize="auto"
+        placeholder="Loading file. . . ">
+      </sl-textarea>
+    </div>
+    </div>
+  </div>
+</div>
+  </form>
+</section>
+
+

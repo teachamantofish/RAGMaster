@@ -1,0 +1,8 @@
+venv/
+.venv/
+node_modules
+.pytest_cache/
+__pycache__/
+.vscode
+.github/
+node_modules

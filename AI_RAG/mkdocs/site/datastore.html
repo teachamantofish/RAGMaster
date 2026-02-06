@@ -1,0 +1,918 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="chunkingcontent.html">
+      
+      
+        <link rel="next" href="usedata.html">
+      
+      
+      <link rel="icon" href="images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.12">
+    
+    
+      
+        <title>Data Store - RAG Pipeline for AI Agents</title>
+      
+    
+    
+    
+      <link rel="stylesheet" href="assets/stylesheets/main.2afb09e1.min.css">
+      
+        
+        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    <link rel="stylesheet" href="./css/extra.css">
+
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Adobe+Clean:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Adobe Clean";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#setting-up-a-vector-data-store" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="index.html" title="RAG Pipeline for AI Agents" class="md-header__button md-logo" aria-label="RAG Pipeline for AI Agents" data-md-component="logo">
+      
+  <img src="images/logo.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            RAG Pipeline for AI Agents: &nbsp;
+            <span class="page-title">
+            
+            Data Store
+          
+            </span>
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Data Store
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+
+
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--integrated" aria-label="Navigation" data-md-level="0">
+ <!--<label class="md-nav__title" for="__drawer">
+    <a href="index.html" title="RAG Pipeline for AI Agents" class="md-nav__button md-logo" aria-label="RAG Pipeline for AI Agents" data-md-component="logo">
+      
+  <img src="images/logo.png" alt="logo">
+
+    </a>
+    RAG Pipeline for AI Agents
+  </label>-->
+  <img src="images/underconstruction.gif" alt="Product Name" style="width:80%; margin: 1em 0 4.5em 1em;">
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="gettingcontent.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Getting Content
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="chunkingcontent.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Chunking Content
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Data Store
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="datastore.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data Store
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Strategy
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      Schema
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Example data
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vector-database-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Vector database setup
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Vector database setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-llamaiindex-packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install llamaiindex packages
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#set-up-postgresql-and-pgvector" class="md-nav__link">
+    <span class="md-ellipsis">
+      Set up postgreSQL and pgvector
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#packages-used" class="md-nav__link">
+    <span class="md-ellipsis">
+      Packages used
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#push-to-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      Push to database
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="usedata.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Use Data
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="sql_cmds.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Sql notes
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="unusedideas.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Unused ideas
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    External Links
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            External Links
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="TBD" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    None
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+    <br><br>
+    <span style="color:#ccc">Updated: <span class="last-updated"></span></span>
+  </ul>
+
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="setting-up-a-vector-data-store">Setting up a vector data store<a class="headerlink" href="#setting-up-a-vector-data-store" title="A link to this section you can copy, save, and share.">&para;</a></h1>
+<p><strong>Done</strong>.</p>
+<p>After much research I decided that I do not need a vector database such as Pinecone or Supabase. This decision is based on the fact that I'll probably never index more than 50,000 pages. My chunk token count should stay under 4 million tokens. Therefore, I'm going with open source postgresql and pgvector. </p>
+<h2 id="strategy">Strategy<a class="headerlink" href="#strategy" title="A link to this section you can copy, save, and share.">&para;</a></h2>
+<p>It's worth noting that we only need a single database because disparate content will be identified by metadata. For example, a FrameMaker query doesn't need to know anything about Markdown or PDF tools. Both custom and generated metadata should adequately isolate content by domain. In addition to script-extracted or generated metadata, I will be adding custom metadata that includes the domain, content type, and a short description. For example: " FrameScript Specification (for manipulating FrameMaker documents)." The strategy supports:</p>
+<ul>
+<li><strong>Semantic Isolation</strong>: Vector similarity search should have a high level of retrieval quality since similar embeddings are semantically meaningful in the same context.</li>
+<li><strong>Query Precision</strong>: Reduced noise to increase performance and relevance for agents working in a specific domain.</li>
+<li><strong>Efficient Resource Use</strong>: Small, domain-specific collections are faster to query and easier to manage. Isolated contexts provide a way to modify the architecture as the pipeline evolves.</li>
+<li><strong>Agent-Specific Retrieval</strong>: Specific domains provide a way to use domain-specialized agents and create multi-agent workflows. This keeps the mental model and toolchain cleaner.</li>
+</ul>
+<p>LlamaIndex makes this easy:</p>
+<ul>
+<li>Use multiple VectorStoreIndex instances, each pointed to its own domain data and vector store.</li>
+<li>Query the correct index depending on the agent context.</li>
+<li>Use a single PostgreSQL database.</li>
+<li>Create a single table for vectors, but include a domain column ('framemaker', 'markdown', etc.).</li>
+<li>Configure LlamaIndex to use pgvector with filtering by domain at query time.</li>
+</ul>
+<h2 id="schema">Schema<a class="headerlink" href="#schema" title="A link to this section you can copy, save, and share.">&para;</a></h2>
+<p>Everything that provides semantic context to the embedding model is stored with the chunk. Other items are stored in the metadata and stored separately. It's important to preserve the hierarchical and logical placement of the chunk relative to the document.</p>
+<table>
+<thead>
+<tr>
+<th>Schema Item</th>
+<th>Source</th>
+<th>Text type</th>
+<th>Data Type</th>
+<th>Definitions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>custom title</td>
+<td>user supplied</td>
+<td>metadata</td>
+<td>TEXT</td>
+<td>metadata.yaml Source may not have it and/or doc cleanup may remove it</td>
+</tr>
+<tr>
+<td>source url</td>
+<td>user supplied</td>
+<td>metadata</td>
+<td>TEXT</td>
+<td>metadata.yaml Source may not have it and/or doc cleanup may remove it</td>
+</tr>
+<tr>
+<td>date</td>
+<td>user supplied</td>
+<td>metadata</td>
+<td>TEXT</td>
+<td>metadata.yaml Source may not have it and/or doc cleanup may remove it</td>
+</tr>
+<tr>
+<td>domain</td>
+<td>user supplied</td>
+<td>metadata</td>
+<td>TEXT</td>
+<td>metadata.yaml Required for separating content in dB using pseudo dB instances</td>
+</tr>
+<tr>
+<td>filename</td>
+<td>file system</td>
+<td>metadata</td>
+<td>TEXT</td>
+<td>Read from system</td>
+</tr>
+<tr>
+<td>id</td>
+<td>generated</td>
+<td>metadata</td>
+<td>TEXT</td>
+<td>Unique UUID for each chunk</td>
+</tr>
+<tr>
+<td>parent_id</td>
+<td>generated</td>
+<td>metadata</td>
+<td>TEXT</td>
+<td>ID of the parent chunk (if any)</td>
+</tr>
+<tr>
+<td>header_level</td>
+<td>generated</td>
+<td>metadata</td>
+<td>INTEGER</td>
+<td>Inferred from heading. May use this with ranking and structuring</td>
+</tr>
+<tr>
+<td>id_prev</td>
+<td>generated</td>
+<td>metadata</td>
+<td>TEXT</td>
+<td>Link to prev</td>
+</tr>
+<tr>
+<td>id_next</td>
+<td>generated</td>
+<td>metadata</td>
+<td>TEXT</td>
+<td>Link to next</td>
+</tr>
+<tr>
+<td>examples</td>
+<td>generated</td>
+<td>metadata</td>
+<td>TEXT</td>
+<td>List of code example references</td>
+</tr>
+<tr>
+<td>ranking</td>
+<td>generated</td>
+<td>metadata</td>
+<td>REAL</td>
+<td>Pre ranking based on # of matches in parents, children, summary, etc.</td>
+</tr>
+<tr>
+<td>token count</td>
+<td>generated</td>
+<td>metadata</td>
+<td>INTEGER</td>
+<td>Only used if we're interested in checking relative chunk sizes</td>
+</tr>
+<tr>
+<td>type</td>
+<td>generated</td>
+<td>metadata</td>
+<td>TEXT</td>
+<td>Code example only: null if text, "code_example" if code</td>
+</tr>
+<tr>
+<td>language</td>
+<td>generated</td>
+<td>metadata</td>
+<td>TEXT</td>
+<td>Code example only: The auto-detected language of the code example</td>
+</tr>
+<tr>
+<td>embedding</td>
+<td>generated</td>
+<td>vector</td>
+<td>vector</td>
+<td>Optional: store the embedding (1536) vector separately</td>
+</tr>
+<tr>
+<td>heading</td>
+<td>document</td>
+<td>chunk</td>
+<td>TEXT</td>
+<td>Closest header (h1-h4)</td>
+</tr>
+<tr>
+<td>concat header path</td>
+<td>generated</td>
+<td>chunk</td>
+<td>TEXT</td>
+<td>Header hierarchy path (e.g., "Getting Started &gt; Installation")</td>
+</tr>
+<tr>
+<td>content/text</td>
+<td>document</td>
+<td>chunk</td>
+<td>TEXT</td>
+<td>The chunked text</td>
+</tr>
+<tr>
+<td>summary</td>
+<td>generated</td>
+<td>chunk</td>
+<td>TEXT</td>
+<td>Auto-generated summary of this chunk alone</td>
+</tr>
+<tr>
+<td>context_summary</td>
+<td>generated</td>
+<td>chunk</td>
+<td>TEXT</td>
+<td>Generated summary of the parent section for added semantic context</td>
+</tr>
+</tbody>
+</table>
+<h2 id="example-data">Example data<a class="headerlink" href="#example-data" title="A link to this section you can copy, save, and share.">&para;</a></h2>
+<p><strong>Note</strong>: The actual schema is better and continues to evolve.</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;chunk-0458&quot;</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">&quot;embedding&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0.123</span><span class="p">,</span><span class="w"> </span><span class="mf">-0.456</span><span class="p">,</span><span class="w"> </span><span class="mf">0.789</span><span class="p">,</span><span class="w"> </span><span class="err">...</span><span class="p">],</span><span class="w">  </span><span class="c1">// 1536 floats for `text-embedding-3-small`</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">&quot;text&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;To install the CLI, run `npm install -g example-cli`...&quot;</span><span class="p">,</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">&quot;metadata&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="nt">&quot;section_header&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Installation&quot;</span><span class="p">,</span>
+</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">    </span><span class="nt">&quot;full_path&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Docs &gt; Getting Started &gt; Installation&quot;</span><span class="p">,</span>
+</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">    </span><span class="nt">&quot;summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Explains how to install the CLI via npm.&quot;</span><span class="p">,</span>
+</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="nt">&quot;context_summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Covers the setup and configuration for first-time users.&quot;</span><span class="p">,</span>
+</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="nt">&quot;parent_node&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;chunk-0457&quot;</span><span class="p">,</span>
+</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="nt">&quot;child_nodes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;chunk-0459&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;chunk-0460&quot;</span><span class="p">],</span>
+</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">    </span><span class="nt">&quot;doc_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;doc-101&quot;</span><span class="p">,</span>
+</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">    </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Getting Started Guide&quot;</span><span class="p">,</span>
+</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="nt">&quot;custom_title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Beginner Setup&quot;</span><span class="p">,</span>
+</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="nt">&quot;source_url&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;https://example.com/docs/getting-started&quot;</span><span class="p">,</span>
+</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">    </span><span class="nt">&quot;file_name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;getting-started.md&quot;</span><span class="p">,</span>
+</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">    </span><span class="nt">&quot;date&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2024-06-01&quot;</span><span class="p">,</span>
+</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="nt">&quot;code_example_ref&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;example-CLI-install-1&quot;</span><span class="p">,</span><span class="w">  </span><span class="c1">// could link to a repo or blob store</span>
+</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">    </span><span class="nt">&quot;tokens&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">138</span><span class="p">,</span>
+</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">    </span><span class="nt">&quot;chunk_index&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span>
+</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="p">}</span>
+</span></code></pre></div>
+<h2 id="vector-database-setup">Vector database setup<a class="headerlink" href="#vector-database-setup" title="A link to this section you can copy, save, and share.">&para;</a></h2>
+<h3 id="install-llamaiindex-packages">Install llamaiindex packages<a class="headerlink" href="#install-llamaiindex-packages" title="A link to this section you can copy, save, and share.">&para;</a></h3>
+<ol>
+<li>pip install llama-index-vector-stores-postgres</li>
+<li>pip install psycopg2-binary: a Python package that provides a PostgreSQL database adapter for Python. It allows your Python code to connect to and interact with a PostgreSQL database. It is commonly used in Python projects that need to run SQL queries, manage tables, or interact with PostgreSQL in any way.</li>
+<li>pip install openai: The openai Python package is the official client library for accessing OpenAI's APIs (such as GPT-3, GPT-4, embeddings, etc.) from Python code. It allows you to send requests to OpenAI models (for text generation, embeddings, etc.) and receive responses in your Python programs.</li>
+</ol>
+<h3 id="set-up-postgresql-and-pgvector">Set up postgreSQL and pgvector<a class="headerlink" href="#set-up-postgresql-and-pgvector" title="A link to this section you can copy, save, and share.">&para;</a></h3>
+<ol>
+<li>Install <a href="https://www.enterprisedB.com/downloads/postgres-postgresql-downloads">https://www.enterprisedB.com/downloads/postgres-postgresql-downloads</a></li>
+<li>pip install pgvector (to verify the package) installed (does not install pgvector extension)</li>
+<li>Compile/build pgvector: ⌛This step was filled with landmines and pitfalls. There are many install paths, including Docker, VMs, Windows build tools, etc. I didn't want to install 7 GB of Visual Studio files, and my AI agent told me I could use MSYS. However, that rabbit hole cost me several hours. In the end, I installed Visual Studio and followed the instructions <a href="https://www.mindfiretechnology.com/blog/archive/installing-pgvector-in-preparation-for-retrieval-augmented-generation/">in this article</a>, and was up and running in 30 minutes.</li>
+<li>pwd: xxxx; port 5432</li>
+<li>Get pgadmin: <a href="https://www.postgresql.org/ftp/pgadmin/pgadmin4/v9.4/windows/">https://www.postgresql.org/ftp/pgadmin/pgadmin4/v9.4/windows/</a></li>
+<li>Verify postgresql server is running (services.msc)</li>
+<li>Open pgadmin</li>
+<li>Create a new server</li>
+<li>Connect to the server</li>
+<li>Open the query workspace tool</li>
+<li>Choose the server to query.</li>
+<li>????</li>
+</ol>
+<h2 id="packages-used">Packages used<a class="headerlink" href="#packages-used" title="A link to this section you can copy, save, and share.">&para;</a></h2>
+<div class="language-python highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="kn">import</span><span class="w"> </span><span class="nn">psycopg2</span>
+</span></code></pre></div>
+<p>from psycopg2.extras import execute_batch
+import os</p>
+<h2 id="push-to-database">Push to database<a class="headerlink" href="#push-to-database" title="A link to this section you can copy, save, and share.">&para;</a></h2>
+<ol>
+<li>Launch pgAdmin (auto starts the server)</li>
+<li>Create a server.</li>
+<li>Right click on the server.</li>
+<li>Choose <strong>Register &gt; Server</strong>.</li>
+<li>Provide a name, host name, port, username</li>
+<li>Adobe gotcha: Enable the port via Windows Defender Firewall if needed (image below).</li>
+<li>Select the Server.</li>
+<li>Select the Query tool.</li>
+<li>Create the dB.</li>
+<li>Connecting to the dB took several hours of troubleshooting. Hopefully you're not a novice.</li>
+<li>Run vectory.py</li>
+<li>Verify the chunks exist. To view your data in pgAdmin: In the Browser panel, expand <strong>Databases &gt; postgres &gt; Schemas &gt; public &gt; Tables</strong>. Select <strong>Select View/Edit Data &gt; All Rows</strong>.</li>
+</ol>
+<p><strong>Windows firewall port configuration</strong>
+<img alt="Windows Defender Firewall if needed" src="images/postgres_windows.png" /></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        
+    <div class="footer">
+    © 2025 Adobe Inc. Last updated: <span class="last-updated"></span>
+    </div>
+    <div id="scroll">
+        <span></span>
+      </div>
+
+
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": ".", "features": ["navigation.sections", "navigation.expand", "navigation.tracking", "navigation.paths", "toc.integrate", "search.highlight", "search.suggest", "search.share", "content.code.annotate", "content.code.copy", "permalink:true"], "search": "assets/javascripts/workers/search.f8cc74c7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+    
+      <script src="assets/javascripts/bundle.c8b220af.min.js"></script>
+      
+    
+    <!-- just before your extra.js -->
+    <script src="js/extra.js"></script>
+    <script src="js/animations.js"></script>
+
+  </body>
+</html>

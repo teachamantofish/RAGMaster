@@ -1,0 +1,68 @@
+﻿Petunia
+
+
+This document is a PRD with specific task steps to design test and build a functional agentic rag pipeline that can query a local vector database in order to make my LM model and expert in a particular domain.
+
+Petunia is a rag pipeline application with multiple agents the back end will be entirely built with llama index components except for the usage of crawl for AI to recursively download web pages. So the back end will be a series of chained Python scripts that primarily rely on llama index. There will be multiple agents at the end of the workflow so that each individual agent will have a specific task. For example analyzing the query evaluating the query improving the query getting information out of a vector database evaluating whether the retrieval was a success whether it should be improved and repeated so on. Once that workflow ends the output from the agents will be pushed to a text field in the front end showing the result this will eventually be a problem that is sent to an llm for additional evaluation
+
+The front end will be HTML and JavaScript. The front end or user interface will contain multiple screens there will be a prompt screen with various modes and they'll also be a menu hamburger icon in the upper right hand corner that goes to additional settings if a user clicks on the menu icon they will open up a new page with six tabs at the top of the page each tab will allow configuration of a particular step in the rag pipeline workflow for example configuring crawling configuring post-processing configuring chunking etc so each one of these tabs will be its own page with the configuration settings that a user can set once said that also sets a variable and a config file that each of the scripts for those steps can read. In this way a user can configure each step of the rag pipeline how it works depth of crawl how it jobs etc all of the configurations will be exposed.
+
+Steps for building the front end 
+
+Use the example file for all HTML and JavaScript 
+We will be using a local copy of shoelace.css for styling 
+Icons will come from Google's material icon set 
+Use flex for layout 
+All pages must be responsive 
+Max width of any pages 900 pixels on a desktop 
+Left right and bottom border should be 2em
+Note that most of the pages or tabs that have content will be displaying options for setting configuration parameters. Whenever these parameters are retrieved from the config.json file then the UI should be as follows a checkbox which is checked by default followed by the label followed by the field which displays the value from the config.json file. These fields are editable and can be changed by the user new values are written to config.json. the checkbox determines whether the application uses that option. If unchecked then the parameter is not used but note that the config.json file does not change it will still contain the value and parameter name it's just ignored.
+
+Create an index.html page
+Add a fixed 75px header to the top of the HTML page. Zero margin at the top of the page 0.5 margin inside the header. 
+Add a menu hamburger icon to the right side of the header 
+The menu should have the items home, configuration, login 
+The page body should have a page wide text field 5ems high.
+The title of the field should be ask. The title should above top left of the text field 
+Underneath the ask test field there is a checkbox a title use knowledge base and a text field populated with the database name and port that field value can be edited but it's also populated from the configuration file. Editing the text field changes the config file and vice versa. 
+Underneath that line is another checkbox and a label local file it should be filed by a browse button which is just a closed folder file icon looking the icon displays and open folder icon in the same line there should be a text field showing the selected file.
+Below that is a checkbox with a label web search followed by a wide field for the URL to search
+Below that line there is another text box the same width as the ask text box and it should be 15ems high. This text box will display the streaming output of the agent workflow as it performs its tasks
+That's streaming text box has a label in the same position called agent streamed output
+Below that line is another text field of the same size. It has a label in the same location named refined prompt for LLM.
+Hello that line there is a radio button group it should be in a panel with a border 
+The panel label is response mode 
+Radio button should be in a row and the labels are default, short, suggest, explain and fix, run in terminal and suggest, autonomous (run and fix all errors)
+
+At the bottom right below the last text box there should be a submit button. Clicking the button sends the configured output to the llm via and endpoint exposed by an mCP server. 
+
+New section: configuration page
+
+The configuration page has the same header as the index page.
+Add 7 tabs across the top 
+Tab labels are as follows crawl, post-process, chunk, vectorize, agents, model config, future 
+Each tab displays unique content for the specific configuration there will be two columns on each tab 
+The left column will be 500 pixels wide and the right column will be 200 pixels wide this will be true for all pages the right column should always be the same height as the stacked panels on the left column this means I'll have to be in a container that can expand as contents in the left column are added 
+In the crawl tab of the content consists of three panels with the labels metadata, get single doc, and web crawl 
+Selecting any item in the left column or providing a value in a field should write that value to the right hand column on a new line. That way as the user configures options the configuration appears in the right hand column. That configuration is not saved it's just a read-only panel that shows the selections or configuration.
+The metadata panel will contain stacked UI items.  these items are the label URL followed by a text field, the label domain followed by a text field, the label Rich title followed by a text field, the label date followed by a field that displays the date there should be a date picker icon and a date picker widget. The date must always be in the format of Day-Day month year year, below these items is a button with the label write metadata. It should be followed by by the text l i n k which should be linked to a file named configuration.txt in a subdirectory called config. 
+Pressing the right button writes the values in the earl, domain, rich title, and date fields, to the config file. 
+
+The next panel has a label called get single document 
+It has the following stacked UI items: and you are ill label followed by a text field, a pages label followed by a text field, and input format label followed by a drop-down list with the values 1 2 3, and output format label followed by a drop-down list with the values 1 2 3, a parse mode label followed by a drop-down list populated with the values 1 2 3, a log label followed by a checkbox which is followed by the label l i n k which is linked to a getdoc_log.txt in a subdirectory called log 
+
+The next panel has a label called Web crawl and it has the following stacked fields. A URL label followed by a text field, a depth label followed by drop-down list with the values 1 2 3 4 5 which is followed by another label recursive which is followed by a checkbox, a label minimum characters followed by a field that only accepts integers, a minimum lines field with a followed by a field that only accepts integers, and English only label followed by a checkbox, 
+
+__--------
+
+
+__------------------config file riding section
+Import Jason and use it for reading and writing to the configuration file 
+
+
+Write a config.json file. This is a configuration file for the entire application there will be sections in the J s o n file for each of the main Python scripts which will allow the user to configure the values from the user interface all values will be provided with a default. Most are optional but some will have to be required. 
+The top level parent sections will be as follows crawl, post-process, chunk, vectorize, agents, llmconfig. 
+Each individual configuration parameter under these parent sections will have these keys: name, value, data type, description, required. 
+After you create the file with the parameter names create a best guest description which I will change later. 
+Here are the perimeter names for the crawler section: language with a default value of en, headless with a default value of true, ignore_ https_errors with the default value of true, ignore underscore links with the default value of true, ignore underscore images with the default value of true, escape underscore html with the default value of false,body underscore width with a default value of 0, skip underscore internal underscore links with a default value of true, include underscore sup underscore sub the default value of false, heading underscore style with the default value of ATX, list underscore style with a default value of dash, strip underscore comments with the default value of true, preserve underscore tables with a default value of true, collapse underscore white space with the default value of faults, strip underscore footnotes with the default value of true, strip underscore code underscore blocks with a default value of faults strip underscore blockquotes with a default value of false, strip underscore math with a default value of false, markdown underscore generator with the default value of MD underscore generator, excluded underscore tags which has an array value that includes the words form, nav, aside, script, style, header, footer, feedback-button, cash _ mode with the default value of CacheMode.BYPASS, CSS underscore selector with the default value of .main-content, remove underscore forms with the default value of true, remove underscore overlay underscore elements with a default value of true, css underscore selector with the default value of null, excluded underscore selector that takes an array value which I'll provide from my code file, exclude underscore external underscore links with the default value of true, exclude underscore social underscore media underscore links with the default value of true, exclude underscore domains which takes an array value the default is example.com, exclude underscore social underscore media underscore domains which takes an array value with the default value of facebook.com and twitter.com.
+

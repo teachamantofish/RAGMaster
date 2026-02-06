@@ -1,0 +1,21 @@
+ID,PARSER,CRAWL_URL,BASE_DIR,METADATA_TITLE,METADATA_AUTHOR,METADATA_CATEGORY,METADATA_DESCRIPTION,TAGS,METADATA_DATE,PAGES
+1,crawlweb,"https://adrienbrignon.github.io/mkdocs-exporter/","mkdocs-exporter","Mkdocs Exporter","adrienbrignon","mkdocs","Create a PDF from mkdocs using mkdocs-exporter","[]","6/16/2025"
+2,crawlweb,"https://docs.crawl4ai.com/","crawl4AI","Crawl4AI Documentation","UncodeCode","web scraping","Scrape web sites with crawl4AI","[]","6/16/2025"
+3,crawlpdf,"https://help.adobe.com/en_US/framemaker/pdfs/fdk-reference.pdf","FDKprgrammers_reference","FrameMaker SDK","Adobe","FDK","FrameMaker SDK API reference for scripting FM and MIF","[]","5/1/2023",20-1063
+4,crawlweb,"https://docs.rs/tauri/latest/tauri/","tauri_rust","Tauri Rust API","Tauri.org","Tauri","Tauri support for Rust including Cargo and API documentation","[]","8/9/2025"
+5,crawlgit,"https://github.com/shoelace-style/shoelace/tree/next/docs/pages","shoelace_css","Shoelace CSS","Shoelace","CSS","Documentation and examples for the Shoelace CSS framework","[]","8/12/2025"
+6,crawlpdf,"C:/GIT/Z_Master_Rag/Data/framemaker","mifref","FrameMaker MIF Reference","Adobe","MIF","FrameMaker Maker Interchange Format reference guide","[]","5/1/2023",5-307
+7,crawlgit,"https://github.com/vitejs/vite/tree/main/docs","vite_docs","Vite Docs","Vite.org","Vite","Vite official documentation","[]","8/16/2025"
+9,crawlgit,"https://github.com/squidfunk/mkdocs-material/tree/master/docs","mkdocs_material","MkDocs Material Docs","squidfunk","mkdocs","Documentation for the Material for MkDocs theme","[]","8/16/2025"
+10,crawlpdf,"https://help.adobe.com/en_US/framemaker/2020/pdfs/fdkprogrammerguide.pdf","FDKprogrammers_guide","FDK Programmer's Guide","Adobe","FDK","Programming FrameMaker with the FDK","[]","5/1/2023",17-562
+11,crawlgit,"https://github.com/run-llama/workflows-py/tree/main/docs/docs/api_reference/workflow","llamaindex_workflow_api","LlamaIndex Workflow API","LlamaIndex","Llamaindex API","API documentation for LlamaIndex workflows","[]","8/27/2025"
+12,crawlgit,"https://github.com/run-llama/workflows-py/tree/main/docs/docs/workflows","llamaindex_workflow","LlamaIndex Workflow","LlamaIndex","Llamaindex Workflows","Documentation for LlamaIndex workflows","[]","8/27/2025"
+13,crawlweb,"https://docs.llamaindex.ai/en/stable/api_reference/","llamaindex_api_reference","LlamaIndex API Reference","LlamaIndex","Llamaindex API","API reference documentation for LlamaIndex","[]","9/12/2025"
+14,crawlpdf,"C:/GIT/Z_Master_Rag/Data/framemaker","extendscript","Extendscript Scripting Guide","Adobe","JSX","FrameMaker Scripting with JSX","[]","9/19/25",70-1078
+15,crawlweb,"https://helpx.adobe.com/adobe-connect/connect-tech-spec","adobe_connect","Adobe Connect User Guide","Adobe","Adobe Connect","User guide for Adobe Connect","[]","10/12/25","",70-1078
+
+
+
+
+
+

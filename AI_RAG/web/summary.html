@@ -1,0 +1,203 @@
+<section>
+  <form>
+<!-- Flex container for two columns -->
+<div class="fw-flex-container">
+  <!-- First column -->
+  <div class="fw-column1">
+    <div class="fw-panel-label">Summary configuration</div>
+        <div class="save-btn-container">
+          <!-- Buttons -->
+          <div style="margin: 0 0 10px 0; display: flex; flex-wrap: wrap; gap: 10px;">
+            <sl-button variant="primary" id="save-btn">
+              <sl-icon name="floppy"></sl-icon>
+            </sl-button>
+            <sl-button variant="primary" id="run-btn">
+              <sl-icon name="play-fill"></sl-icon>
+            </sl-button>
+            <sl-button variant="primary" id="clear-btn">
+              <sl-icon name="arrow-clockwise"></sl-icon>
+            </sl-button>
+          </div>
+        </div>
+
+      <sl-radio-group id="model_backend" label="Model Backend" name="model_backend" value="local" style="--sl-spacing-large: 1rem;">
+        <sl-radio value="huggingface" style="display: inline-block; margin-right: 1.5rem;">Hugging Face Model</sl-radio>
+        <sl-radio value="local" style="display: inline-block;">Local Model</sl-radio>
+      </sl-radio-group>
+
+     <!-- Local Model Fields -->
+     <div id="chunk-summary-model-container" class="local-fields">
+        <sl-input id="chunk_summary_model" class="fw-io-input" label="Chunk Summary Model" placeholder="qwen3-4B: Bigger models are better. Use HF.">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <!-- HuggingFace Fields -->
+     <div id="hf-token-container" class="hf-fields" style="display: none;">
+        <sl-input id="hf_token" class="fw-io-input" label="HF Token" placeholder="Enter HuggingFace token or ENV variable" type="password">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="endpoint-name-container" class="hf-fields" style="display: none;">
+        <sl-input id="endpoint_name" class="fw-io-input" label="Endpoint Name" placeholder="qwen3-next-80b-a3b-instruct-hmt">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="transformers-cache-container" class="hf-fields" style="display: none;">
+        <sl-input id="transformers_cache" class="fw-io-input" label="Transformers Cache" placeholder="Your local .hf_cache often in User/.cache/transformers">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+      <div class="hf-fields" style="display: none;">
+        <sl-radio-group id="auto_pause_endpoint" size="small" label="Auto Pause Endpoint" name="auto_pause_endpoint" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+        </sl-radio-group>
+      </div>
+
+     <div id="testing-mode-container">
+        <sl-input id="testing_mode" class="fw-io-input" label="Testing Mode (N chunks)" placeholder="20: Stop the script after processing X chunks" type="number" min="1">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+      <sl-radio-group id="enable_chunk_summary" size="small" label="Enable Chunk Summary" name="enable_chunk_summary" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+      </sl-radio-group>
+
+     <div id="chunk-summary-size-container">
+        <sl-input id="chunk_summary_size" class="fw-io-input" label="Chunk Summary Size (tokens)" placeholder="100" type="number" min="1">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="chunk-summary-temperature-container">
+        <sl-input id="chunk_summary_temperature" class="fw-io-input" label="Chunk Summary Temperature" placeholder="1" type="number" step="0.1" min="0">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="skip-chunk-threshold-container">
+        <sl-input id="skip_chunk_threshold" class="fw-io-input" label="Skip Chunk Threshold" placeholder="50" type="number" min="1">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="pad-chunk-threshold-container">
+        <sl-input id="pad_chunk_threshold" class="fw-io-input" label="Pad Chunk Threshold" placeholder="150" type="number" min="1">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+      <sl-radio-group id="add_concat_header_path" size="small" label="Add Concat Header Path" name="add_concat_header_path" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+      </sl-radio-group>
+
+      <sl-radio-group id="add_chunk_summary" size="small" label="Add Chunk Summary" name="add_chunk_summary" value="on">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+      </sl-radio-group>
+
+      <sl-radio-group id="add_page_summary" size="small" label="Add Page Summary" name="add_page_summary" value="off">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+      </sl-radio-group>
+
+      <sl-radio-group id="enable_file_summary" size="small" label="Enable File Summary" name="enable_file_summary" value="off">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+      </sl-radio-group>
+
+     <div id="file-summary-model-container">
+        <sl-input id="file_summary_model" class="fw-io-input" label="File Summary Model" placeholder="openai:gpt-5-mini">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="file-summary-size-container">
+        <sl-input id="file_summary_size" class="fw-io-input" label="File Summary Size (tokens)" placeholder="125" type="number" min="1">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="file-summary-temperature-container">
+        <sl-input id="file_summary_temperature" class="fw-io-input" label="File Summary Temperature" placeholder="1" type="number" step="0.1" min="0">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+      <sl-radio-group id="enable_summary_summary" size="small" label="Enable Summary Summary" name="enable_summary_summary" value="off">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+      </sl-radio-group>
+
+     <div id="child-count-container">
+        <sl-input id="child_count" class="fw-io-input" label="Child Count Threshold" placeholder="2" type="number" min="1">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="summary-summary-model-container">
+        <sl-input id="summary_summary_model" class="fw-io-input" label="Summary Summary Model" placeholder="openai:gpt-5-mini">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="summary-summary-size-container">
+        <sl-input id="summary_summary_size" class="fw-io-input" label="Summary Summary Size (tokens)" placeholder="125" type="number" min="1">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="summary-summary-temperature-container">
+        <sl-input id="summary_summary_temperature" class="fw-io-input" label="Summary Summary Temperature" placeholder="1" type="number" step="0.1" min="0">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+      <sl-radio-group id="enable_code_summary" size="small" label="Enable Code Summary" name="enable_code_summary" value="off">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+      </sl-radio-group>
+
+     <div id="code-summary-model-container">
+        <sl-input id="code_summary_model" class="fw-io-input" label="Code Summary Model" placeholder="openai:gpt-4o-mini">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="code-summary-size-container">
+        <sl-input id="code_summary_size" class="fw-io-input" label="Code Summary Size (tokens)" placeholder="40" type="number" min="1">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+     <div id="code-summary-temperature-container">
+        <sl-input id="code_summary_temperature" class="fw-io-input" label="Code Summary Temperature" placeholder="0.2" type="number" step="0.1" min="0">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+    <sl-textarea id="status-display" label="Notes" placeholder="Configuration notes will appear here" readonly resize="none" rows="3"></sl-textarea>
+  </div>
+
+  <!-- Second column -->
+  <div class="fw-column2">
+    <div class="fw-panel-label">File reader</div>
+    <div class="fields">
+      <sl-textarea id="summaryconfig" class="filereader-textarea" resize="auto"
+        placeholder="Loading file. . . ">
+      </sl-textarea>
+    </div>
+    </div>
+  </div>
+</div>
+  </form>
+</section>
+
+

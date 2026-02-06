@@ -1,0 +1,68 @@
+<section>
+  <form>
+<!-- Flex container for two columns -->
+<div class="fw-flex-container">
+  <!-- First column -->
+  <div class="fw-column1">
+    <div class="fw-panel-label">Embed configuration</div>
+             <div class="save-btn-container">
+          <!-- Buttons -->
+          <div style="margin: 0 0 10px 0; display: flex; flex-wrap: wrap; gap: 10px;">
+            <sl-button variant="primary" id="save-btn">
+              <sl-icon name="floppy"></sl-icon>
+            </sl-button>
+            <sl-button variant="primary" id="run-btn">
+              <sl-icon name="play-fill"></sl-icon>
+            </sl-button>
+            <sl-button variant="primary" id="clear-btn">
+              <sl-icon name="arrow-clockwise"></sl-icon>
+            </sl-button>
+          </div>
+        </div>
+
+     <div id="apikey-container">
+        <sl-input id="apikey" class="fw-io-input" label="API Key" placeholder="If required, enter API key or environment variable">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+      <sl-radio-group id="enableembedding" size="small" label="Enable embedding" name="a" value="single">
+        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
+        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
+      </sl-radio-group>
+
+     <div id="embedmodel-container">
+        <sl-input id="embedmodel" class="fw-io-input" label="Embed Model" placeholder="Embed model name">
+          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
+        </sl-input>
+     </div>
+
+    <div class="fw-load-config-group">
+      <sl-select id="config_picker" name="config_file" class="fw-config-picker" label="Vector size" placeholder="Select a vector size" style="width: 100%;">
+        <sl-option value="" selected>Select a vector size</sl-option>
+        <sl-option value="float32">float32</sl-option>
+        <sl-option value="float16">float16</sl-option>
+        <sl-option value="int8">int8</sl-option>
+        <sl-option value="uint8">uint8</sl-option>
+        <sl-option value="fp8">fp8</sl-option>
+        <sl-option value="fp4">fp4</sl-option>
+      </sl-select>
+    </div>
+
+    <sl-textarea id="status-display" label="Notes" placeholder="Configuration notes will appear here" readonly resize="none" rows="3"></sl-textarea>
+  </div>
+
+  <!-- Second column -->
+  <div class="fw-column2">
+    <div class="fw-panel-label">File reader</div>
+    <div class="fields">
+      <sl-textarea id="embedconfig" class="filereader-textarea" resize="auto"
+        placeholder="Loading file. . . ">
+      </sl-textarea>
+    </div>
+    </div>
+  </div>
+</div>
+  </form>
+</section>
+
