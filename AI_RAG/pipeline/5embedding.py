@@ -236,7 +236,7 @@ except Exception as e:
     logger.warning(f"Could not set model dtype to {EMBED_COMPUTE_PRECISION}: {e}")
 
 # Defensive check: ensure the model is targeting CUDA (no silent CPU fallback)
-target_device = getattr(embed_model, "device", getattr(embed_model, "_target_device", None))
+target_device = getattr(embed_model, "device", None)
 td_str = str(target_device) if target_device is not None else "unknown"
 if not td_str.startswith("cuda"):
     logger.error(f"Model target device is not CUDA (got: {td_str}). Aborting.")

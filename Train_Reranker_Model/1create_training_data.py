@@ -3,12 +3,13 @@
 import os
 import json
 import random
+import argparse
 from pathlib import Path
-from typing import List, Dict, Tuple, Set
+from typing import List, Dict, Tuple, Set, Optional
 from collections import defaultdict
 from itertools import combinations
 
-from scripts.config_training_embed import *
+from scripts.config_training_rerank import *
 from scripts.custom_logger import setup_global_logger
 
 # High-level flow::
@@ -35,7 +36,7 @@ from scripts.custom_logger import setup_global_logger
 # - Hard negatives teach fine-grained semantic differences
 # - This progressive approach often produces better final models than random negatives
 
-chunkfile = BASE_CWD / "a_chunks.json"
+DEFAULT_CHUNK_FILE = BASE_CWD / "a_chunks.json"
 
 # Set up global logger with script-specific CSV header; overwrite existing log
 script_base = os.path.splitext(os.path.basename(__file__))[0]
@@ -66,9 +67,10 @@ def _normalize_ratio_map(ratio_map: Dict[str, float]) -> Dict[str, float]:
     return {k: v / total for k, v in positive_items.items()}
 
 
-def load_chunks() -> Tuple[List[Dict], Dict]:
+def load_chunks(chunks_path: Path = DEFAULT_CHUNK_FILE) -> Tuple[List[Dict], Dict]:
     """Load chunks from JSON file and return chunks list plus metadata."""
-    with open(chunkfile, "r", encoding="utf-8") as f:
+    resolved_path = Path(chunks_path)
+    with open(resolved_path, "r", encoding="utf-8") as f:
         loaded = json.load(f)
     
     if isinstance(loaded, dict) and "chunks" in loaded:
@@ -78,7 +80,7 @@ def load_chunks() -> Tuple[List[Dict], Dict]:
         chunks = loaded
         metadata = {}
     
-    logger.info(f"Loaded {len(chunks)} chunks from {chunkfile}")
+    logger.info(f"Loaded {len(chunks)} chunks from {resolved_path}")
     return chunks, metadata
 
 
@@ -691,6 +693,8 @@ def create_training_triplets_by_difficulty(positive_pairs: List[Tuple[Dict, Dict
         'medium': [],
         'hard': []
     }
+    candidate_counts = {'easy': 0, 'medium': 0, 'hard': 0}
+    discarded_triplets = {'easy': 0, 'medium': 0, 'hard': 0}
     
     logger.info(f"Generating triplets with difficulty levels for {len(positive_pairs)} positive pairs")
     hard_total = 0
@@ -727,6 +731,7 @@ def create_training_triplets_by_difficulty(positive_pairs: List[Tuple[Dict, Dict
             "negative_domain": f"{easy_neg.get('category', '')}_{easy_neg.get('title', '')}"
         }
         triplets_by_difficulty['easy'].append(easy_triplet)
+        candidate_counts['easy'] += 1
         
         # Create medium triplet
         medium_triplet = {
@@ -747,6 +752,7 @@ def create_training_triplets_by_difficulty(positive_pairs: List[Tuple[Dict, Dict
             "negative_domain": f"{medium_neg.get('category', '')}_{medium_neg.get('title', '')}"
         }
         triplets_by_difficulty['medium'].append(medium_triplet)
+        candidate_counts['medium'] += 1
         
         # Create hard triplet
         hard_triplet = {
@@ -767,6 +773,7 @@ def create_training_triplets_by_difficulty(positive_pairs: List[Tuple[Dict, Dict
             "negative_domain": f"{hard_neg.get('category', '')}_{hard_neg.get('title', '')}"
         }
         triplets_by_difficulty['hard'].append(hard_triplet)
+        candidate_counts['hard'] += 1
         hard_total += 1
         if hard_category != anchor_category:
             hard_cross_source += 1
@@ -782,7 +789,12 @@ def create_training_triplets_by_difficulty(positive_pairs: List[Tuple[Dict, Dict
             CROSS_SOURCE_HARD_NEGATIVE_RATIO * 100,
         )
     
+    pre_enforce_counts = {k: len(v) for k, v in triplets_by_difficulty.items()}
     triplets_by_difficulty = _enforce_triplet_mix(triplets_by_difficulty)
+    for difficulty, before in pre_enforce_counts.items():
+        after = len(triplets_by_difficulty.get(difficulty, []))
+        discarded_triplets[difficulty] += max(0, before - after)
+
     return triplets_by_difficulty, candidate_counts, discarded_triplets
 
 
@@ -868,45 +880,55 @@ def export_training_data_by_difficulty(
     base_output_dir: Path,
     candidate_counts: Optional[Dict[str, int]] = None,
     discarded_counts: Optional[Dict[str, int]] = None,
-) -> None:
-    """
-    Export training data separated by difficulty level for curriculum learning.
-    
-    Creates subdirectories: easy/, medium/, hard/
-    Each contains train/test splits in JSON format for the orchestrator to use.
+) -> Dict[str, Dict[str, List[Dict]]]:
+    """Export triplets split by difficulty + train/test and return the in-memory splits.
+
+    Returning the split data lets us immediately derive cross-encoder pairs without re-reading
+    from disk or attempting to reproduce the exact shuffle boundary again.
     """
     base_output_dir.mkdir(parents=True, exist_ok=True)
-    
+    split_cache: Dict[str, Dict[str, List[Dict]]] = {}
+
     for difficulty, triplets in triplets_by_difficulty.items():
         if not triplets:
             logger.warning(f"No {difficulty} triplets to export")
             continue
-        
+
         # Create difficulty-specific subdirectory
         difficulty_dir = base_output_dir / difficulty
         difficulty_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Split into train/test
         random.shuffle(triplets)
         split_idx = int(len(triplets) * TRAIN_TEST_SPLIT)
         train_triplets = triplets[:split_idx]
         test_triplets = triplets[split_idx:]
-        
+        split_cache[difficulty] = {
+            "train": list(train_triplets),
+            "test": list(test_triplets),
+        }
+
         # Export in JSON format (for tokenizer compatibility)
         _export_json_format(train_triplets, difficulty_dir / "triplets_train.json")
         _export_json_format(test_triplets, difficulty_dir / "triplets_test.json")
-        
+
         # Export statistics
         extra_stats = {
             "triplets_found": (candidate_counts or {}).get(difficulty, 0),
             "triplets_removed": (discarded_counts or {}).get(difficulty, 0),
         }
         _export_statistics(triplets, difficulty_dir / "statistics.json", extra_stats)
-        
-        logger.info(f"Exported {difficulty} data to {difficulty_dir}: "
-                   f"{len(train_triplets)} train, {len(test_triplets)} test",
-                   extra={"Triplets Generated": str(len(triplets)), 
-                         "Training Data Type": f"{difficulty}_export"})
+
+        logger.info(
+            f"Exported {difficulty} data to {difficulty_dir}: "
+            f"{len(train_triplets)} train, {len(test_triplets)} test",
+            extra={
+                "Triplets Generated": str(len(triplets)),
+                "Training Data Type": f"{difficulty}_export",
+            },
+        )
+
+    return split_cache
 
 
 def _export_json_format(triplets: List[Dict], output_path: Path) -> None:
@@ -964,49 +986,212 @@ def _export_statistics(triplets: List[Dict], output_path: Path, extra_stats: Opt
         json.dump(stats, f, indent=2, ensure_ascii=False)
 
 
-def main():
-    """Main function to generate training data for reranker model fine-tuning."""
-    logger.info("Starting reranker model training data generation with difficulty levels")
-    
-    # Load and filter chunks
-    chunks, metadata = load_chunks()
-    filtered_chunks = filter_chunks_for_training(chunks)
-    
-    if len(filtered_chunks) < 100:
-        logger.warning(f"Only {len(filtered_chunks)} chunks available - may not be sufficient for training")
-    
-    # Group by domain for systematic sampling
-    domain_groups = group_chunks_by_domain(filtered_chunks)
-    
-    # Generate positive pairs
-    positive_pairs = generate_positive_pairs(filtered_chunks)
-    
-    if not positive_pairs:
-        logger.error("No positive pairs generated - cannot create training data")
-        return
-    
-    logger.info(f"Generated {len(positive_pairs)} positive pairs")
-    
-    # Create triplets with easy, medium, and hard negatives for curriculum learning
-    triplets_by_difficulty, candidate_counts, discarded_triplets = create_training_triplets_by_difficulty(
-        positive_pairs, filtered_chunks, domain_groups
+def load_existing_triplet_splits(data_dir: Path) -> Dict[str, Dict[str, List[Dict]]]:
+    """Load pre-generated triplet splits from disk for cross-encoder export."""
+    difficulties = ["easy", "medium", "hard"]
+    split_triplets: Dict[str, Dict[str, List[Dict]]] = {}
+    missing: List[str] = []
+
+    for difficulty in difficulties:
+        diff_dir = data_dir / difficulty
+        train_path = diff_dir / "triplets_train.json"
+        test_path = diff_dir / "triplets_test.json"
+        if not train_path.exists() or not test_path.exists():
+            missing.append(difficulty)
+            continue
+
+        with open(train_path, "r", encoding="utf-8") as f_train:
+            train_triplets = json.load(f_train)
+        with open(test_path, "r", encoding="utf-8") as f_test:
+            test_triplets = json.load(f_test)
+
+        split_triplets[difficulty] = {
+            "train": train_triplets,
+            "test": test_triplets,
+        }
+
+    if not split_triplets:
+        raise FileNotFoundError(
+            f"No triplet splits found under {data_dir}; run with --regenerate-triplets first."
+        )
+
+    if missing:
+        logger.warning(
+            "Missing triplet files for difficulties: %s. Cross-encoder export will skip them.",
+            ", ".join(missing),
+        )
+
+    total_records = sum(
+        len(splits.get("train", [])) + len(splits.get("test", []))
+        for splits in split_triplets.values()
     )
-    
-    total_triplets = sum(len(t) for t in triplets_by_difficulty.values())
-    if total_triplets == 0:
-        logger.error("No triplets created - check positive/negative pair generation")
-        return
-    
-    # Export training data by difficulty level
-    output_dir = TRAINING_DATA_DIR
-    export_training_data_by_difficulty(triplets_by_difficulty, output_dir, candidate_counts, discarded_triplets)
-    
-    logger.info(f"Training data generation complete:")
-    logger.info(f"  Easy: {len(triplets_by_difficulty['easy'])} triplets")
-    logger.info(f"  Medium: {len(triplets_by_difficulty['medium'])} triplets")
-    logger.info(f"  Hard: {len(triplets_by_difficulty['hard'])} triplets")
-    logger.info(f"  Total: {total_triplets} triplets exported to {output_dir}")
-    logger.info(f"Data ready for curriculum learning with run_multi_epoch_training.py")
+    logger.info(
+        "Loaded %d triplet records from %s for cross-encoder export",
+        total_records,
+        data_dir,
+    )
+    return split_triplets
+
+
+def export_cross_encoder_pairs(
+    split_triplets: Dict[str, Dict[str, List[Dict]]],
+    pair_output_dir: Path,
+) -> None:
+    """Create cross-encoder (query, candidate, label) pairs from the triplet splits.
+
+    Each triplet produces two supervised pairs: (anchor, positive, label=1) and
+    (anchor, negative, label=0). We persist the results as newline-delimited JSON so they can be
+    streamed efficiently by the cross-encoder trainer without loading everything into memory.
+    """
+
+    pair_output_dir.mkdir(parents=True, exist_ok=True)
+    pair_counts: Dict[str, Dict[str, int]] = {}
+
+    for difficulty, splits in split_triplets.items():
+        diff_dir = pair_output_dir / difficulty
+        diff_dir.mkdir(parents=True, exist_ok=True)
+        pair_counts[difficulty] = {}
+
+        for split_name, triplets in splits.items():
+            if not triplets:
+                logger.warning("No %s triplets found for %s split; skipping cross-encoder export", difficulty, split_name)
+                continue
+
+            out_path = diff_dir / f"{split_name}.jsonl"
+            pairs_written = 0
+            with open(out_path, "w", encoding="utf-8") as handle:
+                for idx, triplet in enumerate(triplets):
+                    base_record = {
+                        "query": triplet["anchor"],
+                        "difficulty": difficulty,
+                        "pair_type": triplet.get("pair_type", "unknown"),
+                        "triplet_index": idx,
+                    }
+                    # Positive candidate
+                    pos_record = dict(base_record)
+                    pos_record.update({
+                        "candidate": triplet["positive"],
+                        "label": 1,
+                        "candidate_role": "positive",
+                    })
+                    handle.write(json.dumps(pos_record, ensure_ascii=False) + "\n")
+
+                    neg_record = dict(base_record)
+                    neg_record.update({
+                        "candidate": triplet["negative"],
+                        "label": 0,
+                        "candidate_role": "negative",
+                    })
+                    handle.write(json.dumps(neg_record, ensure_ascii=False) + "\n")
+                    pairs_written += 2
+
+            pair_counts[difficulty][split_name] = pairs_written
+            logger.info(
+                "Exported %d cross-encoder pairs for %s/%s to %s",
+                pairs_written,
+                difficulty,
+                split_name,
+                out_path,
+            )
+
+    metadata = {
+        "pair_counts": pair_counts,
+        "total_pairs": sum(sum(split.values()) for split in pair_counts.values()),
+        "schema": {
+            "query": "User question / anchor text",
+            "candidate": "Candidate passage to score",
+            "label": "1 if relevant, 0 otherwise",
+            "difficulty": "Difficulty bucket inherited from triplet",
+        },
+    }
+    with open(pair_output_dir / "metadata.json", "w", encoding="utf-8") as meta_file:
+        json.dump(metadata, meta_file, indent=2, ensure_ascii=False)
+
+
+def parse_args() -> argparse.Namespace:
+    """Parse CLI arguments for triplet regeneration and overrides."""
+    parser = argparse.ArgumentParser(
+        description=(
+            "Create reranker triplets from chunked data or reuse the merged "
+            "embedding outputs to refresh cross-encoder pairs."
+        )
+    )
+    parser.add_argument(
+        "--regenerate-triplets",
+        action="store_true",
+        help=(
+            "Rebuild triplets from chunk JSON instead of reusing the merged "
+            "embedding data under reranker_training_data."
+        ),
+    )
+    parser.add_argument(
+        "--chunks-file",
+        type=Path,
+        default=DEFAULT_CHUNK_FILE,
+        help="Path to the chunk JSON to use when regenerating triplets.",
+    )
+    return parser.parse_args()
+
+
+def main(args: Optional[argparse.Namespace] = None) -> None:
+    """Generate or reuse triplets before exporting cross-encoder supervision pairs."""
+    if args is None:
+        args = parse_args()
+
+    if args.regenerate_triplets:
+        chunks, _ = load_chunks(args.chunks_file)
+        filtered_chunks = filter_chunks_for_training(chunks)
+        if len(filtered_chunks) < 100:
+            logger.warning(
+                "Only %d filtered chunks available; curriculum coverage may suffer.",
+                len(filtered_chunks),
+            )
+
+        domain_groups = group_chunks_by_domain(filtered_chunks)
+        positive_pairs = generate_positive_pairs(filtered_chunks)
+        if not positive_pairs:
+            logger.error("No positive pairs generated - cannot create training data")
+            return
+
+        logger.info("Generated %d positive pairs", len(positive_pairs))
+        triplets_by_difficulty, candidate_counts, discarded_triplets = create_training_triplets_by_difficulty(
+            positive_pairs,
+            filtered_chunks,
+            domain_groups,
+        )
+        total_triplets = sum(len(t) for t in triplets_by_difficulty.values())
+        if total_triplets == 0:
+            logger.error("No triplets created - check positive/negative pair generation")
+            return
+
+        split_triplets = export_training_data_by_difficulty(
+            triplets_by_difficulty,
+            TRAINING_DATA_DIR,
+            candidate_counts,
+            discarded_triplets,
+        )
+    else:
+        logger.info(
+            "Reusing merged embedding triplets from %s (sources: %s)",
+            TRAINING_DATA_DIR,
+            ", ".join(EMBED_SOURCE_SUBDIRS),
+        )
+        split_triplets = load_existing_triplet_splits(TRAINING_DATA_DIR)
+
+    export_cross_encoder_pairs(split_triplets, CROSS_ENCODER_DATA_DIR)
+
+    triplet_counts = {
+        difficulty: sum(len(records) for records in splits.values())
+        for difficulty, splits in split_triplets.items()
+    }
+    total_triplets = sum(triplet_counts.values())
+
+    logger.info("Training triplet summary:")
+    for difficulty in sorted(triplet_counts.keys()):
+        logger.info("  %s: %d triplets", difficulty.title(), triplet_counts[difficulty])
+    logger.info("  Total: %d triplets available at %s", total_triplets, TRAINING_DATA_DIR)
+    logger.info("Cross-encoder pairs ready at %s", CROSS_ENCODER_DATA_DIR)
+    logger.info("Data ready for curriculum learning + reranker fine-tuning")
 
 
 if __name__ == "__main__":

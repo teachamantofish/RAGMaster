@@ -430,74 +430,62 @@ Your workflow:
 ✅ Trained embedding model (done)
 🔜 Train reranker on same triplets
 🔜 Deploy: Embeddings retrieve top-K → Reranker picks best
-Next step:
-Would you like me to help you set up a reranker training script? It would be similar to your embedding trainer but using cross-encoder architecture.
 
 
-===============
+========== something to fix: 
 
-================================================================================
-📈 RESULTS
-================================================================================
-Accuracy:               82.13% (positive closer than negative)
-Mean Positive Similarity: 0.8618 (higher is better)
-Mean Negative Similarity: 0.3932 (lower is better)
-Margin (pos - neg):      0.4686 (higher is better)
+What’s correct
+
+The error is real: your installed sentence-transformers version doesn’t include CEBinaryClassificationEvaluator, so the import fails.
+
+What’s risky / likely wrong
+
+A “simple evaluator that runs model.predict()” is probably not equivalent to what the official evaluator does.
+
+In SentenceTransformers, cross-encoders usually expose CrossEncoder.predict(pairs) returning scores, not class labels. If your agent treats scores as labels without thresholding, accuracy will be meaningless.
+
+Even if it thresholds, the threshold choice matters (default 0.5 only makes sense if your model outputs calibrated probabilities, which it often doesn’t early in training).
+
+Logging only accuracy is a weak metric for rerankers. You usually want ROC-AUC, average precision, or ranking metrics (MRR/NDCG) depending on dataset.
+
+The right fix
+
+Best fix is to install a version of sentence-transformers that contains that evaluator, or use the supported evaluators for your version.
+
+Example:
+
+pip show sentence-transformers
+pip install -U sentence-transformers
 
 
+Bottom line
+
+Replacing the evaluator is fine as a temporary unblock, but the agent’s claim that it’s “still reports validation accuracy” is only meaningful if implemented carefully. Otherwise you may be training blind with fake metrics.
+
+==================
+
+### Reranker evaluation currently proves nothing (2026-02-07)
+
+- What’s happening: the “baseline vs reranker” table is computed on handcrafted triplets where the negatives are obviously irrelevant, so the base retriever already returns Recall@5 ≈0.99 / MRR ≈0.98 / NDCG ≈0.98. Any ±0.02 movement is just noise because the task is already solved before reranking even runs.
+- Why it matters: saturated metrics hide real regressions and can’t show reranker wins, so we risk shipping a cross-encoder that never fixes real retrieval mistakes.
+- Required fix: evaluate with *retrieval-sourced* hard negatives. For each query (a) run the actual hybrid retriever (BM25 + vector) to pull top 50 candidates, (b) verify at least one ground-truth chunk is inside that list, (c) log the baseline ranks/metrics, then (d) feed the exact same candidate list through the cross-encoder and recompute Recall@k / MRR / NDCG.
+- Expected signal: before reranking we should see Recall@5 somewhere in 0.60–0.85 and MRR 0.40–0.75 on this harder slate. A useful reranker should move those numbers up materially (e.g., +10 points MRR, +5–15 points Recall@5). If we still measure ~0.99 everywhere, the candidate generation is still too easy.
+- Action items: extend `build_retrieval_candidates.py` (or a new `evaluate_reranker.py`) to dump per-query candidate lists, enforce “include ground truth” checks, and compute before/after metrics. Block merges until the reranker evaluation harness uses this harder loop and reports both pre/post metrics side by side.
+
+==================
+
+FIX this: `SentenceTransformer._target_device` has been deprecated, please use `SentenceTransformer.device` instead.
+
+===================
+
+### Reranker query validation (2026-02-07)
+
+- The new harness in [Train_Reranker_Model/build_retrieval_candidates.py](Train_Reranker_Model/build_retrieval_candidates.py) enforces two contracts per query: (1) the definition must resolve at least `min_positives` via explicit IDs or production-like filters and (2) the hybrid retriever must surface at least `min_positive_hits` of those ground-truth chunks inside the configured top-k. Missing either condition now fails the run with a concise issue list instead of silently skipping queries.
+- Query schemas were extended in [Train_Reranker_Model/retriever_eval_queries.json](Train_Reranker_Model/retriever_eval_queries.json) to support richer filter specs (`fields`, `contains_any`, `max_matches`) plus `min_positive_hits`. This keeps the ground truth aligned with production metadata without hard-coding chunk IDs unless we explicitly choose to.
+- Pipeline wiring in [Train_Reranker_Model/0pipeline_manager.py](Train_Reranker_Model/0pipeline_manager.py) gained a `--stage validate` shortcut along with `--data-validate-only` and escape hatches for edge-case debugging. By default the `data` stage still fails fast when validation breaks so CI catches regressions immediately.
+- Unit coverage lives in [Train_Reranker_Model/tests/test_query_validation.py](Train_Reranker_Model/tests/test_query_validation.py). These tests lock down the positive-filter resolver and the top-k validation helper so we can refactor the harness without reintroducing the “skipped query” bug.
+- Configure defaults for the validation thresholds in [Train_Reranker_Model/scripts/config_training_rerank.py](Train_Reranker_Model/scripts/config_training_rerank.py) to keep env overrides simple. Operators can tune `min_ground_truth` / `min_positive_hits` per environment, and individual queries can override them inline for especially strict probes.
 
 
-✅ Training epoch 2 - Training with medium negatives (harder examples) completed successfully
-INFO: Using pre-tokenized DataLoader fast path
-INFO: Batch 0, Loss: 0.4904, GPU: Active
-INFO: Batch 10, Loss: 0.7701, GPU: Active
-INFO: Batch 20, Loss: 0.7412, GPU: Active
-INFO: Batch 30, Loss: 0.7276, GPU: Active
-INFO: Batch 40, Loss: 0.7150, GPU: Active
-INFO: Batch 50, Loss: 0.7032, GPU: Active
-INFO: Batch 60, Loss: 0.6913, GPU: Active
-INFO: Batch 70, Loss: 0.6822, GPU: Active
-INFO: Batch 80, Loss: 0.6646, GPU: Active
-INFO: Batch 90, Loss: 0.6436, GPU: Active
-INFO: Batch 100, Loss: 0.6175, GPU: Active
-INFO: Batch 110, Loss: 0.5963, GPU: Active
-INFO: Batch 120, Loss: 0.5697, GPU: Active
-INFO: Batch 130, Loss: 0.5490, GPU: Active
-INFO: Batch 140, Loss: 0.5283, GPU: Active
-INFO: Batch 150, Loss: 0.5072, GPU: Active
-INFO: Batch 160, Loss: 0.4895, GPU: Active
-INFO: Batch 170, Loss: 0.4712, GPU: Active
-INFO: Batch 180, Loss: 0.4549, GPU: Active
-INFO: Batch 190, Loss: 0.4422, GPU: Active
-INFO: Batch 200, Loss: 0.4323, GPU: Active
-INFO: Batch 210, Loss: 0.4229, GPU: Active
-INFO: Batch 220, Loss: 0.4143, GPU: Active
-INFO: Batch 230, Loss: 0.4073, GPU: Active
-
-✅ Training epoch 3 - Training with hard negatives (challenging examples) completed successfully
-INFO: Using pre-tokenized DataLoader fast path
-INFO: Batch 0, Loss: 0.8251, GPU: Active
-INFO: Batch 10, Loss: 0.8044, GPU: Active
-INFO: Batch 20, Loss: 0.8437, GPU: Active
-INFO: Batch 30, Loss: 0.8698, GPU: Active
-INFO: Batch 40, Loss: 0.8832, GPU: Active
-INFO: Batch 50, Loss: 0.8839, GPU: Active
-INFO: Batch 60, Loss: 0.8710, GPU: Active
-INFO: Batch 70, Loss: 0.8701, GPU: Active
-INFO: Batch 80, Loss: 0.8623, GPU: Active
-INFO: Batch 90, Loss: 0.8498, GPU: Active
-INFO: Batch 100, Loss: 0.8348, GPU: Active
-INFO: Batch 110, Loss: 0.8182, GPU: Active
-INFO: Batch 120, Loss: 0.7958, GPU: Active
-INFO: Batch 130, Loss: 0.7707, GPU: Active
-INFO: Batch 140, Loss: 0.7615, GPU: Active
-INFO: Batch 150, Loss: 0.7455, GPU: Active
-INFO: Batch 160, Loss: 0.7349, GPU: Active
-INFO: Batch 170, Loss: 0.7158, GPU: Active
-INFO: Batch 180, Loss: 0.6961, GPU: Active
-INFO: Batch 190, Loss: 0.6934, GPU: Active
-INFO: Batch 200, Loss: 0.6798, GPU: Active
-INFO: Batch 210, Loss: 0.6773, GPU: Active
-INFO: Batch 220, Loss: 0.6693, GPU: Active
-INFO: Batch 230, Loss: 0.6574, GPU: Active
-
+eval query filters
+tune the metadata addition logic. 

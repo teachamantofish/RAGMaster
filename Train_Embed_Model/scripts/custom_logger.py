@@ -139,7 +139,8 @@ def setup_global_logger(
 
     # Log initialization using the CSV formatter (will produce a row) if desired
     if log_initialization:
-        logger.info(f"Logger initialized: {log_path}")
+        display_location = Path(cwd).name or str(Path(cwd))
+        logger.info(f"Logger initialized: {display_location}")
     return logger
 
 

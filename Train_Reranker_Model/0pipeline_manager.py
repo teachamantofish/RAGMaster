@@ -1,649 +1,483 @@
-"""
-Multi-Epoch Training Pipeline for Embedding Models
-===================================================
+"""Minimal orchestration script for the reranker workflow.
 
-WHAT THIS SCRIPT DOES:
----------------------
-This script orchestrates a complete training workflow for fine-tuning an embedding model.
-It handles everything from combining datasets to running multiple training epochs.
-
-The pipeline follows these steps:
-1. COMBINE: Merge training data from multiple sources (e.g., JSX and MIF documentation)
-2. SHUFFLE: Randomly mix the combined data for better training
-3. TOKENIZE: Convert text into tokens the model can understand
-4. TRAIN: Fine-tune the model on your combined dataset
-5. SAVE: Store the trained model for later use
-
-WHY USE THIS SCRIPT:
--------------------
-- Automatically combines data from multiple directories (configured in DOCLIST)
-- Ensures random shuffling for better model generalization
-- Handles multi-epoch training (training in stages with progressively harder examples)
-- Manages model paths between epochs automatically
-- Backs up configuration files before making changes
-- Provides detailed logging so you know what's happening
-
-CONFIGURATION:
--------------
-Before running, edit scripts/config_embed_training.py to set:
-- DOCLIST: Array of directory names containing your training data
-  Example: ["extendscript", "mifref"] 
-  These are subdirectories under BASE_CWD that contain embedding_training_data folders
-  
-- BASE_CWD: Base path where your data directories live
-  Example: Path("C:/GIT/AI_DataSource/framemaker")
-  
-- TRAINING_CONFIG: Model settings like batch size, learning rate, LoRA parameters
-  
-- OUTPUT_MODEL_PATH: Where to save the fine-tuned model
-
-USAGE EXAMPLES:
---------------
-Basic usage (single epoch with combined datasets):  python run_multi_epoch_training.py --epochs 1
-
-Multi-epoch training (curriculum learning): python run_multi_epoch_training.py --epochs 3 --start-epoch 1
-
-Skip combining if you already combined the data: python run_multi_epoch_training.py --epochs 1 --skip-combine
-
-See what would happen without actually running: python run_multi_epoch_training.py --epochs 1 --dry-run
-
-Resume from epoch 2 (if epoch 1 already completed): python run_multi_epoch_training.py --epochs 3 --start-epoch 2
-
-COMMAND LINE OPTIONS:
---------------------
---epochs N          : How many training epochs to run (1-3, default: 3)
---start-epoch N     : Which epoch to start from (1-3, default: 1)
---skip-combine      : Don't combine datasets (use existing combined data)
---skip-tokenization : Don't tokenize data (use existing tokenized data)
---dry-run          : Show what would be done without executing
-
-HOW MULTI-EPOCH TRAINING WORKS:
--------------------------------
-Epoch 1: Train on your combined dataset with easy negatives
-         Model learns basic patterns
-         Saves to: OUTPUT_MODEL_PATH
-
-Epoch 2: Load the epoch 1 model, train on medium difficulty negatives
-         Model refines its understanding
-         Saves to: OUTPUT_MODEL_PATH-epoch2
-
-Epoch 3: Load the epoch 2 model, train on hard negatives
-         Model masters difficult distinctions
-         Saves to: OUTPUT_MODEL_PATH-epoch3
-
-This progressive difficulty is called "curriculum learning" and often produces
-better results than training on all data at once.
-
-DATA STRUCTURE EXPECTED:
------------------------
-Your training data should be organized like this:
-
-C:/GIT/AI_DataSource/framemaker/
-├── extendscript/
-│   └── embedding_training_data/
-│       ├── triplets_train.json  (required)
-│       └── triplets_test.json   (optional)
-├── mifref/
-│   └── embedding_training_data/
-│       ├── triplets_train.json  (required)
-│       └── triplets_test.json   (optional)
-
-Each triplets JSON file contains an array of training examples:
-[
-    {
-        "anchor": "Query text or question",
-        "positive": "Relevant answer or passage",
-        "negative": "Irrelevant passage"
-    },
-    ...
-]
-
-WHAT HAPPENS WHEN YOU RUN THIS:
--------------------------------
-1. The script reads DOCLIST from config (e.g., ["extendscript", "mifref"])
-2. For each directory, it loads triplets_train.json and triplets_test.json
-3. All triplets are combined into one large dataset
-4. The combined dataset is shuffled with a random seed
-5. Combined data is saved to TRAINING_DATA_DIR (first item in DOCLIST by default)
-6. The tokenizer converts text to model-readable format
-7. The training script fine-tunes the model on your data
-8. The trained model is saved to OUTPUT_MODEL_PATH
-
-TROUBLESHOOTING:
----------------
-Error: "No training data found in any source"
-→ Check that your directories match DOCLIST entries
-→ Verify triplets_train.json files exist in each embedding_training_data folder
-
-Error: "Training failed"
-→ Check GPU memory (run nvidia-smi)
-→ Reduce batch_size in config if out of memory
-→ Enable gradient_checkpointing if available
-
-Config changes not taking effect:
-→ Script backs up and modifies config during multi-epoch runs
-→ Check for timestamped backup files: config_embed_training_backup_*.py
-→ The config reflects the last epoch run (this is intentional)
-
-DEPENDENCIES:
-------------
-This script requires the following to be set up:
-- Python virtual environment (.venv)
-- PyTorch with CUDA support
-- sentence-transformers library
-- Your training data prepared as triplets JSON files
-- 2tokenize_triplets.py (handles tokenization)
-- 4embedmodel_finetuner.py (handles training)
-
-For more details on training configuration, see:
-scripts/config_embed_training.py (training parameters, paths, LoRA settings)
+Stages:
+- data: run build_retrieval_candidates.py (or legacy triplet builder) to refresh
+    cross-encoder pairs directly from the production retriever
+- train: run 2cross_encoder_trainer.py with optional overrides
+- evaluate: run 3evaluate_model.py to compare reranker vs retriever baseline
+- full: execute data → train → evaluate
 """
 
+from __future__ import annotations
+
+import argparse
+import csv
+import json
 import subprocess
 import sys
-import os
-from pathlib import Path
-import argparse
-import json
-import shutil
-import random
+import time
+from collections import defaultdict
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
-# Import config (read-only, never modified)
-from scripts.config_embed_training import (
-    TRAINING_DATA_DIR, 
-    OUTPUT_MODEL_PATH, 
-    BASE_MODEL,
-    TRAINING_CONFIG,
-    TOKENIZED_DATA_DIR,
-    DOCLIST,
+from scripts.config_training_rerank import (
     BASE_CWD,
-    CURRENT_EPOCH,
-    RUN_EPOCHS,
-    EMBED_TRAINING_SUBDIR,
+    CODE_CHANGE,
+    CROSS_ENCODER_DATA_DIR,
+    LOG_FILES,
+    MASTER_RERANK_LOG,
+    RERANK_EVAL_CONFIG,
+    RERANKER_TRAINING_CONFIG,
+    RETRIEVER_PIPELINE_CONFIG,
 )
-
 from scripts.custom_logger import setup_global_logger
 
-# Set up custom logger with CSV output to LOG_FILES directory
-script_base = os.path.splitext(os.path.basename(__file__))[0]
-LOG_HEADER = ["Date", "Level", "Message", "Test Step", "Result"]
-logger = setup_global_logger(script_name=script_base, cwd=LOG_FILES, log_level='INFO', headers=LOG_HEADER)
 
-# Configuration for multi-epoch training
-# Defines difficulty levels and model checkpointing strategy
-TRAINING_STAGES = {
-    1: {
-        "name": "easy_negatives",
-        "difficulty": "easy",
-        "description": "Training with easy negatives (baseline)",
-        "model_input": BASE_MODEL,  # Start from base model
-        "model_output": OUTPUT_MODEL_PATH,
-    },
-    2: {
-        "name": "medium_negatives", 
-        "difficulty": "medium",
-        "description": "Training with medium negatives (harder examples)",
-        "model_input": OUTPUT_MODEL_PATH,  # Load from epoch 1
-        "model_output": OUTPUT_MODEL_PATH.parent / f"{OUTPUT_MODEL_PATH.name}-epoch2",
-    },
-    3: {
-        "name": "hard_negatives",
-        "difficulty": "hard", 
-        "description": "Training with hard negatives (challenging examples)",
-        "model_input": OUTPUT_MODEL_PATH.parent / f"{OUTPUT_MODEL_PATH.name}-epoch2",  # Load from epoch 2
-        "model_output": OUTPUT_MODEL_PATH.parent / f"{OUTPUT_MODEL_PATH.name}-epoch3",
-    }
-}
+PROJECT_ROOT = Path(__file__).resolve().parent
 
 
-def activate_venv():
-    """
-    Ensure virtual environment is activated for subprocess calls.
-    
-    WHAT IT DOES:
-    - Checks if a .venv directory exists with a Python executable
-    - Returns the path to the virtual environment's Python
-    - Falls back to system Python if no venv found
-    
-    WHY IT'S NEEDED:
-    - Subprocesses don't automatically use the virtual environment
-    - We need to explicitly point to the venv's Python executable
-    - Ensures all dependencies are available when calling other scripts
-    
-    RETURNS:
-    - String path to Python executable (either venv or system)
-    """
-    venv_python = Path(".venv/Scripts/python.exe")
+logger = setup_global_logger(
+    script_name="0pipeline_manager",
+    cwd=CROSS_ENCODER_DATA_DIR,
+    log_level="INFO",
+    headers=["Date", "Level", "Message", "Stage", "Command"],
+)
+
+EVAL_SUMMARY_FILENAME = "reranker_eval_summary.json"
+EVAL_OUTPUT_DIR_DEFAULT = CROSS_ENCODER_DATA_DIR / "eval_outputs"
+CSV_FIELDS = [
+    "timestamp",
+    "BASE_CWD",
+    "CODE_CHANGE",
+    "max_length",
+    "batch_size",
+    "lr",
+    "epochs",
+    "candidate_k",
+    "num_chunks",
+    "num_eval_queries",
+    "baseline_mrr",
+    "rerank_mrr",
+    "baseline_recall5",
+    "rerank_recall5",
+    "baseline_ndcg10",
+    "rerank_ndcg10",
+]
+CSV_FIELDS.extend(["retrieval_seconds", "rerank_seconds", "total_seconds"])
+
+
+def _python_executable() -> str:
+    venv_python = Path(".venv") / "Scripts" / "python.exe"
     if venv_python.exists():
         return str(venv_python)
     return sys.executable
 
 
-def run_command(cmd, description):
-    """
-    Run a shell command and handle errors gracefully.
-    
-    WHAT IT DOES:
-    - Executes a command in a subprocess
-    - Prints what it's doing for visibility
-    - Captures and reports any errors
-    - Returns success/failure status
-    
-    PARAMETERS:
-    - cmd: List of command parts (e.g., ["python", "script.py"])
-    - description: Human-readable description for logging
-    
-    RETURNS:
-    - True if command succeeded
-    - False if command failed
-    
-    EXAMPLE:
-    run_command(["python", "train.py"], "Training the model")
-    """
-    print(f"\n{'='*80}")
-    print(f"🚀 {description}")
-    print(f"{'='*80}")
-    print(f"Command: {' '.join(cmd)}\n")
-    
+def _run(cmd: List[str], description: str, dry_run: bool) -> Tuple[bool, float]:
+    logger.info("Stage %s", description, extra={"Stage": description, "Command": " ".join(cmd)})
+    start = time.perf_counter()
+    if dry_run:
+        print(f"[DRY RUN] {description}: {' '.join(cmd)}")
+        return True, 0.0
+    print(f"\n{'=' * 80}\n🚀 {description}\n{'=' * 80}")
     try:
-        result = subprocess.run(cmd, check=True, capture_output=False, text=True)
+        subprocess.run(cmd, check=True, cwd=PROJECT_ROOT)
         print(f"✅ {description} completed successfully")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"❌ {description} failed with error code {e.returncode}")
-        print(f"Error: {e}")
-        return False
+        return True, time.perf_counter() - start
+    except subprocess.CalledProcessError as exc:
+        print(f"❌ {description} failed (exit code {exc.returncode})")
+        return False, time.perf_counter() - start
 
 
-def load_triplets(json_path):
-    """
-    Load training triplets from a JSON file.
-    
-    WHAT IT DOES:
-    - Opens a JSON file containing training examples
-    - Parses the JSON data into a Python list
-    - Handles missing files gracefully (returns empty list)
-    
-    PARAMETERS:
-    - json_path: Path to the JSON file to load
-    
-    RETURNS:
-    - List of triplet dictionaries, each containing:
-      {
-          "anchor": "The query or question text",
-          "positive": "A relevant answer or passage",
-          "negative": "An irrelevant passage"
-      }
-    - Empty list [] if file not found
-    
-    EXAMPLE USAGE:
-    triplets = load_triplets(Path("data/triplets_train.json"))
-    print(f"Loaded {len(triplets)} training examples")
-    """
-    if not json_path.exists():
-        print(f"⚠️  Warning: File not found: {json_path}")
-        return []
-    
-    with open(json_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    
-    return data
+def _run_data_stage(
+    python_exe: str,
+    args,
+    dry_run: bool,
+    force_validate_only: bool = False,
+    *,
+    stats_output: Path | None = None,
+) -> Tuple[bool, float]:
+    if args.use_legacy_triplets:
+        cmd = [python_exe, "1create_training_data.py"]
+        if args.data_regenerate_triplets:
+            cmd.append("--regenerate-triplets")
+            if args.data_chunks_file:
+                cmd.extend(["--chunks-file", str(args.data_chunks_file)])
+        description = "Generate reranker data (legacy triplets)"
+    else:
+        cmd = [python_exe, "build_retrieval_candidates.py"]
+        if args.data_queries_file:
+            cmd.extend(["--queries-file", str(args.data_queries_file)])
+        if args.data_top_k:
+            cmd.extend(["--top-k", str(args.data_top_k)])
+        if args.data_max_queries:
+            cmd.extend(["--max-queries", str(args.data_max_queries)])
+        if args.data_lexical_weight is not None:
+            cmd.extend(["--lexical-weight", str(args.data_lexical_weight)])
+        if args.data_dense_weight is not None:
+            cmd.extend(["--dense-weight", str(args.data_dense_weight)])
+        if args.data_batch_size:
+            cmd.extend(["--batch-size", str(args.data_batch_size)])
+        if args.data_validate_only or force_validate_only:
+            cmd.append("--validate-only")
+        if args.data_allow_missed_positives:
+            cmd.append("--no-fail-on-missed-positives")
+        if args.data_allow_missing_ground_truth:
+            cmd.append("--no-fail-on-missing-ground-truth")
+        if stats_output:
+            cmd.extend(["--stats-output", str(stats_output)])
+        description = "Build retrieval candidates"
+    return _run(cmd, description, dry_run)
 
 
-def save_triplets(triplets, json_path):
-    """
-    Save training triplets to a JSON file.
-    
-    WHAT IT DOES:
-    - Creates the output directory if it doesn't exist
-    - Writes triplets to a JSON file with nice formatting
-    - Uses UTF-8 encoding to preserve special characters
-    
-    PARAMETERS:
-    - triplets: List of triplet dictionaries to save
-    - json_path: Where to save the JSON file
-    
-    JSON FORMAT:
-    The output is formatted with:
-    - indent=2: Nice readable formatting with 2-space indents
-    - ensure_ascii=False: Preserves Unicode characters (emojis, accents, etc.)
-    
-    EXAMPLE USAGE:
-    save_triplets(combined_data, Path("output/triplets_train.json"))
-    """
-    json_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(json_path, 'w', encoding='utf-8') as f:
-        json.dump(triplets, f, indent=2, ensure_ascii=False)
+def _run_train_stage(python_exe: str, args, dry_run: bool) -> Tuple[bool, float]:
+    cmd = [python_exe, "2cross_encoder_trainer.py", "--action", "train", "--device", args.device]
+    if args.difficulties:
+        cmd.extend(["--difficulties", *args.difficulties])
+    if args.max_train:
+        cmd.extend(["--max-train", str(args.max_train)])
+    if args.max_eval:
+        cmd.extend(["--max-eval", str(args.max_eval)])
+    if args.trainer_batch_size:
+        cmd.extend(["--batch-size", str(args.trainer_batch_size)])
+    if args.trainer_learning_rate:
+        cmd.extend(["--learning-rate", str(args.trainer_learning_rate)])
+    if args.trainer_max_length:
+        cmd.extend(["--max-length", str(args.trainer_max_length)])
+    if args.use_amp is not None:
+        cmd.append("--use-amp" if args.use_amp else "--no-use-amp")
+    return _run(cmd, "Train reranker cross-encoder", dry_run)
 
 
-def combine_datasets():
-    """
-    Combine training data from all sources listed in DOCLIST for each difficulty level.
-    
-    WHAT IT DOES:
-    1. Loops through each difficulty level (easy, medium, hard)
-    2. For each difficulty, loops through each directory in DOCLIST (e.g., "extendscript", "mifref")
-    3. Loads triplets_train.json and triplets_test.json from each source's difficulty subdirectory
-    4. Combines all training triplets for that difficulty into one large list
-    5. Combines all test triplets for that difficulty into one large list
-    6. Shuffles both lists with a time-based random seed
-    7. Saves the combined, shuffled data to TRAINING_DATA_DIR/difficulty/
-    
-    WHY THIS IS IMPORTANT:
-    - Training on diverse data sources improves model generalization
-    - Shuffling prevents the model from learning source-specific biases
-    - Different shuffle each run (time-based seed) helps avoid overfitting patterns
-    - Combined data means one training run covers all your domains at each difficulty level
-    
-    DOCLIST EXAMPLE:
-    If DOCLIST = ["extendscript", "mifref"], this function loads from:
-    - C:/GIT/AI_DataSource/framemaker/extendscript/embedding_training_data/easy/triplets_train.json
-    - C:/GIT/AI_DataSource/framemaker/mifref/embedding_training_data/easy/triplets_train.json
-    
-    And combines them into:
-    - C:/GIT/AI_DataSource/framemaker/extendscript/embedding_training_data/easy/triplets_train.json
-      (overwrites the first source's easy directory with combined easy data)
-    
-    RETURNS:
-    - True if successful (found training data and saved combined versions for all difficulties)
-    - False if no training data found in any source for any difficulty
-    
-    RANDOM SEED:
-    Uses current timestamp as seed, so each run shuffles differently.
-    This is good for training - prevents memorizing a specific order.
-    """
-    print("\n" + "="*80)
-    print("📦 COMBINING TRAINING DATASETS")
-    print("="*80)
-    
-    difficulties = ['easy', 'medium', 'hard']
-    overall_success = False
-    
-    # Shuffle seed for consistent shuffling across all difficulties
-    seed = int(datetime.now().timestamp())
-    print(f"\n🎲 Using shuffle seed: {seed}")
-    
-    # Process each difficulty level
-    for difficulty in difficulties:
-        print(f"\n{'='*80}")
-        print(f"📊 Processing difficulty: {difficulty.upper()}")
-        print(f"{'='*80}")
-        
-        all_train_triplets = []
-        all_test_triplets = []
-        
-        # Loop through each data source directory
-        for doc_source in DOCLIST:
-            data_dir = BASE_CWD / doc_source / EMBED_TRAINING_SUBDIR / difficulty
-            
-            print(f"\n📂 Loading from: {doc_source}/{difficulty}")
-            print(f"   Path: {data_dir}")
-            
-            # Load training triplets
-            train_path = data_dir / "triplets_train.json"
-            train_triplets = load_triplets(train_path)
-            if train_triplets:
-                print(f"   ✅ Loaded {len(train_triplets)} training triplets")
-                all_train_triplets.extend(train_triplets)
-            else:
-                print(f"   ⚠️  No training data found")
-            
-            # Load test triplets (optional)
-            test_path = data_dir / "triplets_test.json"
-            test_triplets = load_triplets(test_path)
-            if test_triplets:
-                print(f"   ✅ Loaded {len(test_triplets)} test triplets")
-                all_test_triplets.extend(test_triplets)
-            else:
-                print(f"   ⚠️  No test data found")
-        
-        # Check if we got any training data for this difficulty
-        if not all_train_triplets:
-            print(f"\n⚠️  Warning: No training data found for {difficulty} difficulty")
-            continue
-        
-        overall_success = True
-        
-        print(f"\n📊 Total combined for {difficulty}:")
-        print(f"   Training: {len(all_train_triplets)} triplets")
-        print(f"   Test: {len(all_test_triplets)} triplets")
-        
-        # Shuffle with consistent seed across difficulties
-        print(f"   🔀 Shuffling...")
-        random.seed(seed)
-        random.shuffle(all_train_triplets)
-        if all_test_triplets:
-            random.shuffle(all_test_triplets)
-        
-        # Save to combined directory for this difficulty
-        combined_dir = TRAINING_DATA_DIR / difficulty
-        print(f"\n💾 Saving combined {difficulty} data to: {combined_dir}")
-        
-        save_triplets(all_train_triplets, combined_dir / "triplets_train.json")
-        print(f"   ✅ Saved triplets_train.json ({len(all_train_triplets)} triplets)")
-        
-        if all_test_triplets:
-            save_triplets(all_test_triplets, combined_dir / "triplets_test.json")
-            print(f"   ✅ Saved triplets_test.json ({len(all_test_triplets)} triplets)")
-    
-    # Check if we found any data at all
-    if not overall_success:
-        print("\n❌ Error: No training data found in any source for any difficulty!")
-        return False
-    
-    print(f"\n{'='*80}")
-    print("✅ Dataset combining completed successfully!")
-    print(f"{'='*80}")
-    return True
+def _run_eval_stage(python_exe: str, args, dry_run: bool, *, output_dir: Path) -> Tuple[bool, float]:
+    cmd = [python_exe, "3evaluate_model.py", "--split", args.split]
+    if args.difficulties:
+        cmd.extend(["--difficulties", *args.difficulties])
+    if args.model_path:
+        cmd.extend(["--model-path", args.model_path])
+    if args.baseline_model:
+        cmd.extend(["--baseline-model", args.baseline_model])
+    if args.baseline_batch_size:
+        cmd.extend(["--baseline-batch-size", str(args.baseline_batch_size)])
+    if args.cross_batch_size:
+        cmd.extend(["--cross-batch-size", str(args.cross_batch_size)])
+    cmd.extend(["--output-dir", str(output_dir)])
+    return _run(cmd, "Evaluate reranker vs retriever baseline", dry_run)
 
 
-def check_training_data_exists(epoch_num, stage_config):
-    """
-    Verify that training data files exist for this epoch.
-    
-    WHAT IT DOES:
-    - Checks if triplets_train.json exists in the expected directory
-    - Checks if triplets_test.json exists (optional but recommended)
-    - Prints helpful error messages if files are missing
-    
-    PARAMETERS:
-    - epoch_num: Current epoch number (for error messages)
-    - stage_config: Dictionary with data directory info for this epoch
-    
-    RETURNS:
-    - True if training data found
-    - False if training data missing
-    
-    WHY THIS CHECK:
-    - Prevents wasting time starting training only to fail later
-    - Gives clear guidance on what's missing and where to put it
-    - Helps catch configuration errors early
-    """
-    data_dir = TRAINING_DATA_DIR / stage_config["difficulty"]
-    
-    # Check for triplets JSON files
-    train_file = data_dir / "triplets_train.json"
-    test_file = data_dir / "triplets_test.json"
-    
-    if not train_file.exists() or not test_file.exists():
-        print(f"⚠️  Warning: Training data not found for epoch {epoch_num}")
-        print(f"   Expected: {train_file}")
-        print(f"   Expected: {test_file}")
-        print(f"\n   Please run create_training_data.py to create training data with different difficulty levels:")
-        print(f"   1. Run your data generation script for '{stage_config['name']}'")
-        print(f"   2. Save triplets to: {data_dir}/")
-        return False
-    
-    print(f"✅ Training data found for epoch {epoch_num}: {data_dir}")
-    return True
+def _create_stats_path() -> Path:
+    stamp = int(time.time() * 1000)
+    return LOG_FILES / f".retrieval_stats_{stamp}.json"
 
 
-def run_tokenization(epoch_num, stage_config):
-    """
-    Run the tokenization script to convert text into tokens.
-    
-    WHAT IT DOES:
-    - Calls 2tokenize_triplets.py to tokenize your training data
-    - Converts human-readable text into numeric tokens the model understands
-    - Saves tokenized data to TOKENIZED_DATA_DIR
-    
-    WHY TOKENIZATION IS NEEDED:
-    - Models don't understand raw text, only numbers (tokens)
-    - Each word/subword gets converted to a token ID
-    - Tokenization happens once, then training uses the tokenized data
-    
-    PARAMETERS:
-    - epoch_num: Current epoch number (for logging)
-    - stage_config: Dictionary with info about this epoch
-    
-    RETURNS:
-    - True if tokenization succeeded
-    - False if tokenization failed
-    
-    EXAMPLE:
-    Text: "Hello world" 
-    → Tokens: [15496, 995]
-    → These numbers are what the model actually processes
-    """
-    python_exe = activate_venv()
-    
-    description = f"Tokenizing data for epoch {epoch_num} ({stage_config['name']})"
-    cmd = [python_exe, "2tokenize_triplets.py"]
-    
-    return run_command(cmd, description)
+def _load_json(path: Path) -> Dict:
+    with open(path, "r", encoding="utf-8") as handle:
+        return json.load(handle)
 
 
-def run_training(epoch_num, stage_config):
-    """
-    Run the training script to fine-tune the model.
-    
-    WHAT IT DOES:
-    - Calls 4embedmodel_finetuner.py to train the model
-    - Loads tokenized data and the base/previous model
-    - Runs training loop for specified number of epochs
-    - Saves the fine-tuned model
-    
-    THIS IS THE CORE TRAINING STEP:
-    - Model learns to create better embeddings for your domain
-    - Updates model weights based on your training data
-    - Uses triplet loss to learn: positive pairs should be close,
-      negative pairs should be far apart
-    
-    PARAMETERS:
-    - epoch_num: Current epoch number (for logging)
-    - stage_config: Dictionary with info about this epoch
-    
-    RETURNS:
-    - True if training succeeded
-    - False if training failed
-    
-    TRAINING PROGRESSION:
-    Epoch 1: Base model + your data → Epoch 1 model
-    Epoch 2: Epoch 1 model + harder data → Epoch 2 model (better)
-    Epoch 3: Epoch 2 model + hardest data → Epoch 3 model (best)
-    """
-    python_exe = activate_venv()
-    
-    description = f"Training epoch {epoch_num} - {stage_config['description']}"
-    cmd = [python_exe, "4embedmodel_finetuner.py"]
-    
-    return run_command(cmd, description)
+def _aggregate_metrics(summary: Dict[str, Dict]) -> Dict[str, Dict]:
+    if not summary:
+        return {}
+    agg: Dict[str, Dict] = {
+        "pairs": 0,
+        "anchors": 0,
+        "baseline": defaultdict(float),
+        "reranker": defaultdict(float),
+    }
+    for stats in summary.values():
+        agg["pairs"] += stats.get("pairs", 0)
+        agg["anchors"] += stats.get("anchors", 0)
+        for key, value in stats.get("baseline", {}).items():
+            agg["baseline"][key] += value
+        for key, value in stats.get("reranker", {}).items():
+            agg["reranker"][key] += value
+    count = len(summary)
+    if count:
+        agg["baseline"] = {k: v / count for k, v in agg["baseline"].items()}
+        agg["reranker"] = {k: v / count for k, v in agg["reranker"].items()}
+    return agg
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Multi-epoch training pipeline")
-    parser.add_argument("--epochs", type=int, default=3, help="Total number of epochs to run (1-3)")
-    parser.add_argument("--start-epoch", type=int, default=1, help="Starting epoch (1-3)")
-    parser.add_argument("--skip-tokenization", action="store_true", help="Skip tokenization step")
-    parser.add_argument("--skip-combine", action="store_true", help="Skip dataset combining step")
-    parser.add_argument("--dry-run", action="store_true", help="Show what would be done without executing")
-    
-    args = parser.parse_args()
-    
-    if args.epochs < 1 or args.epochs > 3:
-        print("❌ Error: epochs must be between 1 and 3")
-        sys.exit(1)
-    
-    if args.start_epoch < 1 or args.start_epoch > args.epochs:
-        print(f"❌ Error: start-epoch must be between 1 and {args.epochs}")
-        sys.exit(1)
-    
-    print("\n" + "="*80)
-    print("🎯 MULTI-EPOCH TRAINING PIPELINE")
-    print("="*80)
-    print(f"Data sources: {', '.join(DOCLIST)}")
-    print(f"Total epochs: {args.epochs}")
-    print(f"Starting from epoch: {args.start_epoch}")
-    print(f"Skip combining: {args.skip_combine}")
-    print(f"Skip tokenization: {args.skip_tokenization}")
-    print(f"Dry run: {args.dry_run}")
-    print("="*80 + "\n")
-    
-    # Store original config for restoration
-    config_backup = None
-    
+def _resolved_training_params(args) -> Dict[str, float]:
+    return {
+        "batch_size": args.trainer_batch_size or RERANKER_TRAINING_CONFIG.get("batch_size"),
+        "learning_rate": args.trainer_learning_rate or RERANKER_TRAINING_CONFIG.get("learning_rate"),
+        "max_length": args.trainer_max_length or RERANKER_TRAINING_CONFIG.get("max_length"),
+        "epochs": RERANKER_TRAINING_CONFIG.get("epochs"),
+    }
+
+
+def _resolve_candidate_k(args) -> int:
+    return args.data_top_k or RETRIEVER_PIPELINE_CONFIG.get("top_k", 0)
+
+
+def _format_value(value) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, float):
+        if value.is_integer():
+            return str(int(value))
+        text = f"{value:.6f}".rstrip("0").rstrip(".")
+        return text or "0"
+    return str(value)
+
+
+def _format_metric(value) -> str:
+    if value is None:
+        return ""
     try:
-        # Step 0: Combine datasets from all sources in DOCLIST
-        if not args.skip_combine and not args.dry_run:
-            if not combine_datasets():
-                print("\n❌ Failed to combine datasets")
+        return f"{float(value):.3f}"
+    except (TypeError, ValueError):
+        return ""
+
+
+def _format_seconds(value) -> str:
+    if value is None:
+        return ""
+    try:
+        seconds = float(value)
+    except (TypeError, ValueError):
+        return ""
+    rounded = round(seconds, 1)
+    if rounded.is_integer():
+        return str(int(rounded))
+    return f"{rounded:.1f}"
+
+
+def _format_learning_rate(value) -> str:
+    if value is None:
+        return ""
+    try:
+        rate = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    if rate == 0:
+        return "0.000000"
+    if abs(rate) < 1e-3:
+        formatted = f"{rate:.0e}".replace("E", "e")
+        return formatted.replace("e-0", "e-").replace("e+0", "e+")
+    return f"{rate:.6f}"
+
+
+def _append_master_log(row: Dict[str, str]) -> None:
+    target = LOG_FILES / MASTER_RERANK_LOG
+    target.parent.mkdir(parents=True, exist_ok=True)
+    exists = target.exists()
+    with open(target, "a", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=CSV_FIELDS)
+        if not exists:
+            writer.writeheader()
+        writer.writerow({field: row.get(field, "") for field in CSV_FIELDS})
+
+
+def _build_master_row(
+    args,
+    *,
+    retrieval_stats: Dict[str, Any],
+    eval_payload: Dict[str, Any],
+    durations: Dict[str, float],
+) -> Dict[str, str]:
+    summary = eval_payload.get("summary", {})
+    aggregate = eval_payload.get("aggregate") or _aggregate_metrics(summary)
+    coverage = eval_payload.get("coverage") or {}
+    overall_baseline = (aggregate or {}).get("baseline", {})
+    overall_reranker = (aggregate or {}).get("reranker", {})
+
+    training = _resolved_training_params(args)
+    candidate_k = _resolve_candidate_k(args)
+    num_eval_queries = (
+        retrieval_stats.get("queries_total")
+        if isinstance(retrieval_stats, dict)
+        else None
+    ) or coverage.get("queries_total") or (aggregate or {}).get("anchors")
+    durations = durations or {}
+    total_seconds = sum(durations.values())
+
+    row: Dict[str, str] = {
+        "timestamp": datetime.now().strftime("%m/%d/%y %H:%M"),
+        "BASE_CWD": BASE_CWD.name or BASE_CWD.as_posix(),
+        "CODE_CHANGE": CODE_CHANGE,
+        "max_length": _format_value(training.get("max_length")),
+        "batch_size": _format_value(training.get("batch_size")),
+        "lr": _format_learning_rate(training.get("learning_rate")),
+        "epochs": _format_value(training.get("epochs")),
+        "candidate_k": _format_value(candidate_k),
+        "num_chunks": _format_value(retrieval_stats.get("chunk_count")),
+        "num_eval_queries": _format_value(num_eval_queries),
+        "baseline_mrr": _format_metric(overall_baseline.get("mrr")),
+        "rerank_mrr": _format_metric(overall_reranker.get("mrr")),
+        "baseline_recall5": _format_metric(overall_baseline.get("recall@5")),
+        "rerank_recall5": _format_metric(overall_reranker.get("recall@5")),
+        "baseline_ndcg10": _format_metric(overall_baseline.get("ndcg@10")),
+        "rerank_ndcg10": _format_metric(overall_reranker.get("ndcg@10")),
+        "retrieval_seconds": _format_seconds(durations.get("data")),
+        "rerank_seconds": _format_seconds(durations.get("train")),
+        "total_seconds": _format_seconds(total_seconds),
+    }
+
+    return row
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Reranker pipeline manager")
+    parser.add_argument(
+        "--stage",
+        choices=["validate", "data", "train", "evaluate", "full"],
+        default="full",
+        help="Which stage to run",
+    )
+    parser.add_argument(
+        "--difficulties",
+        nargs="*",
+        default=RERANK_EVAL_CONFIG["difficulties"],
+        help="Difficulty buckets for training/eval",
+    )
+    parser.add_argument(
+        "--use-legacy-triplets",
+        action="store_true",
+        help="Use the synthetic triplet builder instead of the production retriever",
+    )
+    parser.add_argument(
+        "--data-regenerate-triplets",
+        action="store_true",
+        help="Force a fresh triplet build before exporting cross-encoder pairs",
+    )
+    parser.add_argument(
+        "--data-chunks-file",
+        type=Path,
+        help="Custom chunk JSON when --data-regenerate-triplets is used",
+    )
+    parser.add_argument(
+        "--data-queries-file",
+        type=Path,
+        help="Override the labeled queries file for build_retrieval_candidates",
+    )
+    parser.add_argument(
+        "--data-top-k",
+        type=int,
+        help="Override the retrieval top-k for build_retrieval_candidates",
+    )
+    parser.add_argument(
+        "--data-max-queries",
+        type=int,
+        help="Optional cap on labeled queries processed during the data stage",
+    )
+    parser.add_argument(
+        "--data-lexical-weight",
+        type=float,
+        help="Override lexical weight for hybrid retrieval",
+    )
+    parser.add_argument(
+        "--data-dense-weight",
+        type=float,
+        help="Override dense weight for hybrid retrieval",
+    )
+    parser.add_argument(
+        "--data-batch-size",
+        type=int,
+        help="Override embedding batch size for build_retrieval_candidates",
+    )
+    parser.add_argument(
+        "--data-validate-only",
+        action="store_true",
+        help="Run the retrieval builder in validation-only mode",
+    )
+    parser.add_argument(
+        "--data-allow-missed-positives",
+        action="store_true",
+        help="Allow builder runs to finish even if queries miss positives in top-k",
+    )
+    parser.add_argument(
+        "--data-allow-missing-ground-truth",
+        action="store_true",
+        help="Allow builder runs to continue when positive filters resolve zero matches",
+    )
+    parser.add_argument("--device", default="auto", help="Device passed to the trainer")
+    parser.add_argument("--max-train", type=int, help="Optional cap on training pairs for smoke tests")
+    parser.add_argument("--max-eval", type=int, help="Optional cap on eval pairs for smoke tests")
+    parser.add_argument("--trainer-batch-size", type=int, help="Override training batch size")
+    parser.add_argument("--trainer-learning-rate", type=float, help="Override training learning rate")
+    parser.add_argument("--trainer-max-length", type=int, help="Override training max length")
+    parser.add_argument(
+        "--use-amp",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="Force enable/disable mixed precision",
+    )
+    parser.add_argument(
+        "--split",
+        default=RERANK_EVAL_CONFIG.get("default_split", "train"),
+        choices=["train", "test", "all"],
+        help="Evaluation split (train/test/all)",
+    )
+    parser.add_argument("--model-path", help="Cross-encoder checkpoint to evaluate")
+    parser.add_argument("--baseline-model", help="Retriever baseline path override")
+    parser.add_argument("--baseline-batch-size", type=int, help="Batch size for retriever scoring")
+    parser.add_argument("--cross-batch-size", type=int, help="Batch size for reranker scoring")
+    parser.add_argument("--eval-output-dir", help="Custom directory for eval outputs")
+    parser.add_argument("--dry-run", action="store_true", help="Print commands without executing")
+
+    args = parser.parse_args()
+    python_exe = _python_executable()
+    eval_output_dir = Path(args.eval_output_dir) if args.eval_output_dir else EVAL_OUTPUT_DIR_DEFAULT
+    stats_output_path = None
+    if args.stage == "full" and not args.use_legacy_triplets and not args.dry_run:
+        stats_output_path = _create_stats_path()
+
+    stages = {
+        "validate": lambda: _run_data_stage(
+            python_exe, args, args.dry_run, force_validate_only=True, stats_output=None
+        ),
+        "data": lambda: _run_data_stage(
+            python_exe, args, args.dry_run, stats_output=stats_output_path if not args.use_legacy_triplets else None
+        ),
+        "train": lambda: _run_train_stage(python_exe, args, args.dry_run),
+        "evaluate": lambda: _run_eval_stage(python_exe, args, args.dry_run, output_dir=eval_output_dir),
+    }
+
+    order = [args.stage] if args.stage != "full" else ["data", "train", "evaluate"]
+
+    stage_durations: Dict[str, float] = {}
+    retrieval_stats: Dict[str, Any] | None = None
+    eval_payload: Dict[str, Any] | None = None
+
+    try:
+        for stage in order:
+            success, duration = stages[stage]()
+            stage_durations[stage] = duration
+            if not success:
                 sys.exit(1)
-        elif args.skip_combine:
-            print("⏭️  Skipping dataset combining (using existing combined data)")
-        elif args.dry_run:
-            print("[DRY RUN] Would combine datasets from:", ', '.join(DOCLIST))
-        
-        for epoch in range(args.start_epoch, args.epochs + 1):
-            stage_config = TRAINING_STAGES[epoch]
-            
-            print(f"\n{'#'*80}")
-            print(f"# EPOCH {epoch}/{args.epochs}: {stage_config['name'].upper()}")
-            print(f"# {stage_config['description']}")
-            print(f"{'#'*80}\n")
-            
-            # Check if training data exists
-            if not check_training_data_exists(epoch, stage_config):
-                print(f"\n⚠️  Skipping epoch {epoch} - training data not found")
-                print("   Create the training data first, then re-run this script")
-                continue
-            
-            if args.dry_run:
-                print(f"[DRY RUN] Would tokenize data: {not args.skip_tokenization}")
-                print(f"[DRY RUN] Would train epoch {epoch}")
-                continue
-            
-            # Tokenize data if needed
-            if not args.skip_tokenization:
-                if not run_tokenization(epoch, stage_config):
-                    print(f"❌ Tokenization failed for epoch {epoch}")
-                    break
-            else:
-                print(f"⏭️  Skipping tokenization for epoch {epoch}")
-            
-            # Run training
-            if not run_training(epoch, stage_config):
-                print(f"❌ Training failed for epoch {epoch}")
-                break
-            
-            print(f"\n✅ Epoch {epoch} completed successfully!")
-            print(f"   Model saved to: {stage_config['model_output']}\n")
-        
-        print("\n" + "="*80)
-        print("🎉 TRAINING PIPELINE COMPLETED!")
-        print("="*80)
-        print(f"\nFinal model location: {TRAINING_STAGES[args.epochs]['model_output']}")
-        print("\nNext steps:")
-        print("1. Test the model: python 4embedmodel_finetuner.py --action test")
-        print("2. Export for use: python 4embedmodel_finetuner.py --action export")
-        
-    except KeyboardInterrupt:
-        print("\n\n⚠️  Training interrupted by user")
-    except Exception as e:
-        print(f"\n\n❌ Unexpected error: {e}")
-        raise
+            if stage == "data" and stats_output_path and stats_output_path.exists():
+                retrieval_stats = _load_json(stats_output_path)
+            if stage == "evaluate" and not args.dry_run:
+                summary_path = eval_output_dir / EVAL_SUMMARY_FILENAME
+                if summary_path.exists():
+                    eval_payload = _load_json(summary_path)
     finally:
-        print("\n💡 Note: To resume or run a different epoch, update CURRENT_EPOCH in config_embed_training.py")
+        if stats_output_path and stats_output_path.exists():
+            try:
+                stats_output_path.unlink()
+            except OSError:
+                pass
+
+    if args.stage == "full" and not args.dry_run:
+        if args.use_legacy_triplets:
+            logger.warning("Legacy triplet mode enabled; skipping master rerank log append.")
+        elif not retrieval_stats:
+            logger.warning("Retrieval stats missing; skipping master rerank log append.")
+        elif not eval_payload:
+            logger.warning("Evaluation summary missing; skipping master rerank log append.")
+        else:
+            row = _build_master_row(
+                args,
+                retrieval_stats=retrieval_stats,
+                eval_payload=eval_payload,
+                durations=stage_durations,
+            )
+            _append_master_log(row)
+
+    print("\n🎉 Pipeline complete!")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,10 @@
-"""Quick utility to measure anchor-vs-negative cosine similarity for triplet files."""
+"""Train Embed Model diagnostic for anchor-vs-negative cosine similarity.
+
+This script is wired into the Train Embed Model pipeline as a lightweight
+sanity-check step: it validates that mined negatives remain sufficiently far
+from their anchors before we launch fine-tuning. Ops can run it standalone or
+as part of `0pipeline_manager.py` to catch data-drift issues early by surfacing
+summary stats (and optional per-triplet details) for any triplet split."""
 from __future__ import annotations
 
 import argparse
@@ -26,6 +32,8 @@ logger = setup_global_logger(script_name=script_base, cwd=LOG_FILES, log_level="
 
 
 def _default_triplet_path(difficulty: str, split: str) -> Path:
+    # Mirrors how the training pipeline lays out triplet exports so adhoc calls
+    # share the exact same defaults as the orchestrated runs.
     candidate = TRAINING_DATA_DIR / difficulty / f"triplets_{split}.json"
     if candidate.exists():
         return candidate
@@ -33,6 +41,8 @@ def _default_triplet_path(difficulty: str, split: str) -> Path:
 
 
 def _load_triplets(path: Path, limit: int | None) -> List[dict]:
+    # Defensive validation keeps downstream cosine math from crashing mid-run
+    # when upstream data generation emits malformed triplets.
     with path.open("r", encoding="utf-8") as handle:
         data = json.load(handle)
     if not isinstance(data, list):
@@ -51,6 +61,8 @@ def _batched(iterable: List[str], batch_size: int) -> Iterable[List[str]]:
 
 
 def _encode_pairs(model: SentenceTransformer, anchors: List[str], negatives: List[str], batch_size: int) -> Tuple[np.ndarray, np.ndarray]:
+    # Encode anchors and negatives in lock-step mini-batches so the cosine scores
+    # remain index-aligned while keeping GPU/CPU memory usage predictable.
     anchor_embs: List[np.ndarray] = []
     negative_embs: List[np.ndarray] = []
     for a_batch, n_batch in zip(_batched(anchors, batch_size), _batched(negatives, batch_size)):
@@ -87,6 +99,7 @@ def _summarize(values: np.ndarray) -> dict:
 
 
 def _write_details(path: Path, scores: np.ndarray) -> None:
+    # Detailed CSV output feeds the optional QA dashboard step in the pipeline.
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)

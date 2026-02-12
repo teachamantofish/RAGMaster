@@ -1,0 +1,4165 @@
+[
+  {
+    "id": "q001",
+    "query": "How can I find a table title in a MIF file?",
+    "difficulty": "hard",
+    "split": "train",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content",
+          "heading"
+        ],
+        "contains_any": [
+          "table title",
+          "TblTitle"
+        ],
+        "max_matches": 20
+      },
+      {
+        "fields": [
+          "content",
+          "chunk_summary"
+        ],
+        "contains_all": [
+          "TblTitlePosition",
+          "Constants.FV_TBL"
+        ],
+        "max_matches": 10
+      }
+    ]
+  },
+  {
+    "id": "q002",
+    "query": "How can I write a JSX script that saves an FM file as MIF?",
+    "difficulty": "hard",
+    "split": "train",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "content",
+          "chunk_summary"
+        ],
+        "contains_any": [
+          "Save as MIF",
+          "GetSaveDefaultParams"
+        ],
+        "max_matches": 25
+      },
+      {
+        "fields": [
+          "content",
+          "chunk_summary"
+        ],
+        "contains_any": [
+          "SimpleSave",
+          "saveAsName"
+        ],
+        "max_matches": 15
+      }
+    ]
+  },
+  {
+    "id": "q003",
+    "query": "How can I write a JSX script to search for and replace text in all open files?",
+    "difficulty": "hard",
+    "split": "train",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "FirstOpenDoc",
+          "NextOpenDocInSession"
+        ],
+        "max_matches": 25
+      },
+      {
+        "fields": [
+          "content",
+          "chunk_summary"
+        ],
+        "contains_any": [
+          "Find()",
+          "findParams",
+          "FS_FindWrap"
+        ],
+        "max_matches": 15
+      }
+    ]
+  },
+  {
+    "id": "q004",
+    "query": "How can I set the max width of all tables with JSX in a FrameMaker file?",
+    "difficulty": "hard",
+    "split": "train",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "TblWidth",
+          "max table width",
+          "SetTblFmt"
+        ],
+        "max_matches": 20
+      }
+    ]
+  },
+  {
+    "id": "q005",
+    "query": "How can I use JSX to specify column widths in all tables in an open document?",
+    "difficulty": "hard",
+    "split": "train",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "TblColumnAlignment",
+          "column widths",
+          "SetTblColWidth"
+        ],
+        "max_matches": 20
+      }
+    ]
+  },
+  {
+    "id": "q006",
+    "query": "When I insert a new table, how can I specify the default table width via script?",
+    "difficulty": "hard",
+    "split": "train",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "TblFmtOverride",
+          "TblWidth",
+          "default table width"
+        ],
+        "max_matches": 20
+      }
+    ]
+  },
+  {
+    "id": "q007",
+    "query": "What is the safest way to delete a FrameMaker reference page via JSX scripting?",
+    "difficulty": "hard",
+    "split": "train",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content",
+          "heading"
+        ],
+        "contains_any": [
+          "DeleteMasterPage",
+          "reference page",
+          "doc.DeletePage"
+        ],
+        "max_matches": 20
+      }
+    ]
+  },
+  {
+    "id": "q008",
+    "query": "What is the safest way to edit a master page via JSX scripting?",
+    "difficulty": "hard",
+    "split": "train",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content",
+          "heading"
+        ],
+        "contains_any": [
+          "master page",
+          "GetMasterPage",
+          "doc.MasterPages",
+          "ApplyMasterPage",
+          "UpdateMasterPage"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q009",
+    "query": "How is a master page defined in MIF and what are the beginning and ending tags?",
+    "difficulty": "hard",
+    "split": "train",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "content",
+          "chunk_summary",
+          "heading"
+        ],
+        "contains_any": [
+          "<MasterPage",
+          "MasterPageTag",
+          "MasterPageType",
+          "MasterPageMargins",
+          "</MasterPage",
+          "MasterPageLayout",
+          "MasterPageUsage"
+        ],
+        "max_matches": 100
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_all": [
+          "MasterPage",
+          "End"
+        ],
+        "max_matches": 20
+      }
+    ],
+    "positive_ids": [
+      "h3_f30c00eb",
+      "h2_96cc0c95_exa"
+    ],
+    "min_positives": 1
+  },
+  {
+    "id": "q010",
+    "query": "How do I detect and fix broken cross-references when generating MIF from a legacy FM book?",
+    "difficulty": "hard",
+    "split": "train",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "Broken cross-reference",
+          "XRefSrcText",
+          "UpdateXRef"
+        ],
+        "max_matches": 30
+      }
+    ]
+  },
+  {
+    "id": "q011",
+    "query": "Can JSX batch-update conditional text visibility across all components of a FrameMaker book?",
+    "difficulty": "hard",
+    "split": "train",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content",
+          "heading"
+        ],
+        "contains_any": [
+          "ConditionalText",
+          "Conditional visibility",
+          "SetCondVisibility",
+          "ApplyCondSetting",
+          "CondFmt"
+        ],
+        "max_matches": 60
+      }
+    ],
+    "positive_ids": [
+      "h2_987aadfa",
+      "h3_7f860344_exa"
+    ]
+  },
+  {
+    "id": "q012",
+    "query": "Which MIF attributes control side-head placement?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content",
+          "heading"
+        ],
+        "contains_any": [
+          "SideHead",
+          "SideHeadPlacement",
+          "RuninHead",
+          "MIF sidehead"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q013",
+    "query": "How do I programmatically merge multiple FM books into one while preserving master pages?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "BookComponent",
+          "ImportFormats",
+          "MasterPage",
+          "Combine books"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q014",
+    "query": "What How can I delete all index markers?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "index marker",
+          "MType 2",
+          "Marker statement",
+          "MarkerType"
+        ],
+        "max_matches": 60
+      }
+    ],
+    "positive_ids": [
+      "h2_6ad963d1"
+    ]
+  },
+  {
+    "id": "q015",
+    "query": "How can I delete all variables except for the default ones in all open files?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "DeleteUnusedVarFmt",
+          "GetNamedVarFmt",
+          "NamedVariable",
+          "doc.DeleteFmt"
+        ],
+        "max_matches": 60
+      }
+    ],
+    "positive_ids": [
+      "h3_3e1957a3"
+    ]
+  },
+  {
+    "id": "q016",
+    "query": "How can I script a diff between two FrameMaker documents to highlight paragraph overrides?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "CompareDocuments",
+          "Diff",
+          "ParagraphOverrides",
+          "Highlight overrides"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q017",
+    "query": "What is the procedure to bulk replace fonts in FM using ExtendScript without corrupting styles?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "ReplaceFont",
+          "FontCatalog",
+          "SetTextFmt",
+          "ChangeFonts"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q018",
+    "query": "How can I delete all but the default colors from the color catalog?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "ColorCatalog",
+          "DeleteColor",
+          "Default colors",
+          "RemoveColor"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q019",
+    "query": "How can I add custom colors in RGB to the color catalog of every open file?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "AddColor",
+          "SetColorDefinition",
+          "RGB",
+          "Color catalog"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q020",
+    "query": "How can I use JSX to find all TblTitle Text and return it as a list?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "TblTitle",
+          "TblTitleText",
+          "FindTblTitle",
+          "table title list"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q021",
+    "query": "How do I extract (remove) all unresolved variables with their definitions from a FrameMaker book via MIF?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "UnresolvedVariable",
+          "VarFmt",
+          "VariableDef",
+          "Remove variable"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q022",
+    "query": "Can I generate a mini-TOC per chapter through JSX and sync it with the main TOC automatically?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content",
+          "heading"
+        ],
+        "contains_any": [
+          "mini-TOC",
+          "GenerateTOC",
+          "UpdateTOC",
+          "Chapter TOC"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q023",
+    "query": "Can I disable spellcheck for any words using Camel Case (for example: myParameterName)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "SpellCheck",
+          "SpellingPrefs",
+          "CamelCase",
+          "Dictionary"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q024",
+    "query": "Can I globally search and replace table title text in all open files?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "TblTitle",
+          "FindReplace",
+          "table title text",
+          "ReplaceTblTitle"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q025",
+    "query": "How can I script adding file metadata to a book so that I don't have to manually do it from the File Info menu?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "FileInfo",
+          "DocSummary",
+          "SetUserString",
+          "Document metadata"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q026",
+    "query": "What script iterates all text insets and reports missing external source files?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "TiApiClient",
+          "TiFile",
+          "TiAutomaticUpdate",
+          "NextTiInDoc"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "TiText",
+          "text inset",
+          "TiClientData"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q027",
+    "query": "How do I normalize spot colors across documents using ExtendScript batch commands?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "ColorCatalog",
+          "SetColorDefinition",
+          "AddColor",
+          "DeleteColor"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "spot color",
+          "TintPercent",
+          "ColorViewCtl"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q028",
+    "query": "What are the best practices for exporting large FM books to IDML via JSX automation?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "SaveFmtBookWithXml",
+          "SaveFmtBookWithFm",
+          "GetSaveDefaultParams",
+          "SimpleSave"
+        ],
+        "max_matches": 60
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "UpdateBook",
+          "BookComponent",
+          "DocSaveType",
+          "DontUpdateTextInsets"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q029",
+    "query": "How can I auto-create cross-references for glossary entries detected in body text?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "XRefSrcText",
+          "XRefFmt",
+          "XRefClientName",
+          "XRefIsUnresolved"
+        ],
+        "max_matches": 60
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "FirstXRefInDoc",
+          "XRefFile",
+          "XRefAltText"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q030",
+    "query": "What script would remove all index entries from only the first column of every table in a book?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "TblColumn",
+          "CellColNum",
+          "FirstRowInTbl",
+          "CellDefaultLeftRuling"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "index marker",
+          "MType 2",
+          "Marker statement",
+          "MarkerType"
+        ],
+        "max_matches": 60
+      }
+    ]
+  },
+  {
+    "id": "q031",
+    "query": "What is the recommended way to rebuild a broken book structure using the FM API?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "UpdateBook",
+          "BookComponent",
+          "BookCleanup",
+          "Book status"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "ImportFormats",
+          "BookComponentStatus",
+          "BookComponentId"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q032",
+    "query": "How do I bulk rename paragraph formats and update all references in a FrameMaker file?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "FirstPgfFmtInDoc",
+          "NextPgfFmtInDoc",
+          "PgfCatalog",
+          "PgfFmt"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "FmtChangeList",
+          "PgfBoxColor",
+          "PgfFmtInCatalog"
+        ],
+        "max_matches": 50
+      }
+    ]
+  },
+  {
+    "id": "q033",
+    "query": "What MIF tokens control table ruling styles, and how can I toggle them via script?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "RulingFmt",
+          "CellDefaultTopRuling",
+          "CellOverrideBottomRuling",
+          "CellUseOverrideRuling"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "Constants.FP_FirstRulingFmtInDoc",
+          "RulingPenWidth",
+          "TblFmt"
+        ],
+        "max_matches": 50
+      }
+    ]
+  },
+  {
+    "id": "q034",
+    "query": "How do I detect overlapping anchored frames that may cause PDF export issues?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "AFrame",
+          "anchored frame",
+          "FirstSelectedGraphicInDoc",
+          "FrameParent"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "frame.Height",
+          "frame.Width",
+          "Shrinkwrap",
+          "FitGraphic"
+        ],
+        "max_matches": 50
+      }
+    ]
+  },
+  {
+    "id": "q035",
+    "query": "Can JSX export all conditional builds plus metadata into a single dashboard file?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content",
+          "heading"
+        ],
+        "contains_any": [
+          "ConditionalText",
+          "SetCondVisibility",
+          "ApplyCondSetting",
+          "CondFmt"
+        ],
+        "max_matches": 60
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "Conditional expression",
+          "Conditional builds",
+          "UserString"
+        ],
+        "max_matches": 50
+      }
+    ]
+  },
+  {
+    "id": "q036",
+    "query": "How can I change the header color of all table header rows?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "CellOverrideShading",
+          "CellOverrideFill",
+          "CellUseOverrideShading"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "TblRow",
+          "TblFmt",
+          "Header row"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q037",
+    "query": "What method cleans up unused master pages across a multi-book deliverable?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content",
+          "heading"
+        ],
+        "contains_any": [
+          "MasterPage",
+          "DeleteMasterPage",
+          "ApplyMasterPage",
+          "MasterPageUsage"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "BookComponent",
+          "UpdateBook",
+          "Book cleanup"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q038",
+    "query": "How can I reflow inline equations into display math blocks via MIF editing?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content",
+          "heading"
+        ],
+        "contains_any": [
+          "MathML",
+          "MathML object properties",
+          "MathML methods",
+          "NewMathML"
+        ],
+        "max_matches": 60
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "Equation",
+          "display math",
+          "Inline equation"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q039",
+    "query": "How do I programmatically audit numbering properties for all list styles?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "PgfIsAutoNum",
+          "PgfNumber",
+          "NumAtEnd"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "FmtChangeList",
+          "PgfFmt",
+          "PgfCatalog"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q040",
+    "query": "Can I bulk insert tracking comments tied to document coordinates through ExtendScript?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "ReviewerNameList",
+          "TrackChanges",
+          "PreviewState"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "TextLoc",
+          "TextRange",
+          "LocX"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q041",
+    "query": "What MIF adjustments ensure Unicode characters survive round trips for Japanese content?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "Unicode",
+          "Kanji",
+          "Japanese"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "AsianComposer",
+          "Direction",
+          "ResolvedDirection"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q042",
+    "query": "How do I flatten nested conditional tags so only top-level flags remain?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content",
+          "heading"
+        ],
+        "contains_any": [
+          "ConditionalText",
+          "CondFmt",
+          "Conditional expression"
+        ],
+        "max_matches": 60
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "SetCondVisibility",
+          "ApplyCondSetting",
+          "CondTag"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q043",
+    "query": "What script extracts all anchored frame sizes and flags those exceeding margins?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "AFrame",
+          "AnchorType",
+          "Alignment"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "frame.Height",
+          "frame.Width",
+          "Shrinkwrap"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q044",
+    "query": "How can I auto-generate mini-TOCs for all chapters?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content",
+          "heading"
+        ],
+        "contains_any": [
+          "GenerateTOC",
+          "UpdateTOC",
+          "mini-TOC"
+        ],
+        "max_matches": 60
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "BookComponentIsGeneratable",
+          "BookComponentType",
+          "Chapter"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q045",
+    "query": "How do I convert legacy SGML-based templates to structured FrameMaker via script?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "SGML",
+          "StructuredApplication",
+          "ElementDef"
+        ],
+        "max_matches": 60
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "ElementCatalogDisplay",
+          "StructuredApplicationForOpen",
+          "ElementDefInDoc"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q046",
+    "query": "Can JSX calculate the total page count per condition combination for planning?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "ConditionalText",
+          "CondFmt",
+          "Conditional expression"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "PDFPrintPageRange",
+          "Page count",
+          "PageRange"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q047",
+    "query": "How do I rebuild cross-reference formats after importing from Word via MIF?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "XRefFmt",
+          "XRefSrcText",
+          "XRefIsUnresolved"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "ImportFormats",
+          "Word import",
+          "doc.DeleteFmt"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q048",
+    "query": "What is the workflow to sync FM variables with external YAML configuration files?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "VarFmt",
+          "NamedVariable",
+          "VarFmtInDoc"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "UserString",
+          "SetUserString",
+          "External data"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q049",
+    "query": "How can I detect missing graphics referenced by relative paths in MIF exports?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "relative path",
+          "Relative pathnames",
+          "include statement"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "FirstSelectedGraphicInDoc",
+          "GetImportDefaultParams",
+          "Graphic import"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q050",
+    "query": "How do I visualize callout markers and ensure they match figure numbers in bulk?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "Marker",
+          "MarkerType",
+          "Marker statement"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "XRef",
+          "XRefFmt",
+          "Figure"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q051",
+    "query": "Can I automate assignment of master pages based on paragraph tags using ExtendScript?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "MasterPage",
+          "ApplyMasterPage",
+          "MasterPageUsage"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "PgfFmt",
+          "FirstPgfInDoc",
+          "Paragraph tag"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q052",
+    "query": "How do I script a spellcheck that logs findings per component without user prompts?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "SpellCheck",
+          "SpellingPrefs",
+          "Dictionary"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "BookComponent",
+          "ComponentStatus",
+          "UpdateBook"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q053",
+    "query": "What MIF sections control MathML entities and how can I patch them via script?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content",
+          "heading"
+        ],
+        "contains_any": [
+          "MathML",
+          "MathML object properties",
+          "MathML methods"
+        ],
+        "max_matches": 60
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "NewMathML",
+          "Equation",
+          "MathML entity"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q054",
+    "query": "How do I gather hyperlink destinations and verify their targets after HTML5 publish?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "Hypertext",
+          "Hyperlink",
+          "URL marker"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "HTML",
+          "HTML5",
+          "Publish"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q055",
+    "query": "How can I enable AutoBackup/AutoSave checkpoints via ExtendScript during long conversions?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "FS_AutoBackupOnSave",
+          "FV_SaveYesAutoBackup",
+          "AutoBackup"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "DocSaveType",
+          "SaveFmt",
+          "SimpleSave"
+        ],
+        "max_matches": 40
+      }
+    ],
+    "positive_ids": [
+      "h2_472abbac_tab",
+      "h3_a219b05a_tab"
+    ]
+  },
+  {
+    "id": "q056",
+    "query": "How do I queue multiple publishing presets via JSX and capture their logs centrally?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "PDFJobOptions",
+          "PDFConvertCMYKtoRGB",
+          "PDFDistiller"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "UpdateBook",
+          "BookComponent",
+          "Log file"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q057",
+    "query": "How can I rebuild the book TOC after deleting chapters to avoid orphan entries?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "GenerateTOC",
+          "BookComponentIsGeneratable",
+          "BookComponentType"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "UpdateBook",
+          "BookComponentStatus",
+          "ChapNumComputeMethod"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q058",
+    "query": "How do I enforce consistent footnote numbering across files merged into one book?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "DFNoteRestart",
+          "BFNoteComputeMethod",
+          "BFNoteNumStyle"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "Footnote numbering",
+          "BFNoteStartNum",
+          "BFNoteRestart"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q059",
+    "query": "Can I preflight all font embeddings before generating PDF-A output with scripts?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "PDFJobOptions",
+          "PDFConvertCMYKtoRGB",
+          "PDFGenerateForReview"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "FontCatalog",
+          "FontFamily",
+          "FontEncoding"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q060",
+    "query": "How do I audit variable usage frequency to prune unused entries automatically?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "VarFmt",
+          "VarFmtInDoc",
+          "NamedVariable"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "DeleteUnusedVarFmt",
+          "doc.DeleteFmt",
+          "UserString"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q061",
+    "query": "What scripted pipeline exports MIF, runs custom QA, and re-imports fixes into FrameMaker?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "SaveFmtBinary",
+          "SaveFmtInterchange",
+          "GetSaveDefaultParams"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "ImportFormats",
+          "UpdateBook",
+          "BookComponent"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q062",
+    "query": "How can I script changing the color of a condition in all open files?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content",
+          "heading"
+        ],
+        "contains_any": [
+          "ConditionalText",
+          "CondFmt",
+          "CondTag"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "ColorCatalog",
+          "SetColorDefinition",
+          "ApplyCondSetting"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q063",
+    "query": "How can I hide or show a condition using JSX?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "SetCondVisibility",
+          "ApplyCondSetting",
+          "Conditional visibility"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "ConditionalText",
+          "CondFmt",
+          "CondTag"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q064",
+    "query": "How can I hide or show a condition in a MIF file?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "ConditionTag",
+          "Conditional text",
+          "CondFmt"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "Conditional expression",
+          "CondVisibility",
+          "CondText"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q065",
+    "query": "How can I script a text change in all files except for auto-generated lists like TOCs and the index?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "FirstOpenDoc",
+          "NextOpenDocInSession",
+          "FindReplace"
+        ],
+        "max_matches": 50
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "BookComponentType",
+          "BookComponentIsGeneratable",
+          "TOC"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q066",
+    "query": "How can I control whether an anchored frame is aligned left, center, or right?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_filters": [
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "AFrame",
+          "AnchorType",
+          "Alignment"
+        ],
+        "max_matches": 40
+      },
+      {
+        "fields": [
+          "chunk_summary",
+          "content"
+        ],
+        "contains_any": [
+          "AFrameIsFloating",
+          "LocX",
+          "LocY"
+        ],
+        "max_matches": 40
+      }
+    ]
+  },
+  {
+    "id": "q067",
+    "query": "What does ObjectValid() return for a SubCol object?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_a949c0b1"
+    ],
+    "hard_negative_ids": [
+      "h3_05ed9cb1",
+      "h3_da63b331",
+      "h3_7872c81d",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q068",
+    "query": "Syntax for ObjectValid()",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_05ed9cb1"
+    ],
+    "hard_negative_ids": [
+      "h3_a949c0b1",
+      "h3_da63b331",
+      "h3_7872c81d",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q069",
+    "query": "What is Tab(x, type, leader, decimal) used for?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_ce0feae0"
+    ],
+    "hard_negative_ids": [
+      "h2_2fc7ec96",
+      "h3_4b246bff",
+      "h3_52e52acf",
+      "h3_14ef8fb4"
+    ]
+  },
+  {
+    "id": "q070",
+    "query": "Syntax for Tab(x, type, leader, decimal)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_ce0feae0"
+    ],
+    "hard_negative_ids": [
+      "h3_4b246bff",
+      "h3_52e52acf",
+      "h3_703bb5d3",
+      "h2_fc2e1d41"
+    ]
+  },
+  {
+    "id": "q071",
+    "query": "What are the valid tab type constants for Tab?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_ce0feae0"
+    ],
+    "hard_negative_ids": [
+      "h2_2fc7ec96",
+      "h3_4b246bff",
+      "h2_49a370f2",
+      "h2_8b135bcd"
+    ]
+  },
+  {
+    "id": "q072",
+    "query": "How do I create a decimal tab stop using Tab()?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_ce0feae0"
+    ],
+    "hard_negative_ids": [
+      "h3_4b246bff",
+      "h3_08868ba0",
+      "h3_52e52acf",
+      "h3_703bb5d3"
+    ]
+  },
+  {
+    "id": "q073",
+    "query": "What does Tabs represent in ExtendScript?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_2fc7ec96"
+    ],
+    "hard_negative_ids": [
+      "h2_8b135bcd",
+      "h2_49a370f2",
+      "h2_ce0feae0",
+      "h2_fc2e1d41"
+    ]
+  },
+  {
+    "id": "q074",
+    "query": "What does Tabs.concat(value) do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_4b246bff"
+    ],
+    "hard_negative_ids": [
+      "h3_52e52acf",
+      "h3_62ebceb3",
+      "h3_08868ba0",
+      "h3_703bb5d3"
+    ]
+  },
+  {
+    "id": "q075",
+    "query": "Does Tabs.concat() modify the original array?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_4b246bff"
+    ],
+    "hard_negative_ids": [
+      "h3_52e52acf",
+      "h3_08868ba0",
+      "h3_b038d1dd",
+      "h3_703bb5d3"
+    ]
+  },
+  {
+    "id": "q076",
+    "query": "Syntax for Tabs.concat(value)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_4b246bff"
+    ],
+    "hard_negative_ids": [
+      "h3_52e52acf",
+      "h3_62ebceb3",
+      "h3_08868ba0",
+      "h3_703bb5d3"
+    ]
+  },
+  {
+    "id": "q077",
+    "query": "What does Tabs.pop() return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_08868ba0"
+    ],
+    "hard_negative_ids": [
+      "h3_b038d1dd",
+      "h3_4b246bff",
+      "h3_62ebceb3",
+      "h3_703bb5d3"
+    ]
+  },
+  {
+    "id": "q078",
+    "query": "Syntax for Tabs.pop()",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_08868ba0"
+    ],
+    "hard_negative_ids": [
+      "h3_b038d1dd",
+      "h3_4b246bff",
+      "h3_52e52acf",
+      "h3_703bb5d3"
+    ]
+  },
+  {
+    "id": "q079",
+    "query": "What does Tabs.push(value) return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_62ebceb3"
+    ],
+    "hard_negative_ids": [
+      "h3_703bb5d3",
+      "h3_4b246bff",
+      "h3_08868ba0",
+      "h3_52e52acf"
+    ]
+  },
+  {
+    "id": "q080",
+    "query": "Syntax for Tabs.push(value)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_62ebceb3"
+    ],
+    "hard_negative_ids": [
+      "h3_703bb5d3",
+      "h3_4b246bff",
+      "h3_08868ba0",
+      "h3_52e52acf"
+    ]
+  },
+  {
+    "id": "q081",
+    "query": "What does TextItems represent?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_8b135bcd"
+    ],
+    "hard_negative_ids": [
+      "h2_2fc7ec96",
+      "h2_49a370f2",
+      "h2_ce0feae0",
+      "h2_fc2e1d41"
+    ]
+  },
+  {
+    "id": "q082",
+    "query": "What does TextItems.concat(value) do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_52e52acf"
+    ],
+    "hard_negative_ids": [
+      "h3_4b246bff",
+      "h3_b038d1dd",
+      "h3_703bb5d3",
+      "h3_08868ba0"
+    ]
+  },
+  {
+    "id": "q083",
+    "query": "Syntax for TextItems.concat(value)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_52e52acf"
+    ],
+    "hard_negative_ids": [
+      "h3_4b246bff",
+      "h3_b038d1dd",
+      "h3_703bb5d3",
+      "h3_62ebceb3"
+    ]
+  },
+  {
+    "id": "q084",
+    "query": "What does TextItems.pop() return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_b038d1dd"
+    ],
+    "hard_negative_ids": [
+      "h3_08868ba0",
+      "h3_52e52acf",
+      "h3_703bb5d3",
+      "h3_4b246bff"
+    ]
+  },
+  {
+    "id": "q085",
+    "query": "Syntax for TextItems.pop()",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_b038d1dd"
+    ],
+    "hard_negative_ids": [
+      "h3_08868ba0",
+      "h3_52e52acf",
+      "h3_703bb5d3",
+      "h3_4b246bff"
+    ]
+  },
+  {
+    "id": "q086",
+    "query": "What does TextItems.push(value) return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_703bb5d3"
+    ],
+    "hard_negative_ids": [
+      "h3_62ebceb3",
+      "h3_52e52acf",
+      "h3_b038d1dd",
+      "h3_08868ba0"
+    ]
+  },
+  {
+    "id": "q087",
+    "query": "Syntax for TextItems.push(value)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_703bb5d3",
+      "h2_8b135bcd"
+    ],
+    "hard_negative_ids": [
+      "h3_62ebceb3",
+      "h3_52e52acf",
+      "h3_b038d1dd",
+      "h3_08868ba0"
+    ]
+  },
+  {
+    "id": "q088",
+    "query": "How do I add columns to a table using AddCols()?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_89405a43"
+    ],
+    "hard_negative_ids": [
+      "h3_38399768",
+      "h3_db7ecd02",
+      "h3_816e5813",
+      "h3_e30d6de4"
+    ]
+  },
+  {
+    "id": "q089",
+    "query": "Syntax for Tbl.AddCols(refColNum, direction, numNewCols)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_89405a43"
+    ],
+    "hard_negative_ids": [
+      "h3_38399768",
+      "h3_db7ecd02",
+      "h3_816e5813",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q090",
+    "query": "What does Tbl.AddCols() return on success?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_89405a43"
+    ],
+    "hard_negative_ids": [
+      "h3_38399768",
+      "h3_db7ecd02",
+      "h3_816e5813",
+      "h3_e30d6de4"
+    ]
+  },
+  {
+    "id": "q091",
+    "query": "What does refColNum mean in AddCols()?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_89405a43"
+    ],
+    "hard_negative_ids": [
+      "h3_38399768",
+      "h3_816e5813",
+      "h3_db7ecd02",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q092",
+    "query": "How do I add columns to the left of a reference column?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_89405a43"
+    ],
+    "hard_negative_ids": [
+      "h3_38399768",
+      "h3_db7ecd02",
+      "h3_816e5813",
+      "h3_e30d6de4"
+    ]
+  },
+  {
+    "id": "q093",
+    "query": "How do I add columns to the right of a reference column?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_89405a43"
+    ],
+    "hard_negative_ids": [
+      "h3_38399768",
+      "h3_db7ecd02",
+      "h3_816e5813",
+      "h3_e30d6de4"
+    ]
+  },
+  {
+    "id": "q094",
+    "query": "What errors can Tbl.AddCols() return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_89405a43"
+    ],
+    "hard_negative_ids": [
+      "h3_38399768",
+      "h3_db7ecd02",
+      "h3_816e5813",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q095",
+    "query": "How do I delete table columns using DeleteCols()?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_38399768"
+    ],
+    "hard_negative_ids": [
+      "h3_89405a43",
+      "h3_db7ecd02",
+      "h3_816e5813",
+      "h3_e30d6de4"
+    ]
+  },
+  {
+    "id": "q096",
+    "query": "Syntax for Tbl.DeleteCols(delColNum, numDelCols)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_38399768"
+    ],
+    "hard_negative_ids": [
+      "h3_89405a43",
+      "h3_db7ecd02",
+      "h3_816e5813",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q097",
+    "query": "What does delColNum mean in DeleteCols()?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_38399768"
+    ],
+    "hard_negative_ids": [
+      "h3_89405a43",
+      "h3_db7ecd02",
+      "h3_816e5813",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q098",
+    "query": "How does DeleteCols determine which columns to delete?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_38399768"
+    ],
+    "hard_negative_ids": [
+      "h3_89405a43",
+      "h3_db7ecd02",
+      "h3_816e5813",
+      "h3_e30d6de4"
+    ]
+  },
+  {
+    "id": "q099",
+    "query": "What errors can Tbl.DeleteCols() return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_38399768"
+    ],
+    "hard_negative_ids": [
+      "h3_89405a43",
+      "h3_db7ecd02",
+      "h3_816e5813",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q100",
+    "query": "What does FE_TableInLockedTi mean in DeleteCols()?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_38399768"
+    ],
+    "hard_negative_ids": [
+      "h3_89405a43",
+      "h3_db7ecd02",
+      "h3_816e5813",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q101",
+    "query": "How do I delete table rows using DeleteRows()?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_db7ecd02"
+    ],
+    "hard_negative_ids": [
+      "h3_38399768",
+      "h3_89405a43",
+      "h3_816e5813",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q102",
+    "query": "Syntax for Tbl.DeleteRows(refRow, numDelRows)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_db7ecd02"
+    ],
+    "hard_negative_ids": [
+      "h3_38399768",
+      "h3_89405a43",
+      "h3_816e5813",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q103",
+    "query": "Can DeleteRows delete header and body rows together?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_db7ecd02"
+    ],
+    "hard_negative_ids": [
+      "h3_38399768",
+      "h3_89405a43",
+      "h3_816e5813",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q104",
+    "query": "Why does DeleteRows return FE_OutOfRange?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_db7ecd02"
+    ],
+    "hard_negative_ids": [
+      "h3_816e5813",
+      "h3_e6b0ac82",
+      "h3_38399768",
+      "h3_89405a43"
+    ]
+  },
+  {
+    "id": "q105",
+    "query": "What does numDelRows include in DeleteRows()?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_db7ecd02"
+    ],
+    "hard_negative_ids": [
+      "h3_38399768",
+      "h3_89405a43",
+      "h3_816e5813",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q106",
+    "query": "What errors can Tbl.DeleteRows() return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_db7ecd02"
+    ],
+    "hard_negative_ids": [
+      "h3_38399768",
+      "h3_89405a43",
+      "h3_816e5813",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q107",
+    "query": "How do I get a Column object by column number?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_816e5813"
+    ],
+    "hard_negative_ids": [
+      "h3_89405a43",
+      "h3_38399768",
+      "h3_db7ecd02",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q108",
+    "query": "Syntax for GetTableColumnByColNum(docId, tableId, colNum)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_816e5813"
+    ],
+    "hard_negative_ids": [
+      "h3_89405a43",
+      "h3_38399768",
+      "h3_db7ecd02",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q109",
+    "query": "What does GetTableColumnByColNum return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_816e5813"
+    ],
+    "hard_negative_ids": [
+      "h3_89405a43",
+      "h3_38399768",
+      "h3_db7ecd02",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q110",
+    "query": "What does colNum mean in GetTableColumnByColNum?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_816e5813"
+    ],
+    "hard_negative_ids": [
+      "h3_89405a43",
+      "h3_38399768",
+      "h3_db7ecd02",
+      "h3_e6b0ac82"
+    ]
+  },
+  {
+    "id": "q111",
+    "query": "Why does GetTableColumnByColNum return FE_OutOfRange?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_816e5813"
+    ],
+    "hard_negative_ids": [
+      "h3_db7ecd02",
+      "h3_e6b0ac82",
+      "h3_38399768",
+      "h3_89405a43"
+    ]
+  },
+  {
+    "id": "q112",
+    "query": "How do I select a range of table cells with MakeTblSelection()?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_e6b0ac82"
+    ],
+    "hard_negative_ids": [
+      "h3_db7ecd02",
+      "h3_38399768",
+      "h3_816e5813",
+      "h3_89405a43"
+    ]
+  },
+  {
+    "id": "q113",
+    "query": "Syntax for MakeTblSelection(topRow, bottomRow, leftCol, rightCol)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_e6b0ac82"
+    ],
+    "hard_negative_ids": [
+      "h3_db7ecd02",
+      "h3_38399768",
+      "h3_816e5813",
+      "h3_89405a43"
+    ]
+  },
+  {
+    "id": "q114",
+    "query": "How do I select an entire table using MakeTblSelection()?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_e6b0ac82"
+    ],
+    "hard_negative_ids": [
+      "h3_db7ecd02",
+      "h3_38399768",
+      "h3_816e5813",
+      "h3_89405a43"
+    ]
+  },
+  {
+    "id": "q115",
+    "query": "What does Constants.FF_SELECT_WHOLE_TABLE do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_e6b0ac82"
+    ],
+    "hard_negative_ids": [
+      "h3_db7ecd02",
+      "h3_38399768",
+      "h3_816e5813",
+      "h3_89405a43"
+    ]
+  },
+  {
+    "id": "q116",
+    "query": "Can MakeTblSelection select mixed row types?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_e6b0ac82"
+    ],
+    "hard_negative_ids": [
+      "h3_db7ecd02",
+      "h3_38399768",
+      "h3_816e5813",
+      "h3_89405a43"
+    ]
+  },
+  {
+    "id": "q117",
+    "query": "What errors can MakeTblSelection return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_e6b0ac82"
+    ],
+    "hard_negative_ids": [
+      "h3_db7ecd02",
+      "h3_38399768",
+      "h3_816e5813",
+      "h3_89405a43"
+    ]
+  },
+  {
+    "id": "q118",
+    "query": "What does Tbl.Delete() do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_e30d6de4"
+    ],
+    "hard_negative_ids": [
+      "h3_ef99f6f3",
+      "h3_d4f6dd83",
+      "h3_70ccf4de",
+      "h3_38399768"
+    ]
+  },
+  {
+    "id": "q119",
+    "query": "Syntax for Tbl.Delete()",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_e30d6de4"
+    ],
+    "hard_negative_ids": [
+      "h3_ef99f6f3",
+      "h3_d4f6dd83",
+      "h3_70ccf4de",
+      "h3_38399768"
+    ]
+  },
+  {
+    "id": "q120",
+    "query": "What does Tbl.GetProps() return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_5bac0530"
+    ],
+    "hard_negative_ids": [
+      "h3_4979db51",
+      "h3_3d6a0e95",
+      "h3_54ac8b7a",
+      "h3_020784ff"
+    ]
+  },
+  {
+    "id": "q121",
+    "query": "Syntax for Tbl.GetProps()",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_5bac0530"
+    ],
+    "hard_negative_ids": [
+      "h3_4979db51",
+      "h3_3d6a0e95",
+      "h3_54ac8b7a",
+      "h3_020784ff"
+    ]
+  },
+  {
+    "id": "q122",
+    "query": "What does Tbl.SetProps(setVal) do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_76a9895d"
+    ],
+    "hard_negative_ids": [
+      "h3_b893d859",
+      "h3_eae4645f",
+      "h3_020784ff",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q123",
+    "query": "Syntax for Tbl.SetProps(setVal)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_76a9895d"
+    ],
+    "hard_negative_ids": [
+      "h3_b893d859",
+      "h3_eae4645f",
+      "h3_020784ff",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q124",
+    "query": "Does Tbl.SetProps() return anything?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_76a9895d"
+    ],
+    "hard_negative_ids": [
+      "h3_b893d859",
+      "h3_eae4645f",
+      "h3_020784ff",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q125",
+    "query": "What does Tbl.ObjectValid() return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_05ed9cb1"
+    ],
+    "hard_negative_ids": [
+      "h3_a949c0b1",
+      "h3_da63b331",
+      "h3_7872c81d",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q126",
+    "query": "What does TblFmt represent?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_48f243f2"
+    ],
+    "hard_negative_ids": [
+      "h2_f48cde5f",
+      "h2_4e6c0eb1",
+      "h2_49a370f2",
+      "h2_fc2e1d41"
+    ]
+  },
+  {
+    "id": "q127",
+    "query": "What does TblFmt.Delete() do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_70ccf4de"
+    ],
+    "hard_negative_ids": [
+      "h3_e30d6de4",
+      "h3_ef99f6f3",
+      "h3_d4f6dd83",
+      "h3_38399768"
+    ]
+  },
+  {
+    "id": "q128",
+    "query": "What does TblFmt.GetProps() do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_54ac8b7a"
+    ],
+    "hard_negative_ids": [
+      "h3_5bac0530",
+      "h3_4979db51",
+      "h3_3d6a0e95",
+      "h3_020784ff"
+    ]
+  },
+  {
+    "id": "q129",
+    "query": "What does TblFmt.SetProps() do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_020784ff"
+    ],
+    "hard_negative_ids": [
+      "h3_76a9895d",
+      "h3_b893d859",
+      "h3_eae4645f",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q130",
+    "query": "What does TblFmt.ObjectValid() do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_7af592e4"
+    ],
+    "hard_negative_ids": [
+      "h3_05ed9cb1",
+      "h3_a949c0b1",
+      "h3_da63b331",
+      "h3_7872c81d"
+    ]
+  },
+  {
+    "id": "q131",
+    "query": "What does TextFrame.Delete() do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_ef99f6f3"
+    ],
+    "hard_negative_ids": [
+      "h3_e30d6de4",
+      "h3_d4f6dd83",
+      "h3_70ccf4de",
+      "h3_db7ecd02"
+    ]
+  },
+  {
+    "id": "q132",
+    "query": "Syntax for TextFrame.Delete()",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_ef99f6f3"
+    ],
+    "hard_negative_ids": [
+      "h3_e30d6de4",
+      "h3_d4f6dd83",
+      "h3_70ccf4de",
+      "h3_db7ecd02"
+    ]
+  },
+  {
+    "id": "q133",
+    "query": "What does TextFrame.GetText(flags) return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_14ef8fb4"
+    ],
+    "hard_negative_ids": [
+      "h3_e648228f",
+      "h3_ef99f6f3",
+      "h3_4979db51",
+      "h3_3d6a0e95"
+    ]
+  },
+  {
+    "id": "q134",
+    "query": "Syntax for TextFrame.GetText(flags)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_14ef8fb4"
+    ],
+    "hard_negative_ids": [
+      "h3_e648228f",
+      "h3_ef99f6f3",
+      "h3_4979db51",
+      "h3_3d6a0e95"
+    ]
+  },
+  {
+    "id": "q135",
+    "query": "What do flags control in TextFrame.GetText()?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_14ef8fb4"
+    ],
+    "hard_negative_ids": [
+      "h3_e648228f",
+      "h3_14ef8fb4",
+      "h3_4979db51",
+      "h3_b893d859"
+    ]
+  },
+  {
+    "id": "q136",
+    "query": "What does TextFrame.GetProps() return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_4979db51"
+    ],
+    "hard_negative_ids": [
+      "h3_5bac0530",
+      "h3_3d6a0e95",
+      "h3_54ac8b7a",
+      "h3_020784ff"
+    ]
+  },
+  {
+    "id": "q137",
+    "query": "Syntax for TextFrame.GetProps()",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_4979db51"
+    ],
+    "hard_negative_ids": [
+      "h3_5bac0530",
+      "h3_3d6a0e95",
+      "h3_54ac8b7a",
+      "h3_020784ff"
+    ]
+  },
+  {
+    "id": "q138",
+    "query": "What does TextFrame.SetProps(setVal) do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_b893d859"
+    ],
+    "hard_negative_ids": [
+      "h3_76a9895d",
+      "h3_eae4645f",
+      "h3_020784ff",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q139",
+    "query": "Syntax for TextFrame.SetProps(setVal)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_b893d859"
+    ],
+    "hard_negative_ids": [
+      "h3_76a9895d",
+      "h3_eae4645f",
+      "h3_020784ff",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q140",
+    "query": "Does TextFrame.SetProps() return anything?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_b893d859"
+    ],
+    "hard_negative_ids": [
+      "h3_76a9895d",
+      "h3_eae4645f",
+      "h3_020784ff",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q141",
+    "query": "What does TextFrame.ObjectValid() return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_da63b331"
+    ],
+    "hard_negative_ids": [
+      "h3_a949c0b1",
+      "h3_05ed9cb1",
+      "h3_7872c81d",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q142",
+    "query": "What does TextLine.Delete() do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_d4f6dd83"
+    ],
+    "hard_negative_ids": [
+      "h3_ef99f6f3",
+      "h3_e30d6de4",
+      "h3_70ccf4de",
+      "h3_db7ecd02"
+    ]
+  },
+  {
+    "id": "q143",
+    "query": "Syntax for TextLine.Delete()",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_d4f6dd83"
+    ],
+    "hard_negative_ids": [
+      "h3_ef99f6f3",
+      "h3_e30d6de4",
+      "h3_70ccf4de",
+      "h3_db7ecd02"
+    ]
+  },
+  {
+    "id": "q144",
+    "query": "What does TextLine.GetText(flags) return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_e648228f"
+    ],
+    "hard_negative_ids": [
+      "h3_14ef8fb4",
+      "h3_d4f6dd83",
+      "h3_3d6a0e95",
+      "h3_4979db51"
+    ]
+  },
+  {
+    "id": "q145",
+    "query": "Syntax for TextLine.GetText(flags)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_e648228f"
+    ],
+    "hard_negative_ids": [
+      "h3_14ef8fb4",
+      "h3_d4f6dd83",
+      "h3_3d6a0e95",
+      "h3_4979db51"
+    ]
+  },
+  {
+    "id": "q146",
+    "query": "What do flags control in TextLine.GetText()?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_e648228f"
+    ],
+    "hard_negative_ids": [
+      "h3_14ef8fb4",
+      "h3_d4f6dd83",
+      "h3_3d6a0e95",
+      "h3_4979db51"
+    ]
+  },
+  {
+    "id": "q147",
+    "query": "What does TextLine.GetProps() return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_3d6a0e95"
+    ],
+    "hard_negative_ids": [
+      "h3_4979db51",
+      "h3_5bac0530",
+      "h3_54ac8b7a",
+      "h3_020784ff"
+    ]
+  },
+  {
+    "id": "q148",
+    "query": "Syntax for TextLine.GetProps()",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_3d6a0e95"
+    ],
+    "hard_negative_ids": [
+      "h3_4979db51",
+      "h3_5bac0530",
+      "h3_54ac8b7a",
+      "h3_020784ff"
+    ]
+  },
+  {
+    "id": "q149",
+    "query": "What does TextLine.SetProps(setVal) do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_eae4645f"
+    ],
+    "hard_negative_ids": [
+      "h3_b893d859",
+      "h3_76a9895d",
+      "h3_020784ff",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q150",
+    "query": "Syntax for TextLine.SetProps(setVal)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_eae4645f"
+    ],
+    "hard_negative_ids": [
+      "h3_b893d859",
+      "h3_76a9895d",
+      "h3_020784ff",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q151",
+    "query": "What does TextLine.ObjectValid() return?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_7872c81d"
+    ],
+    "hard_negative_ids": [
+      "h3_da63b331",
+      "h3_05ed9cb1",
+      "h3_a949c0b1",
+      "h3_7af592e4"
+    ]
+  },
+  {
+    "id": "q152",
+    "query": "What is TextLoc(obj, offset)?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_fc2e1d41"
+    ],
+    "hard_negative_ids": [
+      "h2_41153a4b",
+      "h3_14ef8fb4",
+      "h3_e648228f",
+      "h1_fbd6f5b9"
+    ]
+  },
+  {
+    "id": "q153",
+    "query": "Syntax for TextLoc(obj, offset)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_fc2e1d41"
+    ],
+    "hard_negative_ids": [
+      "h2_41153a4b",
+      "h3_14ef8fb4",
+      "h3_e648228f",
+      "h1_fbd6f5b9"
+    ]
+  },
+  {
+    "id": "q154",
+    "query": "What objects can TextLoc reference?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_fc2e1d41"
+    ],
+    "hard_negative_ids": [
+      "h2_41153a4b",
+      "h3_14ef8fb4",
+      "h3_e648228f",
+      "h1_fbd6f5b9"
+    ]
+  },
+  {
+    "id": "q155",
+    "query": "What does offset mean in TextLoc?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_fc2e1d41"
+    ],
+    "hard_negative_ids": [
+      "h2_41153a4b",
+      "h3_14ef8fb4",
+      "h3_e648228f",
+      "h1_fbd6f5b9"
+    ]
+  },
+  {
+    "id": "q156",
+    "query": "What is TextRange(beg, end)?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_41153a4b"
+    ],
+    "hard_negative_ids": [
+      "h2_fc2e1d41",
+      "h3_14ef8fb4",
+      "h3_e648228f",
+      "h1_fbd6f5b9"
+    ]
+  },
+  {
+    "id": "q157",
+    "query": "Syntax for TextRange(beg, end)",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_41153a4b"
+    ],
+    "hard_negative_ids": [
+      "h2_fc2e1d41",
+      "h3_14ef8fb4",
+      "h3_e648228f",
+      "h1_fbd6f5b9"
+    ]
+  },
+  {
+    "id": "q158",
+    "query": "Can TextRange span multiple paragraphs?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_41153a4b"
+    ],
+    "hard_negative_ids": [
+      "h2_fc2e1d41",
+      "h3_14ef8fb4",
+      "h3_e648228f",
+      "h1_fbd6f5b9"
+    ]
+  },
+  {
+    "id": "q159",
+    "query": "Can TextRange span graphic text lines?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_41153a4b"
+    ],
+    "hard_negative_ids": [
+      "h2_fc2e1d41",
+      "h3_14ef8fb4",
+      "h3_e648228f",
+      "h1_fbd6f5b9"
+    ]
+  },
+  {
+    "id": "q160",
+    "query": "What does Constants.FV_OBJ_END_OFFSET represent when selecting text ranges?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_41153a4b",
+      "h2_a9464f08",
+      "h2_cdb1ca35_exa",
+      "h2_7316769f_tab"
+    ],
+    "positive_filters": [
+      {
+        "fields": [
+          "content",
+          "chunk_summary",
+          "heading"
+        ],
+        "contains_any": [
+          "Constants.FV_OBJ_END_OFFSET",
+          "FV_OBJ_END_OFFSET"
+        ],
+        "max_matches": 50
+      }
+    ],
+    "hard_negative_ids": [
+      "h2_fc2e1d41",
+      "h3_14ef8fb4",
+      "h3_e648228f",
+      "h1_fbd6f5b9"
+    ]
+  },
+  {
+    "id": "q161",
+    "query": "What is MIF (Maker Interchange Format)?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h1_fbd6f5b9"
+    ],
+    "hard_negative_ids": [
+      "h2_2fc7ec96",
+      "h2_ce0feae0",
+      "h2_fc2e1d41",
+      "h3_14ef8fb4"
+    ]
+  },
+  {
+    "id": "q162",
+    "query": "What does the MIFFile statement do?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_ad11e077"
+    ],
+    "hard_negative_ids": [
+      "h2_f4f12ee6",
+      "h2_5bc2bd98",
+      "h2_798aabd3",
+      "h2_be9735b6"
+    ]
+  },
+  {
+    "id": "q163",
+    "query": "What is required for FrameMaker to recognize a MIF file?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_ad11e077"
+    ],
+    "hard_negative_ids": [
+      "h2_f4f12ee6",
+      "h2_5bc2bd98",
+      "h2_798aabd3",
+      "h2_be9735b6"
+    ]
+  },
+  {
+    "id": "q164",
+    "query": "What happens if a MIF file does not include document objects?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_ad11e077"
+    ],
+    "hard_negative_ids": [
+      "h2_5bc2bd98",
+      "h2_798aabd3",
+      "h2_f4f12ee6",
+      "h1_36f066b5"
+    ]
+  },
+  {
+    "id": "q165",
+    "query": "What default objects does FrameMaker provide in a MIF file?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_5bc2bd98"
+    ],
+    "hard_negative_ids": [
+      "h2_798aabd3",
+      "h2_ad11e077",
+      "h2_f4f12ee6",
+      "h3_2128a2b9"
+    ]
+  },
+  {
+    "id": "q166",
+    "query": "What does the MIF interpreter track as current state?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_798aabd3"
+    ],
+    "hard_negative_ids": [
+      "h2_5bc2bd98",
+      "h2_ad11e077",
+      "h2_f4f12ee6",
+      "h3_2128a2b9"
+    ]
+  },
+  {
+    "id": "q167",
+    "query": "How is MIF statement syntax structured?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_f4f12ee6"
+    ],
+    "hard_negative_ids": [
+      "h3_94a5019b",
+      "h3_c3377504",
+      "h2_ad11e077",
+      "h3_2128a2b9"
+    ]
+  },
+  {
+    "id": "q168",
+    "query": "Are MIF tokens case-sensitive?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_f4f12ee6"
+    ],
+    "hard_negative_ids": [
+      "h3_94a5019b",
+      "h3_c3377504",
+      "h2_ad11e077",
+      "h3_2128a2b9"
+    ]
+  },
+  {
+    "id": "q169",
+    "query": "What happens when the MIF interpreter encounters an invalid token?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_f4f12ee6"
+    ],
+    "hard_negative_ids": [
+      "h3_94a5019b",
+      "h3_c3377504",
+      "h2_ad11e077",
+      "h3_2128a2b9"
+    ]
+  },
+  {
+    "id": "q170",
+    "query": "What are substatements in MIF?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_94a5019b"
+    ],
+    "hard_negative_ids": [
+      "h2_f4f12ee6",
+      "h3_c3377504",
+      "h2_ad11e077",
+      "h3_2128a2b9"
+    ]
+  },
+  {
+    "id": "q171",
+    "query": "What is the difference between a main statement and substatement in MIF?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_94a5019b"
+    ],
+    "hard_negative_ids": [
+      "h2_f4f12ee6",
+      "h3_c3377504",
+      "h2_ad11e077",
+      "h3_2128a2b9"
+    ]
+  },
+  {
+    "id": "q172",
+    "query": "What is a tagstring in MIF?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_5e29a849_tab"
+    ],
+    "positive_filters": [
+      {
+        "fields": [
+          "content",
+          "chunk_summary"
+        ],
+        "contains_any": [
+          "tagstring value must be unique",
+          "A `tagstring` value must be unique"
+        ],
+        "max_matches": 50
+      }
+    ],
+    "hard_negative_ids": [
+      "h3_69d49ece",
+      "h3_a36ecfde",
+      "h3_bb997434",
+      "h2_f4f12ee6"
+    ]
+  },
+  {
+    "id": "q173",
+    "query": "What is an ID in MIF and what range is valid?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_5e29a849_tab",
+      "h4_8825749c"
+    ],
+    "positive_filters": [
+      {
+        "fields": [
+          "content",
+          "chunk_summary"
+        ],
+        "contains_any": [
+          "ID can be any positive integer",
+          "An ID can be any positive integer from 1 to 65535"
+        ],
+        "max_matches": 50
+      }
+    ],
+    "hard_negative_ids": [
+      "h3_69d49ece",
+      "h3_a36ecfde",
+      "h3_bb997434",
+      "h2_f4f12ee6"
+    ]
+  },
+  {
+    "id": "q174",
+    "query": "What does dimension mean in MIF data types?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_5e29a849_tab"
+    ],
+    "hard_negative_ids": [
+      "h3_69d49ece",
+      "h3_bb997434",
+      "h3_bb997434",
+      "h2_f4f12ee6"
+    ]
+  },
+  {
+    "id": "q175",
+    "query": "What are the supported measurement units in MIF?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_69d49ece"
+    ],
+    "hard_negative_ids": [
+      "h3_5e29a849_tab",
+      "h3_bb997434",
+      "h3_a36ecfde",
+      "h2_f4f12ee6"
+    ]
+  },
+  {
+    "id": "q176",
+    "query": "Can MIF mix units in a single statement?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_69d49ece"
+    ],
+    "hard_negative_ids": [
+      "h3_5e29a849_tab",
+      "h3_bb997434",
+      "h3_a36ecfde",
+      "h2_f4f12ee6"
+    ]
+  },
+  {
+    "id": "q177",
+    "query": "What is a metric value in MathFullForm?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_bb997434"
+    ],
+    "hard_negative_ids": [
+      "h3_69d49ece",
+      "h3_5e29a849_tab",
+      "h3_a36ecfde",
+      "h2_f4f12ee6"
+    ]
+  },
+  {
+    "id": "q178",
+    "query": "How do I convert metric values to inches?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_bb997434"
+    ],
+    "hard_negative_ids": [
+      "h3_69d49ece",
+      "h3_5e29a849_tab",
+      "h3_a36ecfde",
+      "h2_f4f12ee6"
+    ]
+  },
+  {
+    "id": "q179",
+    "query": "How are strings delimited in MIF?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_a36ecfde"
+    ],
+    "hard_negative_ids": [
+      "h3_4837b874",
+      "h3_5e29a849_tab",
+      "h3_69d49ece",
+      "h2_f4f12ee6"
+    ]
+  },
+  {
+    "id": "q180",
+    "query": "How do I escape a tab character in a MIF string?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_a36ecfde"
+    ],
+    "hard_negative_ids": [
+      "h3_4837b874",
+      "h3_5e29a849_tab",
+      "h3_69d49ece",
+      "h2_f4f12ee6"
+    ]
+  },
+  {
+    "id": "q181",
+    "query": "How do I escape a > character in a MIF string?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_a36ecfde"
+    ],
+    "hard_negative_ids": [
+      "h3_4837b874",
+      "h3_5e29a849_tab",
+      "h3_69d49ece",
+      "h2_f4f12ee6"
+    ]
+  },
+  {
+    "id": "q182",
+    "query": "How do I represent non-ASCII characters in a MIF string?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_a36ecfde"
+    ],
+    "hard_negative_ids": [
+      "h3_4837b874",
+      "h3_5e29a849_tab",
+      "h3_69d49ece",
+      "h2_f4f12ee6"
+    ]
+  },
+  {
+    "id": "q183",
+    "query": "What is the difference between \\xnn and \\uXXXX in MIF?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_a36ecfde"
+    ],
+    "hard_negative_ids": [
+      "h3_4837b874",
+      "h3_5e29a849_tab",
+      "h3_69d49ece",
+      "h2_f4f12ee6"
+    ]
+  },
+  {
+    "id": "q184",
+    "query": "How do I write a device-independent pathname in MIF?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_4837b874"
+    ],
+    "hard_negative_ids": [
+      "h4_b37400a2",
+      "h4_c46ff5dd",
+      "h3_a36ecfde",
+      "h3_69d49ece"
+    ]
+  },
+  {
+    "id": "q185",
+    "query": "How do I write an absolute pathname in MIF for Windows?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h4_b37400a2"
+    ],
+    "hard_negative_ids": [
+      "h3_4837b874",
+      "h4_c46ff5dd",
+      "h3_a36ecfde",
+      "h3_69d49ece"
+    ]
+  },
+  {
+    "id": "q186",
+    "query": "How do I write an absolute pathname in MIF for UNIX?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h4_b37400a2"
+    ],
+    "hard_negative_ids": [
+      "h3_4837b874",
+      "h4_c46ff5dd",
+      "h3_a36ecfde",
+      "h3_69d49ece"
+    ]
+  },
+  {
+    "id": "q187",
+    "query": "How do I write a relative pathname in MIF?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h4_c46ff5dd"
+    ],
+    "hard_negative_ids": [
+      "h4_b37400a2",
+      "h3_4837b874",
+      "h3_a36ecfde",
+      "h3_69d49ece"
+    ]
+  },
+  {
+    "id": "q188",
+    "query": "What is the required order of objects in a MIF file?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_2128a2b9"
+    ],
+    "hard_negative_ids": [
+      "h2_f4f12ee6",
+      "h2_2c9e82c5",
+      "h2_ad11e077",
+      "h2_798aabd3"
+    ]
+  },
+  {
+    "id": "q189",
+    "query": "How do I create a minimal MIF file with Hello World text?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_be9735b6"
+    ],
+    "hard_negative_ids": [
+      "h2_9bde2376",
+      "h2_ad11e077",
+      "h1_fbd6f5b9",
+      "h2_f4f12ee6"
+    ]
+  },
+  {
+    "id": "q190",
+    "query": "What MIF statements are required to import text?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_9bde2376"
+    ],
+    "hard_negative_ids": [
+      "h2_be9735b6",
+      "h2_f4f12ee6",
+      "h3_2128a2b9",
+      "h2_ad11e077"
+    ]
+  },
+  {
+    "id": "q191",
+    "query": "How do I define a paragraph in MIF?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_9bde2376"
+    ],
+    "hard_negative_ids": [
+      "h2_be9735b6",
+      "h3_62500024",
+      "h3_784f10af",
+      "h3_2128a2b9"
+    ]
+  },
+  {
+    "id": "q192",
+    "query": "How do I define a paragraph format using Pgf?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_62500024"
+    ],
+    "hard_negative_ids": [
+      "h3_784f10af",
+      "h3_50301205",
+      "h2_9bde2376",
+      "h3_ea39fdff"
+    ]
+  },
+  {
+    "id": "q193",
+    "query": "What is a PgfCatalog statement?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_50301205"
+    ],
+    "hard_negative_ids": [
+      "h3_62500024",
+      "h3_784f10af",
+      "h2_9bde2376",
+      "h3_ea39fdff"
+    ]
+  },
+  {
+    "id": "q194",
+    "query": "Do custom paragraph catalogs replace default paragraph formats?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_50301205"
+    ],
+    "hard_negative_ids": [
+      "h3_62500024",
+      "h3_784f10af",
+      "h2_9bde2376",
+      "h3_f30c00eb"
+    ]
+  },
+  {
+    "id": "q195",
+    "query": "How do I apply a paragraph format using PgfTag?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_784f10af"
+    ],
+    "hard_negative_ids": [
+      "h3_50301205",
+      "h3_62500024",
+      "h2_9bde2376",
+      "h3_ea39fdff"
+    ]
+  },
+  {
+    "id": "q196",
+    "query": "How do I override paragraph alignment locally in MIF?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_784f10af"
+    ],
+    "hard_negative_ids": [
+      "h3_50301205",
+      "h3_62500024",
+      "h2_9bde2376",
+      "h3_ea39fdff"
+    ]
+  },
+  {
+    "id": "q197",
+    "query": "How do paragraphs inherit properties in MIF?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h3_ea39fdff"
+    ],
+    "hard_negative_ids": [
+      "h3_784f10af",
+      "h3_50301205",
+      "h3_62500024",
+      "h2_798aabd3"
+    ]
+  },
+  {
+    "id": "q198",
+    "query": "How do I define character formats using FontCatalog?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_bafc1173"
+    ],
+    "hard_negative_ids": [
+      "h3_50301205",
+      "h3_784f10af",
+      "h3_62500024",
+      "h2_9bde2376"
+    ]
+  },
+  {
+    "id": "q199",
+    "query": "How do I apply a character format using FTag?",
+    "difficulty": "hard",
+    "split": "test",
+    "min_positive_hits": 1,
+    "positive_ids": [
+      "h2_bafc1173"
+    ],
+    "hard_negative_ids": [
+      "h3_784f10af",
+      "h3_50301205",
+      "h3_62500024",
+      "h2_9bde2376"
+    ]
+  }
+]

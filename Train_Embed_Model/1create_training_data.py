@@ -1,3 +1,38 @@
+"""Generate curriculum-ready triplets for the Train Embed Model pipeline.
+
+This script is invoked by `0pipeline_manager.py` after chunking to build all
+training/eval splits used downstream (tokenizer, fine-tuner, diagnostics). It
+does the following:
+
+1. Load curated chunks (plus metadata) emitted by the upstream crawl/clean
+    stages.
+2. Engineer multiple positive-pair views (parent-child, sibling, summary, and
+    section matches) while honoring project-specific exclusions.
+3. For every positive pair, sample easy/medium/hard negatives with steadily
+    tighter cosine thresholds so we can teach progressive difficulty during
+    curriculum training.
+4. Enforce the configured category mix, same-source ratio, and per-difficulty
+    quotas before exporting JSON train/test splits (and stats) into
+    `TRAINING_DATA_DIR/<difficulty>/`.
+
+Maintaining this docstring alongside the pipeline docs keeps feature work in
+sync with the automation that publishes triplets to the rest of the stack."""
+
+# Filtering overview (read top-to-bottom while following `main()`):
+# - Global chunk gates: `filter_chunks_for_training()` removes low-quality
+#   content and marks chunks with summaries; `_is_excluded_anchor_chunk()` blocks
+#   disallowed types (tables by default) from anchor/positive roles.
+# - Structural safety rails: `_generate_parent_child_pairs()` enforces the
+#   parent/child rule, while sibling/section generators keep anchors aligned
+#   with meaningful context before balancing/ratio enforcement steps.
+# - Table throttling: `_initialize_table_chunk_cache()` +
+#   `_table_chunk_allowed_for_medium()` limit how many table rows survive as
+#   medium negatives under a single heading so we don't flood the dataset.
+# - Difficulty-specific filters: within `create_training_triplets_by_difficulty()`
+#   every easy/medium/hard negative is scored via `_negative_similarity_...` and
+#   rejected when cosine similarity breaks that tier's bounds; the per-tier
+#   logic also encodes rules like "easy must change H1" or "hard must share
+#   scope" before the triplet gets written.
 
 
 import os
@@ -11,17 +46,6 @@ from sentence_transformers import SentenceTransformer
 from scripts.config_training_embed import *
 from scripts.custom_logger import setup_global_logger
 
-# High-level flow::
-# 1. Load the chunk JSON file that was generated earlier in the pipeline.
-# 2. Generate training triplets (anchor, positive, negative) from the chunks:
-#    - Use hierarchical relationships (parent-child) for positive pairs
-#    - Use semantic similarity (same heading paths, summaries) for positive pairs
-#    - Generate THREE difficulty levels of negatives for each positive pair:
-#      * EASY: Random chunks from different heading parents: teach basic domain separation
-#      * MEDIUM: Chunks from similar topics but different contexts: teach topic-level distinctions
-#      * HARD: Chunks from same topic that look similar but aren't the answer: teach fine-grained semantic differences
-# 3. Export difficulty level data to subdirectories each parsed by epoch (easy=1, medium=2, hard=3)
-# 4. Each difficulty level gets train/test splits for evaluation
 
 # Temporary filter to keep specific chunk types from acting as anchors/positives.
 chunkfile = BASE_CWD / "a_chunks.json"
@@ -73,11 +97,13 @@ def _is_excluded_anchor_chunk(chunk: Dict) -> bool:
 
 
 def _is_table_chunk(chunk: Dict) -> bool:
+    """Return True when the chunk is a table (used for medium-neg filters)."""
     chunk_type = chunk.get("chunk_type")
     return isinstance(chunk_type, str) and chunk_type.lower() == "table"
 
 
 def _initialize_table_chunk_cache(all_chunks: List[Dict]) -> None:
+    """Cache table chunk ids per heading so we can throttle medium-neg sampling."""
     global _TABLE_CHUNK_CACHE_READY
     if _TABLE_CHUNK_CACHE_READY:
         return
@@ -99,6 +125,7 @@ def _initialize_table_chunk_cache(all_chunks: List[Dict]) -> None:
 
 
 def _table_chunk_allowed_for_medium(chunk: Dict, heading: str) -> bool:
+    """Check whether a table chunk under the heading is within the sampling cap."""
     if not _is_table_chunk(chunk):
         return True
     chunk_id = chunk.get("id")
@@ -111,12 +138,14 @@ def _table_chunk_allowed_for_medium(chunk: Dict, heading: str) -> bool:
 
 
 def _split_header_segments(path_value: str) -> List[str]:
+    """Split a concat header path into normalized segments for comparisons."""
     if not path_value:
         return []
     return [segment.strip().lower() for segment in path_value.split("/") if segment.strip()]
 
 
 def _shares_heading_scope(anchor_segments: List[str], candidate_path: str, candidate_heading: str) -> bool:
+    """Return True when candidate shares the required heading scope with anchor."""
     if not anchor_segments:
         return True
     candidate_segments = _split_header_segments(candidate_path)
@@ -161,6 +190,7 @@ COSINE_MIN_THRESHOLD_MAP = {
     "hard": None,
 }
 
+# Get the batch size and fallback to a safe default if not set or invalid.
 CHUNK_EMBED_BATCH_SIZE = TRAINING_CONFIG.get("chunk_embedding_batch_size", 32)
 _EMBED_MODEL: Optional[SentenceTransformer] = None
 
@@ -318,6 +348,9 @@ def load_chunks() -> Tuple[List[Dict], Dict]:
 
 def filter_chunks_for_training(chunks: List[Dict]) -> List[Dict]:
     """Filter chunks suitable for training based on content length and quality."""
+    # GLOBAL FILTERING PASS: This is the first gate that drops unusable chunks
+    # (length, empty content, placeholder summaries) before any positive/negative
+    # logic runs. Everything downstream assumes only these survivors remain.
     filtered = []
     
     for chunk in chunks:
@@ -372,6 +405,8 @@ def generate_positive_pairs(chunks: List[Dict]) -> List[Tuple[Dict, Dict, str]]:
     positive_pairs = []
     
     # Strategy 1: Parent-child relationships
+    # Enforces the "parent rule" so curriculum training always sees canonical
+    # hierarchical pairs before we add looser similarity heuristics.
     parent_child_pairs = _generate_parent_child_pairs(chunks)
     positive_pairs.extend([(p, c, "parent_child") for p, c in parent_child_pairs])
     
@@ -695,6 +730,9 @@ def _select_medium_negative(anchor: Dict, anchor_path: str, anchor_filename: str
                            anchor_content_words: Set[str], all_chunks: List[Dict],
                            positive: Dict) -> Dict:
     """Select a medium negative: same H1 as anchor but different context."""
+    # Table rows can dominate certain headings, so we seed/update the table
+    # cache up front and consult `_table_chunk_allowed_for_medium()` to cap how
+    # many medium negatives can be tables under a single heading.
     _initialize_table_chunk_cache(all_chunks)
     anchor_top_heading = _top_level_heading(anchor)
     anchor_leaf = (anchor.get("heading") or anchor.get("concat_header_path") or "").lower()
@@ -1050,6 +1088,9 @@ def create_training_triplets_by_difficulty(positive_pairs: List[Tuple[Dict, Dict
     discarded_triplets = {"easy": 0, "medium": 0, "hard": 0}
     candidate_counts = {"easy": 0, "medium": 0, "hard": 0}
     
+    # DIFFICULTY FILTER ORDER: generate candidate negatives (rule-based per
+    # difficulty), then immediately run cosine threshold checks so any
+    # over-similar triplets are discarded before export/stat tracking.
     for anchor, positive, pos_type in positive_pairs:
         # Generate all three difficulty levels for this pair
         easy_neg, medium_neg, hard_neg = generate_negatives_by_difficulty(
@@ -1062,7 +1103,9 @@ def create_training_triplets_by_difficulty(positive_pairs: List[Tuple[Dict, Dict
         medium_category = _chunk_category(medium_neg)
         hard_category = _chunk_category(hard_neg)
 
-        # Create easy triplet when cosine similarity stays under threshold
+        # EASY FILTERS: drop tables (handled via exclusions), require a distinct
+        # top-level heading, and enforce the low-cosine threshold so negatives
+        # feel obviously wrong to the model at the start of training.
         candidate_counts["easy"] += 1
         too_similar, easy_cos = _negative_similarity_exceeds_threshold(anchor, easy_neg, "easy")
         if too_similar:
@@ -1094,7 +1137,9 @@ def create_training_triplets_by_difficulty(positive_pairs: List[Tuple[Dict, Dict
             }
             triplets_by_difficulty['easy'].append(easy_triplet)
         
-        # Create medium triplet
+        # MEDIUM FILTERS: allow same H1 but demand different leaf/context and a
+        # cosine window (min/max). Table throttling ensures we do not oversample
+        # structured data for this tier.
         candidate_counts["medium"] += 1
         too_similar, medium_cos = _negative_similarity_exceeds_threshold(anchor, medium_neg, "medium")
         if too_similar:
@@ -1134,7 +1179,8 @@ def create_training_triplets_by_difficulty(positive_pairs: List[Tuple[Dict, Dict
             }
             triplets_by_difficulty['medium'].append(medium_triplet)
         
-        # Create hard triplet
+        # HARD FILTERS: enforce shared topic scope plus the highest cosine band
+        # (still below the hard max) so negatives are “confusingly similar”.
         candidate_counts["hard"] += 1
         too_similar, hard_cos = _negative_similarity_exceeds_threshold(anchor, hard_neg, "hard")
         if too_similar:

@@ -1,0 +1,381 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Reader</title>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link href="https://cdn.datatables.net/v/dt/dt-2.3.4/datatables.min.css" rel="stylesheet">
+    <script src="https://cdn.datatables.net/v/dt/dt-2.3.4/datatables.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            padding: 20px;
+        }
+        .controls {
+            margin-bottom: 20px;
+            padding: 12px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+        .file-input,
+        .filter-row {
+            margin-bottom: 10px;
+        }
+        #csvSelect {
+            margin-bottom: 8px;
+        }
+        #fileStats {
+            font-size: 0.9rem;
+            color: #555;
+        }
+        #dataTable_wrapper {
+            margin-top: 20px;
+        }
+        .table-sm td,
+        .table-sm th {
+            padding: 0.25rem !important;
+        }
+        table.dataTable.table-sm tbody td,
+        table.dataTable.table-sm thead th {
+            padding: 0.25rem !important;
+        }
+        .value-300 {
+            background-color: #fff3cd !important;
+        }
+        .value-400 {
+            background-color: #ffeaa7 !important;
+        }
+        .value-500 {
+            background-color: #fab1a0 !important;
+        }
+        .value-600 {
+            background-color: #e17055 !important;
+        }
+        .value-700 {
+            background-color: #d63031 !important;
+            color: white !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <h3>CSV Log Reader</h3>
+
+        <div class="controls">
+            <div class="file-input">
+                <label for="directoryInput" class="form-label mb-1">Pick a root folder once (for example: <code>Z_Master_Rag</code>)</label>
+                <input type="file" id="directoryInput" webkitdirectory directory multiple class="form-control">
+            </div>
+
+            <div class="filter-row input-group">
+                <span class="input-group-text">Filter Files</span>
+                <input type="text" id="fileSearch" class="form-control" placeholder="Type part of path or filename..." value="C:\GIT\Z_Master_Rag\Data\framemaker\mif_jsx">
+            </div>
+
+            <div class="filter-row form-check">
+                <input class="form-check-input" type="checkbox" id="includeExcludedDirs">
+                <label class="form-check-label" for="includeExcludedDirs">
+                    Include noise folders (<code>venv</code>, <code>.git</code>, <code>node_modules</code>, <code>__pycache__</code>)
+                </label>
+            </div>
+
+            <div>
+                <select id="csvSelect" class="form-select" disabled>
+                    <option value="">Select CSV File</option>
+                </select>
+                <div id="fileStats">No folder loaded.</div>
+            </div>
+        </div>
+
+        <div id="tableContainer">
+            <table id="dataTable" class="display table table-striped table-sm" style="width:100%">
+                <thead></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let dataTable;
+        let allCsvFiles = [];
+        let filteredCsvFiles = [];
+
+        const EXCLUDED_DIR_MARKERS = [
+            '/venv/',
+            '/.venv/',
+            '/.git/',
+            '/node_modules/',
+            '/__pycache__/'
+        ];
+
+        function normalizePath(path) {
+            return String(path || '').replace(/\\/g, '/');
+        }
+
+        function isCsvOrLog(name) {
+            const lower = name.toLowerCase();
+            return lower.endsWith('.csv') || lower.endsWith('.log');
+        }
+
+        function shouldKeepPath(relativePath) {
+            if (document.getElementById('includeExcludedDirs').checked) {
+                return true;
+            }
+
+            const normalized = `/${normalizePath(relativePath).toLowerCase()}/`;
+            return !EXCLUDED_DIR_MARKERS.some(marker => normalized.includes(marker));
+        }
+
+        function updateFileStats() {
+            const statsEl = document.getElementById('fileStats');
+            const total = allCsvFiles.length;
+            const shown = filteredCsvFiles.length;
+
+            if (total === 0) {
+                statsEl.textContent = 'No CSV/log files found in selected folder.';
+                return;
+            }
+
+            statsEl.textContent = `Showing ${shown} of ${total} CSV/log files.`;
+        }
+
+        function applyFileFilters() {
+            const rawQuery = document.getElementById('fileSearch').value.trim();
+            const normalizedQuery = normalizePath(rawQuery).toLowerCase();
+            const relativeQuery = normalizedQuery
+                .replace(/^[a-z]:\//, '')
+                .replace(/^git\/z_master_rag\//, '');
+            const relativeSegments = relativeQuery.split('/').filter(Boolean);
+            const suffixTerms = [];
+
+            for (let i = 0; i < relativeSegments.length; i++) {
+                const suffix = relativeSegments.slice(i).join('/');
+                if (suffix) {
+                    suffixTerms.push(suffix);
+                }
+            }
+
+            filteredCsvFiles = allCsvFiles.filter(fileObj => {
+                if (!shouldKeepPath(fileObj.relativePath)) {
+                    return false;
+                }
+
+                if (!normalizedQuery) {
+                    return true;
+                }
+
+                const queryTerms = Array.from(new Set([normalizedQuery, relativeQuery, ...suffixTerms].filter(Boolean)));
+                const pathLower = fileObj.relativePath.toLowerCase();
+                const nameLower = fileObj.name.toLowerCase();
+
+                return (
+                    queryTerms.some(term => pathLower.includes(term) || nameLower.includes(term))
+                );
+            });
+
+            populateCSVDropdown();
+            updateFileStats();
+        }
+
+        document.getElementById('directoryInput').addEventListener('change', function(event) {
+            const files = Array.from(event.target.files);
+
+            allCsvFiles = files
+                .filter(file => isCsvOrLog(file.name))
+                .map(file => ({
+                    name: file.name,
+                    relativePath: normalizePath(file.webkitRelativePath || file.name),
+                    file: file,
+                    isUrl: false
+                }))
+                .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+
+            applyFileFilters();
+        });
+
+        document.getElementById('fileSearch').addEventListener('input', applyFileFilters);
+        document.getElementById('includeExcludedDirs').addEventListener('change', applyFileFilters);
+
+        function populateCSVDropdown() {
+            const select = document.getElementById('csvSelect');
+            select.innerHTML = '<option value="">Select a CSV/log file...</option>';
+
+            if (filteredCsvFiles.length === 0) {
+                select.innerHTML = '<option value="">No matching CSV/log files</option>';
+                select.disabled = true;
+                return;
+            }
+
+            filteredCsvFiles.forEach((fileObj, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = fileObj.relativePath;
+                select.appendChild(option);
+            });
+
+            select.disabled = false;
+        }
+
+        document.getElementById('csvSelect').addEventListener('change', function(event) {
+            const fileIndex = event.target.value;
+            if (fileIndex === '') return;
+
+            const selectedFileObj = filteredCsvFiles[fileIndex];
+            loadCSVFile(selectedFileObj);
+        });
+
+        function loadCSVFile(fileObj) {
+            if (fileObj.isUrl) {
+                fetch(fileObj.path)
+                    .then(response => response.text())
+                    .then(csvContent => parseCSV(csvContent))
+                    .catch(error => {
+                        console.error('Error loading file:', error);
+                        alert('Error loading file: ' + fileObj.name);
+                    });
+            } else {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const csvContent = e.target.result;
+                    parseCSV(csvContent);
+                };
+                reader.readAsText(fileObj.file);
+            }
+        }
+
+        function parseCSV(csvContent) {
+            const lines = csvContent.split('\n').filter(line => line.trim() !== '');
+            if (lines.length === 0) return;
+
+            let headerIndex = -1;
+            let headers = [];
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+
+                if (
+                    line.includes('Token count analysis') ||
+                    line.includes('Using tiktoken') ||
+                    line.includes('====')
+                ) {
+                    continue;
+                }
+
+                if (line.includes(',')) {
+                    headers = parseCSVLine(line);
+                    headerIndex = i;
+                    break;
+                }
+            }
+
+            if (headerIndex === -1 || headers.length === 0) {
+                alert('Could not find valid CSV headers in the file');
+                return;
+            }
+
+            const data = [];
+            for (let i = headerIndex + 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (line === '') continue;
+
+                const row = parseCSVLine(line);
+                if (row.length > 0) {
+                    while (row.length < headers.length) {
+                        row.push('');
+                    }
+                    data.push(row);
+                }
+            }
+
+            createDataTable(headers, data);
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+
+                if (char === '"') {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+
+            result.push(current.trim());
+            return result;
+        }
+
+        function createDataTable(headers, data) {
+            if (dataTable) {
+                dataTable.destroy();
+            }
+
+            const table = document.getElementById('dataTable');
+            const thead = table.querySelector('thead');
+            const tbody = table.querySelector('tbody');
+
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+
+            const headerRow = document.createElement('tr');
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                row.forEach(cell => {
+                    const td = document.createElement('td');
+                    td.textContent = cell;
+
+                    const numValue = parseFloat(cell);
+                    if (!isNaN(numValue)) {
+                        if (numValue >= 700) {
+                            td.classList.add('value-700');
+                        } else if (numValue >= 600) {
+                            td.classList.add('value-600');
+                        } else if (numValue >= 500) {
+                            td.classList.add('value-500');
+                        } else if (numValue >= 400) {
+                            td.classList.add('value-400');
+                        } else if (numValue >= 300) {
+                            td.classList.add('value-300');
+                        }
+                    }
+
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+
+            dataTable = new DataTable('#dataTable', {
+                pageLength: 200,
+                lengthMenu: [50, 100, 200, 400],
+                order: [],
+                columnDefs: [
+                    { targets: '_all', className: 'dt-left' }
+                ]
+            });
+
+            document.getElementById('dataTable').classList.add('table-sm');
+        }
+
+        $(document).ready(function() {
+            console.log('CSV Log Reader initialized');
+        });
+    </script>
+</body>
+</html>
