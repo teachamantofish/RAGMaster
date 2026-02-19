@@ -8,7 +8,7 @@ import os
 BASE_CWD = Path("C:/GIT/Z_Master_Rag/Data/framemaker/mif_jsx")
 LOG_FILES = BASE_CWD  # Individual scripts can override if needed.
 MASTER_RERANK_LOG = "master_rerank_training_log.csv"
-CODE_CHANGE = "add 133 q's"  # Optional short description of code changes for logging purposes.
+CODE_CHANGE = "Exp39: DeBERTa-v3-base (86M) + expanded synthetic query training data (~500 new queries)"  # Optional short description of code changes for logging purposes.
 
 # Directory naming for reranker artifacts ------------------------------------
 RERANK_TRAINING_SUBDIR = "reranker_training_data"
@@ -27,7 +27,7 @@ RERANKER_OUTPUT_PATH = BASE_CWD / RERANK_OUTPUT_SUBDIR
 RETRIEVER_BASELINE_MODEL_PATH = BASE_CWD / RETRIEVER_BASELINE_SUBDIR
 
 # Model definition -----------------------------------------------------------
-BASE_MODEL = "C:\\GIT\\Z_Master_Rag\\Data\\framemaker\\mif_jsx\\Qwen3-Reranker-0.6B"
+BASE_MODEL = "microsoft/deberta-v3-base"
 CONFIG_MODEL_NAME = BASE_MODEL
 
 # Allow optional comma-separated overrides for ad-hoc experiments.
@@ -67,11 +67,13 @@ HARD_TRIPLET_RATIO = 0.45
 RERANKER_TRAINING_CONFIG = {
     "epochs": 3,
     "learning_rate": 2e-5,
-    "batch_size": 8,
-    "gradient_accumulation_steps": 2,
-    "warmup_steps": 100,
-    "max_length": 256,
+    "batch_size": 32,
+    "gradient_accumulation_steps": 2,  # NOTE: not supported by CrossEncoder.fit()
+    "warmup_steps": 50,
+    "max_length": 512,
     "use_amp": True,
+    "loss": "binary_ce",
+    "freeze_base": False,
 }
 
 # Hybrid retrieval + rerank defaults ----------------------------------------
@@ -85,9 +87,10 @@ HYBRID_PIPELINE_CONFIG = {
 
 # Retriever-backed candidate generation defaults ---------------------------
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+WORKSPACE_ROOT = PROJECT_ROOT.parent  # C:/GIT/Z_Master_Rag
 
 RETRIEVER_PIPELINE_CONFIG = {
-    "queries_file": PROJECT_ROOT / "retriever_eval_queries.json",
+    "queries_file": WORKSPACE_ROOT / "Training_Data" / "retriever_eval_queries.json",
     "chunks_file": BASE_CWD / "a_chunks.json",
     "top_k": 200,
     "lexical_weight": 0.35,
@@ -98,6 +101,12 @@ RETRIEVER_PIPELINE_CONFIG = {
     "min_positive_hits": 1,
     "min_ground_truth": 1,
 }
+
+# Score Interpolation defaults -----------------------------------------------
+# Sweep alpha values: final_score = α·reranker + (1−α)·baseline
+# alpha=1.0 is pure reranker, alpha=0.0 is pure baseline.
+# Set to empty list [] to skip the sweep.
+INTERPOLATION_ALPHAS = [0.60, 0.63, 0.65, 0.67, 0.70, 0.73, 0.75, 0.77, 0.80]
 
 # Evaluation/reporting defaults ---------------------------------------------
 # Notes:
@@ -113,7 +122,7 @@ RERANK_EVAL_CONFIG = {
     "default_split": "all",
     "use_live_retrieval": True,
     "allow_missing_ground_truth": False,
-    "allow_missed_positives": False,
+    "allow_missed_positives": True,
     "metrics": [
         "mrr",
         "ndcg@10",

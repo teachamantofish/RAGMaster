@@ -215,8 +215,15 @@ except Exception as _e:
     # Non-fatal: log at debug level if needed
     pass
 
-# Load the model directly from HuggingFace name instead of local path
-embed_model = SentenceTransformer(EMBED_MODEL, device=device)
+# Resolve model: try DATASET_ROOT-relative local path first, then treat as HF model ID
+_local_model_path = DATASET_ROOT / EMBED_MODEL
+if _local_model_path.exists():
+    _resolved_model = str(_local_model_path)
+    logger.info("Using local model at %s", _resolved_model)
+else:
+    _resolved_model = EMBED_MODEL  # Treat as HuggingFace model ID
+    logger.info("Loading model from HuggingFace: %s", _resolved_model)
+embed_model = SentenceTransformer(_resolved_model, device=device)
 
 if ADAPTER_DIR:
     if ADAPTER_DIR.exists():
@@ -290,8 +297,15 @@ for idx, chunk in enumerate(chunks):
         try:
             # Use tensor output to preserve/control dtype, then cast to requested output dtype
             # Note: compute dtype is controlled by model param dtype; autocast is generally not needed here
+            # Build enriched text: align with training by including heading + friendly names
+            _heading = (chunk.get("concat_header_path") or "").strip()
+            _friendly = (chunk.get("code_friendly_name") or "").strip()
+            _embed_text = f"{_heading}: {chunk['content']}" if _heading else chunk['content']
+            if _friendly:
+                _embed_text = f"{_embed_text}\n{_friendly}"
+
             emb_tensor = embed_model.encode(
-                chunk['content'],
+                _embed_text,
                 convert_to_tensor=True,
                 device=device,
                 normalize_embeddings=NORMALIZE_EMBEDDINGS,

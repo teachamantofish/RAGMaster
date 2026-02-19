@@ -241,10 +241,16 @@ def _chunk_embedding_text(chunk: Dict) -> str:
     summary = (chunk.get("chunk_summary") or "").strip()
     heading = (chunk.get("concat_header_path") or "").strip()
     if summary and summary.lower() != "false" and len(summary) > 20:
-        return f"{heading}: {summary}" if heading else summary
-    if heading and len(content) > 100:
-        return f"{heading}: {content}"
-    return content
+        text = f"{heading}: {summary}" if heading else summary
+    elif heading and len(content) > 100:
+        text = f"{heading}: {content}"
+    else:
+        text = content
+    # Append code-friendly names for FDK constant expansion
+    friendly = (chunk.get("code_friendly_name") or "").strip()
+    if friendly:
+        text = f"{text}\n{friendly}"
+    return text
 
 
 def _get_embedding_model() -> SentenceTransformer:
@@ -1317,6 +1323,11 @@ def _extract_text_for_training(chunk: Dict, include_instruction: bool = False) -
 
     else:
         text = content
+
+    # Append code-friendly names so the model learns FDK constant expansions
+    friendly = (chunk.get("code_friendly_name") or "").strip()
+    if friendly:
+        text = f"{text}\n{friendly}"
 
     if include_instruction:
         return f"{EMBED_INSTRUCTION}\n{text}"

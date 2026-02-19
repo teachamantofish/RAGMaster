@@ -77,6 +77,7 @@
 </main>
 </body>
 <script type="module" src="js/app-config.js"></script>
+<script src="js/app-bridge.js"></script>
 <script src="js/datatables.js"></script>
 <script src="js/util.js"></script>
 <script>
@@ -111,29 +112,18 @@ const tabConfigFiles = {
 // own data table (no textarea/pywebview load required).
 const configTabsToAutoLoad = Object.keys(tabConfigFiles).filter(t => t !== 'source');
 const isHttpProtocol = window.location.protocol === 'http:' || window.location.protocol === 'https:';
-const userAgent = typeof navigator !== 'undefined' ? (navigator.userAgent || '').toLowerCase() : '';
-const detectedPywebviewUA = userAgent.includes('pywebview');
-const detectedPywebviewGlobal = typeof pywebview !== 'undefined';
-
-const PYWEBVIEW_MAX_ATTEMPTS = 6;
-const PYWEBVIEW_RETRY_DELAY = 400;
-
-window.__PYWEBVIEW_RUNTIME__ = detectedPywebviewUA || detectedPywebviewGlobal || window.__PYWEBVIEW_RUNTIME__ === true;
-window.__PYWEBVIEW_MAX_ATTEMPTS__ = PYWEBVIEW_MAX_ATTEMPTS;
-window.__PYWEBVIEW_RETRY_DELAY__ = PYWEBVIEW_RETRY_DELAY;
-
-window.addEventListener('pywebviewready', () => {
-  window.__PYWEBVIEW_RUNTIME__ = true;
-});
 
 function hasPywebviewApi() {
-  return typeof pywebview !== 'undefined' &&
-    pywebview &&
-    pywebview.api &&
-    typeof pywebview.api.load_file === 'function';
+  if (window.AppBridge && typeof window.AppBridge.hasPywebviewApi === 'function') {
+    return window.AppBridge.hasPywebviewApi('load_file');
+  }
+  return false;
 }
 
 function isPywebviewRuntime() {
+  if (window.AppBridge && typeof window.AppBridge.isPywebviewRuntime === 'function') {
+    return window.AppBridge.isPywebviewRuntime();
+  }
   return window.__PYWEBVIEW_RUNTIME__ === true;
 }
 
@@ -158,8 +148,7 @@ function loadTab(tab) {
   const fileUrl = (() => {
     if (/^(?:https?:)?\/\//.test(file)) return file;
     if (file.startsWith('/')) return file;
-    if (window.location.protocol === 'file:') return file;
-    return `/${file.replace(/^\.\//, '')}`;
+    return file.replace(/^\.\//, '');
   })();
   
   // Only fetch HTML if the section is empty (not already loaded)
@@ -246,7 +235,7 @@ function loadTab(tab) {
 
 
                 if (configPath) {
-                  const result = await pywebview.api.load_file(configPath);
+                  const result = await window.AppBridge.loadFile(configPath);
                   if (result && result.success && typeof result.content === 'string') {
                     window.__PRELOADED_FILES = window.__PRELOADED_FILES || {};
                     if (preloadKey) {
@@ -387,8 +376,8 @@ async function loadConfigForTab(tabName, attempt = 0) {
     console.log(`[DEBUG] Set placeholder, now attempting to load...`);
     
     const pywebviewRuntime = isPywebviewRuntime();
-    const maxAttempts = window.__PYWEBVIEW_MAX_ATTEMPTS__ ?? PYWEBVIEW_MAX_ATTEMPTS;
-    const retryDelay = window.__PYWEBVIEW_RETRY_DELAY__ ?? PYWEBVIEW_RETRY_DELAY;
+    const maxAttempts = window.__PYWEBVIEW_MAX_ATTEMPTS__ ?? 6;
+    const retryDelay = window.__PYWEBVIEW_RETRY_DELAY__ ?? 400;
     const hasPy = hasPywebviewApi();
 
     if (pywebviewRuntime && !hasPy && attempt < maxAttempts) {
@@ -403,8 +392,8 @@ async function loadConfigForTab(tabName, attempt = 0) {
     
     if (hasPy) {
         try {
-            console.log(`[DEBUG] Calling pywebview.api.load_file(${configFile})`);
-            const result = await pywebview.api.load_file(configFile);
+        console.log(`[DEBUG] Calling AppBridge.loadFile(${configFile})`);
+        const result = await window.AppBridge.loadFile(configFile);
             console.log(`[DEBUG] Load result:`, result);
             
             if (result && result.success) {
@@ -521,11 +510,11 @@ if (workflowTabs) {
     if (!activePanel) return;
 
     if (configTabsToAutoLoad.includes(activePanel)) {
-      setTimeout(() => loadConfigForTab(activePanel), PYWEBVIEW_RETRY_DELAY);
+      setTimeout(() => loadConfigForTab(activePanel), window.__PYWEBVIEW_RETRY_DELAY__ ?? 400);
     }
 
     if (activePanel === 'source') {
-      setTimeout(() => loadSourceTab(true), PYWEBVIEW_RETRY_DELAY);
+      setTimeout(() => loadSourceTab(true), window.__PYWEBVIEW_RETRY_DELAY__ ?? 400);
     }
   });
 }

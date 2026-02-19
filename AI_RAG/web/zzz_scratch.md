@@ -14,12 +14,3 @@ show summary log
 show eval log
 show script
 
-======= training =============
-
-embed training instructions
-ranker model training instructions
-
-======================
-
-train embed  and reranker
-eval both models.

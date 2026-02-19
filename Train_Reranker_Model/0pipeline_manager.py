@@ -147,6 +147,8 @@ def _run_train_stage(python_exe: str, args, dry_run: bool) -> Tuple[bool, float]
         cmd.extend(["--max-length", str(args.trainer_max_length)])
     if args.use_amp is not None:
         cmd.append("--use-amp" if args.use_amp else "--no-use-amp")
+    if args.loss:
+        cmd.extend(["--loss", args.loss])
     return _run(cmd, "Train reranker cross-encoder", dry_run)
 
 
@@ -163,7 +165,46 @@ def _run_eval_stage(python_exe: str, args, dry_run: bool, *, output_dir: Path) -
     if args.cross_batch_size:
         cmd.extend(["--cross-batch-size", str(args.cross_batch_size)])
     cmd.extend(["--output-dir", str(output_dir)])
-    return _run(cmd, "Evaluate reranker vs retriever baseline", dry_run)
+
+    total_duration = 0.0
+    ok, duration = _run(cmd, "Evaluate reranker vs retriever baseline", dry_run)
+    total_duration += duration
+    if not ok:
+        return False, total_duration
+
+    holdout_path = Path(args.holdout_queries_file) if args.holdout_queries_file else None
+    run_holdout = args.run_holdout_eval and holdout_path is not None and holdout_path.exists()
+    if run_holdout:
+        holdout_output_dir = Path(args.holdout_output_dir) if args.holdout_output_dir else (output_dir / "holdout")
+        holdout_cmd = [python_exe, "3evaluate_model.py", "--split", args.holdout_split]
+        if args.difficulties:
+            holdout_cmd.extend(["--difficulties", *args.difficulties])
+        if args.model_path:
+            holdout_cmd.extend(["--model-path", args.model_path])
+        if args.baseline_model:
+            holdout_cmd.extend(["--baseline-model", args.baseline_model])
+        if args.baseline_batch_size:
+            holdout_cmd.extend(["--baseline-batch-size", str(args.baseline_batch_size)])
+        if args.cross_batch_size:
+            holdout_cmd.extend(["--cross-batch-size", str(args.cross_batch_size)])
+        holdout_cmd.extend([
+            "--queries-file",
+            str(holdout_path),
+            "--output-dir",
+            str(holdout_output_dir),
+        ])
+        ok_holdout, dur_holdout = _run(holdout_cmd, "Evaluate reranker on human holdout", dry_run)
+        total_duration += dur_holdout
+        if not ok_holdout:
+            return False, total_duration
+    elif args.run_holdout_eval:
+        print(
+            f"[INFO] Holdout eval skipped: file not found at {holdout_path}"
+            if holdout_path
+            else "[INFO] Holdout eval skipped: no --holdout-queries-file configured"
+        )
+
+    return True, total_duration
 
 
 def _create_stats_path() -> Path:
@@ -400,6 +441,12 @@ def main() -> None:
     parser.add_argument("--trainer-learning-rate", type=float, help="Override training learning rate")
     parser.add_argument("--trainer-max-length", type=int, help="Override training max length")
     parser.add_argument(
+        "--loss",
+        choices=["binary_ce", "listwise"],
+        default=RERANKER_TRAINING_CONFIG.get("loss", "binary_ce"),
+        help="Training loss: binary_ce (original) or listwise (grouped softmax/InfoNCE)",
+    )
+    parser.add_argument(
         "--use-amp",
         action=argparse.BooleanOptionalAction,
         default=None,
@@ -416,6 +463,28 @@ def main() -> None:
     parser.add_argument("--baseline-batch-size", type=int, help="Batch size for retriever scoring")
     parser.add_argument("--cross-batch-size", type=int, help="Batch size for reranker scoring")
     parser.add_argument("--eval-output-dir", help="Custom directory for eval outputs")
+    parser.add_argument(
+        "--holdout-queries-file",
+        type=Path,
+        default=PROJECT_ROOT.parent / "Training_Data" / "retriever_eval_queries_human_holdout.json",
+        help="Optional human holdout queries file for secondary eval pass",
+    )
+    parser.add_argument(
+        "--run-holdout-eval",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Run additional holdout evaluation when holdout queries file exists",
+    )
+    parser.add_argument(
+        "--holdout-split",
+        choices=["train", "test", "all"],
+        default="test",
+        help="Split argument used for holdout evaluation",
+    )
+    parser.add_argument(
+        "--holdout-output-dir",
+        help="Custom output directory for holdout eval outputs (default: <eval-output-dir>/holdout)",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Print commands without executing")
 
     args = parser.parse_args()

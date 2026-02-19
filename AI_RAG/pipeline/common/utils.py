@@ -1,18 +1,15 @@
 import os
 import inspect
 import logging
-import logging.config
-import yaml
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Union
 import csv
 import sys
-import pandas
 
 # Base configuration file for all scripts
 _CSV_PATH = "metadataconfig.csv"  # Path to metadata config CSV
 _ROOT_DIR = "C:/GIT/Z_Master_Rag/Data/framemaker" # parent directory for downloaded source documents
-_CRAWL_ID = 14 ############### this needs to get moved and only sent to the script via the datatables UI.
+_CRAWL_ID = 16 ############### this needs to get moved and only sent to the script via the datatables UI.
 
 def get_csv_to_process(crawl_id=None) -> Dict[str, Any]:
     """

@@ -5,6 +5,9 @@
   const CSV_LINE_ENDING = '\n';
 
   function hasPywebviewApi() {
+    if (global.AppBridge && typeof global.AppBridge.hasPywebviewApi === 'function') {
+      return global.AppBridge.hasPywebviewApi('save_file');
+    }
     return (
       typeof global.pywebview !== 'undefined' &&
       global.pywebview &&
@@ -168,7 +171,9 @@
     }
 
     const csvText = buildCsv(headers, rows, includeHeaders);
-    const result = await global.pywebview.api.save_file(targetPath, csvText);
+    const result = global.AppBridge && typeof global.AppBridge.saveFile === 'function'
+      ? await global.AppBridge.saveFile(targetPath, csvText)
+      : await global.pywebview.api.save_file(targetPath, csvText);
     if (!result || result.success !== true) {
       const reason = (result && result.error) || 'Unknown error';
       console.warn('[SourceActions] pywebview save_file reported failure.', reason);

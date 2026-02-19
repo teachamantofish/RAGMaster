@@ -487,5 +487,40 @@ FIX this: `SentenceTransformer._target_device` has been deprecated, please use `
 - Configure defaults for the validation thresholds in [Train_Reranker_Model/scripts/config_training_rerank.py](Train_Reranker_Model/scripts/config_training_rerank.py) to keep env overrides simple. Operators can tune `min_ground_truth` / `min_positive_hits` per environment, and individual queries can override them inline for especially strict probes.
 
 
-eval query filters
-tune the metadata addition logic. 
+===========
+
+### Reranker model selection — resolved (2026-02-13)
+
+**Misconception**: Embedding model and reranker model should be from the same family (e.g., both Qwen 0.6B).
+
+**Reality**: Embedding (bi-encoder) and reranking (cross-encoder) are fundamentally different architectures. They don't need to match and there is no benefit to using the same model family for both.
+
+| | Bi-encoder (embedding) | Cross-encoder (reranker) |
+|---|---|---|
+| Purpose | Map text → vector for fast retrieval | Score (query, doc) pairs for re-ranking |
+| Architecture | Encoder producing single embedding | Classifier seeing both texts together |
+| Speed | Fast (independent encoding) | Slow (pair-wise scoring) |
+| When used | Retrieve top-K from full corpus | Re-score short candidate list |
+
+**What went wrong with Qwen3-Reranker-0.6B**:
+1. It's a **causal LM** (`Qwen3Model`), not a cross-encoder. The `CrossEncoder()` API wraps it as `ForSequenceClassification`, adding a random `score.weight` head that ignores the pre-trained LM head.
+2. Even used correctly (causal LM, P(yes)/P(no) scoring), it shows zero domain discrimination (PairAcc=0.501 = coin flip) on FrameMaker MIF/JSX content.
+3. 28 experiments across hyperparameters, loss functions, architecture variants — best Qwen3 result was MRR 0.495 (still 14% below baseline).
+
+**Resolution**: Switched to `cross-encoder/ms-marco-MiniLM-L-6-v2` — a 22M parameter model specifically pre-trained as a cross-encoder on 500K+ MS MARCO relevance pairs. Results:
+- Zero-shot: MRR 0.650 (+12.5% over baseline)
+- Fine-tuned (5 epochs, LR=2e-5, 51 train queries): **MRR 0.74 pure reranker**
+- With score interpolation (α=0.67 reranker + 0.33 baseline): **MRR 0.770 (+30.5% over baseline)**
+- 30x smaller than Qwen3 (22M vs 600M params), trains in 115 seconds
+
+**Current production stack**:
+- Embedding: Qwen 0.6B (fine-tuned bi-encoder for domain coverage)
+- Reranker: ms-marco-MiniLM-L-6-v2 (fine-tuned cross-encoder for relevance scoring)
+- Score blending: final_score = 0.67 × reranker + 0.33 × baseline (per-query normalized)
+- These are independent, mismatched model families — this is standard practice in RAG pipelines.
+
+---
+
+
+
+

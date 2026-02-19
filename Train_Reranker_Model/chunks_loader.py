@@ -33,6 +33,10 @@ def load_chunks(config: Mapping[str, Any], *, logger: logging.Logger) -> Tuple[L
         content = (chunk.get("chunk_summary") or chunk.get("content") or "").strip()
         if not chunk_id or not content:
             continue
+        # Append code-friendly names so BM25 and reranker see natural-language expansions
+        friendly = (chunk.get("code_friendly_name") or "").strip()
+        if friendly:
+            content = f"{content}\n{friendly}"
         key = str(chunk_id)
         ordered_chunks.append({"id": key, "text": content, "raw": chunk})
         chunk_map[key] = chunk

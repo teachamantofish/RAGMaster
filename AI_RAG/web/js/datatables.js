@@ -527,6 +527,9 @@ l	Length changing dropdown (“Show 10/25/50 entries”)
   }
 
   const hasPywebview = () => {
+    if (global.AppBridge && typeof global.AppBridge.hasPywebviewApi === 'function') {
+      return global.AppBridge.hasPywebviewApi('load_file');
+    }
     if (typeof global.hasPywebviewApi === 'function') {
       try {
         return global.hasPywebviewApi();
@@ -556,7 +559,9 @@ l	Length changing dropdown (“Show 10/25/50 entries”)
       const csvPath = config.csvPath;
       if (csvPath) {
         try {
-          const result = await global.pywebview.api.load_file(csvPath);
+          const result = global.AppBridge && typeof global.AppBridge.loadFile === 'function'
+            ? await global.AppBridge.loadFile(csvPath)
+            : await global.pywebview.api.load_file(csvPath);
           if (result && result.success && typeof result.content === 'string') {
             console.log('[source-tab] fetched CSV via pywebview API:', csvPath);
             return result.content;

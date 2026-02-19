@@ -8,6 +8,58 @@ const projectRoot = fileURLToPath(new URL('..', import.meta.url))
 const pipelineDir = path.resolve(projectRoot, '..', 'pipeline')
 const appPathsPath = path.resolve(projectRoot, 'config', 'paths.json')
 const appPaths = JSON.parse(fs.readFileSync(appPathsPath, 'utf8'))
+
+const staticBuildEntries = [
+  'home.html',
+  'source.html',
+  'crawl.html',
+  'crawl_pdf.html',
+  'clean.html',
+  'chunk.html',
+  'summary.html',
+  'embed.html',
+  'vector.html',
+  'style.css',
+  'js',
+  'css',
+  'images',
+  'config',
+]
+
+function copyPathIfExists(fromPath, toPath) {
+  if (!fs.existsSync(fromPath)) {
+    return
+  }
+
+  const stats = fs.statSync(fromPath)
+  if (stats.isDirectory()) {
+    fs.mkdirSync(toPath, { recursive: true })
+    const children = fs.readdirSync(fromPath)
+    for (const child of children) {
+      copyPathIfExists(path.join(fromPath, child), path.join(toPath, child))
+    }
+    return
+  }
+
+  fs.mkdirSync(path.dirname(toPath), { recursive: true })
+  fs.copyFileSync(fromPath, toPath)
+}
+
+function copyStaticBuildResources() {
+  return {
+    name: 'copy-static-build-resources',
+    apply: 'build',
+    closeBundle() {
+      const outDir = path.resolve(projectRoot, 'build')
+      for (const entry of staticBuildEntries) {
+        const sourcePath = path.resolve(projectRoot, entry)
+        const targetPath = path.resolve(outDir, entry)
+        copyPathIfExists(sourcePath, targetPath)
+      }
+    },
+  }
+}
+
 function pipelineFileProxy() {
   return {
     name: 'pipeline-file-proxy',
@@ -58,10 +110,12 @@ function pipelineFileProxy() {
 
 export default defineConfig({
   root: '..', // your source is web/
+  base: './',
   appType: 'mpa',
   plugins: [
     FullReload(['**/*.html']), // reload on ANY html change
     pipelineFileProxy(),
+    copyStaticBuildResources(),
   ],
   define: {
     __APP_PATHS__: JSON.stringify(appPaths),

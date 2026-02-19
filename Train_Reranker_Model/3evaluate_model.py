@@ -38,6 +38,7 @@ from scripts.config_training_rerank import (
     RERANKER_TRAINING_CONFIG,
     CONFIG_MODEL_NAME,
     RETRIEVER_PIPELINE_CONFIG,
+    INTERPOLATION_ALPHAS,
 )
 from scripts.custom_logger import setup_global_logger
 
@@ -224,13 +225,13 @@ def _print_table(summary: Dict[str, Dict], k_values: List[int], aggregate: Dict[
     headers = [
         "Difficulty",
         "Anchors",
-        "PairAcc (base → rerank)",
-        "MRR (base → rerank)",
-        "Top1% (base → rerank)",
-    ] + [f"Recall@{k} (base → rerank)" for k in k_values] + [f"NDCG@{k} (base → rerank)" for k in k_values]
+        "PairAcc (base->rerank)",
+        "MRR (base->rerank)",
+        "Top1% (base->rerank)",
+    ] + [f"Recall@{k} (base->rerank)" for k in k_values] + [f"NDCG@{k} (base->rerank)" for k in k_values]
 
     print("\n" + "=" * 80)
-    print("📊 RERANKER VS BASELINE")
+    print("[EVAL] RERANKER VS BASELINE")
     print("=" * 80)
     print(" | ".join(f"{h:>15}" for h in headers))
     print("-" * 80)
@@ -278,19 +279,200 @@ def _format_row(label: str, stats: Dict, k_values: List[int]) -> List[str]:
     row = [
         label,
         str(stats.get("anchors", 0)),
-        f"{baseline.get('pair_accuracy', 0):.2f} → {reranker.get('pair_accuracy', 0):.2f}",
-        f"{baseline.get('mrr', 0):.2f} → {reranker.get('mrr', 0):.2f}",
-        f"{baseline.get('top1_positive_rate', 0):.2f} → {reranker.get('top1_positive_rate', 0):.2f}",
+        f"{baseline.get('pair_accuracy', 0):.2f} -> {reranker.get('pair_accuracy', 0):.2f}",
+        f"{baseline.get('mrr', 0):.2f} -> {reranker.get('mrr', 0):.2f}",
+        f"{baseline.get('top1_positive_rate', 0):.2f} -> {reranker.get('top1_positive_rate', 0):.2f}",
     ]
     for k in k_values:
         row.append(
-            f"{baseline.get(f'recall@{k}', 0):.2f} → {reranker.get(f'recall@{k}', 0):.2f}"
+            f"{baseline.get(f'recall@{k}', 0):.2f} -> {reranker.get(f'recall@{k}', 0):.2f}"
         )
     for k in k_values:
         row.append(
-            f"{baseline.get(f'ndcg@{k}', 0):.2f} → {reranker.get(f'ndcg@{k}', 0):.2f}"
+            f"{baseline.get(f'ndcg@{k}', 0):.2f} -> {reranker.get(f'ndcg@{k}', 0):.2f}"
         )
     return row
+
+
+# ---------------------------------------------------------------------------
+# Score interpolation sweep
+# ---------------------------------------------------------------------------
+
+def _alpha_sweep(enriched_pairs: List[Dict], k_values: List[int], alphas: List[float]):
+    """Sweep interpolation weights: score = a*norm_reranker + (1-a)*norm_baseline.
+
+    Per-query min-max normalization ensures both score types occupy [0, 1]
+    before blending, so alpha directly controls the relative influence.
+    """
+    score_field = HYBRID_PIPELINE_CONFIG["score_field"]
+    interp_field = "_interp_score"
+    groups = _group_by_anchor(enriched_pairs)
+
+    results = {}
+    for alpha in alphas:
+        # Per-query min-max normalization + interpolation
+        for records in groups.values():
+            b_scores = [r["baseline_score"] for r in records]
+            r_scores = [r[score_field] for r in records]
+            b_min, b_max = min(b_scores), max(b_scores)
+            r_min, r_max = min(r_scores), max(r_scores)
+            b_range = (b_max - b_min) or 1.0
+            r_range = (r_max - r_min) or 1.0
+
+            for rec in records:
+                b_norm = (rec["baseline_score"] - b_min) / b_range
+                r_norm = (rec[score_field] - r_min) / r_range
+                rec[interp_field] = alpha * r_norm + (1.0 - alpha) * b_norm
+
+        interp_metrics = _anchor_metrics(groups, interp_field, k_values)
+        results[alpha] = interp_metrics
+
+    return results
+
+
+def _print_alpha_sweep(results: Dict[float, Dict], k_values: List[int]):
+    """Print compact alpha sweep table and return (best_alpha, best_mrr)."""
+    # Pre-compute rows
+    rows = []
+    best_alpha, best_mrr = 1.0, 0.0
+    for alpha in sorted(results.keys()):
+        all_metrics = results[alpha]
+        count = len(all_metrics)
+        if count == 0:
+            continue
+
+        def _avg(key, _m=all_metrics, _c=count):
+            return sum(v.get(key, 0) for v in _m.values()) / _c
+
+        mrr = _avg("mrr")
+        if mrr > best_mrr:
+            best_mrr = mrr
+            best_alpha = alpha
+
+        rows.append({
+            "alpha": alpha,
+            "mrr": mrr,
+            "pair_accuracy": _avg("pair_accuracy"),
+            "top1": _avg("top1_positive_rate"),
+            "recalls": {k: _avg(f"recall@{k}") for k in k_values},
+            "ndcgs": {k: _avg(f"ndcg@{k}") for k in k_values},
+        })
+
+    # Print
+    print("\n" + "=" * 100)
+    print("SCORE INTERPOLATION SWEEP:  score = alpha * reranker + (1-alpha) * baseline")
+    print("=" * 100)
+    header = f"{'Alpha':>7} | {'MRR':>7} | {'PairAcc':>7} | {'Top1%':>7}"
+    for k in k_values:
+        header += f" | {'R@' + str(k):>6}"
+    for k in k_values:
+        header += f" | {'N@' + str(k):>6}"
+    print(header)
+    print("-" * 100)
+
+    for row in rows:
+        marker = "  <-- best" if row["alpha"] == best_alpha else ""
+        line = f"{row['alpha']:>7.2f} | {row['mrr']:>7.3f} | {row['pair_accuracy']:>7.3f} | {row['top1']:>7.3f}"
+        for k in k_values:
+            line += f" | {row['recalls'][k]:>6.3f}"
+        for k in k_values:
+            line += f" | {row['ndcgs'][k]:>6.3f}"
+        print(line + marker)
+
+    print("-" * 100)
+    print(f"  Best alpha = {best_alpha:.2f}  -->  MRR = {best_mrr:.3f}")
+    print("=" * 100 + "\n")
+
+    return best_alpha, best_mrr
+
+
+# ---------------------------------------------------------------------------
+# Label-type split metrics (filter-based vs ID-based queries)
+# ---------------------------------------------------------------------------
+
+def _print_label_type_metrics(
+    enriched_pairs: List[Dict],
+    k_values: List[int],
+    queries_file: Path,
+    score_field: str,
+):
+    """Print separate MRR / R@5 for filter-based vs ID-based queries.
+
+    This detects whether the reranker benefits disproportionately from
+    the loose, multi-positive labels that filter-based queries produce.
+    """
+    if not queries_file or not queries_file.exists():
+        return
+
+    raw = json.loads(queries_file.read_text(encoding="utf-8"))
+    if isinstance(raw, dict):
+        raw = raw.get("queries", raw)
+
+    # Classify each query_id
+    q_type: Dict[str, str] = {}
+    for q in raw:
+        qid = q.get("id") or q.get("query_id", "")
+        has_filter = bool(q.get("positive_filters"))
+        has_ids = bool(q.get("positive_ids") or q.get("positives"))
+        if has_filter and not has_ids:
+            q_type[qid] = "filter"
+        elif has_ids and not has_filter:
+            q_type[qid] = "id"
+        elif has_filter and has_ids:
+            q_type[qid] = "both"
+        else:
+            q_type[qid] = "unknown"
+
+    # Group enriched pairs by (label_type, query_text)
+    type_groups: Dict[str, Dict[str, List[Dict]]] = defaultdict(lambda: defaultdict(list))
+    for rec in enriched_pairs:
+        ltype = q_type.get(rec.get("query_id", ""), "unknown")
+        type_groups[ltype][rec["query"]].append(rec)
+
+    def _mrr_r5(groups: Dict[str, List[Dict]], sfield: str):
+        rrs, r5_hits, total = [], 0, 0
+        for _, records in groups.items():
+            positives = [r for r in records if r["label"] == 1]
+            if not positives:
+                continue
+            total += 1
+            ranked = sorted(records, key=lambda r: r[sfield], reverse=True)
+            labels = [r["label"] for r in ranked]
+            try:
+                rrs.append(1.0 / (labels.index(1) + 1))
+            except ValueError:
+                rrs.append(0.0)
+            if any(r["label"] == 1 for r in ranked[:5]):
+                r5_hits += 1
+        mrr = np.mean(rrs) if rrs else 0.0
+        r5 = r5_hits / total if total else 0.0
+        return float(mrr), float(r5), total
+
+    print("\n" + "=" * 90)
+    print("LABEL-TYPE SPLIT METRICS  (filter-based vs ID-based queries)")
+    print("=" * 90)
+    print(f"{'Type':>12} | {'n':>4} | {'Base MRR':>9} | {'Rerank MRR':>10} | {'d MRR':>7} | {'Base R@5':>8} | {'Rerank R@5':>10}")
+    print("-" * 90)
+
+    for ltype in ["filter", "id", "both"]:
+        groups = type_groups.get(ltype, {})
+        if not groups:
+            continue
+        b_mrr, b_r5, n = _mrr_r5(groups, "baseline_score")
+        r_mrr, r_r5, _ = _mrr_r5(groups, score_field)
+        delta = r_mrr - b_mrr
+        print(f"{ltype:>12} | {n:>4} | {b_mrr:>9.4f} | {r_mrr:>10.4f} | {delta:>+7.4f} | {b_r5:>8.3f} | {r_r5:>10.3f}")
+
+    # All combined
+    all_groups: Dict[str, List[Dict]] = defaultdict(list)
+    for rec in enriched_pairs:
+        all_groups[rec["query"]].append(rec)
+    b_mrr, b_r5, n = _mrr_r5(all_groups, "baseline_score")
+    r_mrr, r_r5, _ = _mrr_r5(all_groups, score_field)
+    delta = r_mrr - b_mrr
+    print("-" * 90)
+    print(f"{'ALL':>12} | {n:>4} | {b_mrr:>9.4f} | {r_mrr:>10.4f} | {delta:>+7.4f} | {b_r5:>8.3f} | {r_r5:>10.3f}")
+    print("=" * 90 + "\n")
 
 
 def _write_outputs(
@@ -636,15 +818,15 @@ def main():
     on the fly via _build_live_retrieval_pairs, then reuses _format_query_table from 
     build_retrieval_candidates.py to emit this coverage block before scoring the reranker. 
     It sanity-checks the retrieval stage that feeds the reranker by showing, per labeled query, 
-    how many of its ground-truth positives were actually retrieved inside the hybrid top‑K slate. 
-    If these numbers look bad, the reranker evaluation can’t prove anything because the relevant 
+    how many of its ground-truth positives were actually retrieved inside the hybrid top-K slate. 
+    If these numbers look bad, the reranker evaluation can't prove anything because the relevant 
     documents never reach stage two.
     """
     if coverage and coverage.get("query_breakdown"):
         table = format_query_table(coverage["query_breakdown"])
         if table:
             print("\n" + "=" * 80)
-            print("📊 evaluate_model.py: Retrieval Coverage evaluation")
+            print("[EVAL] evaluate_model.py: Retrieval Coverage evaluation")
             print("=" * 80)
             print(table)
             print("=" * 80 + "\n")
@@ -662,6 +844,7 @@ def main():
     reranker_model_id = _resolve_reranker_model_id(args.model_path)
     reranker_model = CrossEncoder(
         reranker_model_id,
+        num_labels=1,
         max_length=RERANKER_TRAINING_CONFIG.get("max_length", 512),
     )
     _ensure_padding_token(reranker_model)
@@ -679,6 +862,22 @@ def main():
     summary = _summarize(enriched_pairs, k_values)
     aggregate = _aggregate_summary(summary)
     _print_table(summary, k_values, aggregate)
+
+    # --- Score interpolation sweep ---
+    best_alpha = None
+    if INTERPOLATION_ALPHAS:
+        alpha_results = _alpha_sweep(enriched_pairs, k_values, INTERPOLATION_ALPHAS)
+        best_alpha, best_mrr = _print_alpha_sweep(alpha_results, k_values)
+
+    # --- Label-type split metrics ---
+    queries_file = Path(args.queries_file) if args.queries_file else RETRIEVER_PIPELINE_CONFIG.get("queries_file")
+    if queries_file:
+        _print_label_type_metrics(
+            enriched_pairs,
+            k_values,
+            Path(queries_file),
+            HYBRID_PIPELINE_CONFIG["score_field"],
+        )
 
     if RERANK_EVAL_CONFIG.get("emit_json", True):
         _write_outputs(

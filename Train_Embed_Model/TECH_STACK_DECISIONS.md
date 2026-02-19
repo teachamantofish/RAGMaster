@@ -2,27 +2,8 @@
 
 This document records the *current* runtime and tuning choices implemented in this repository and why they were selected. It intentionally excludes legacy/fallback implementations and focuses on the stack we actively use for GPU-accelerated fine-tuning and the limited-step smoke runner.
 
-## Overview
-- Primary compute: NVIDIA CUDA (PyTorch CUDA build). We target CUDA-only GPU acceleration on the local RTX 5060 Ti.
-- Precision and memory optimizations: mixed precision (fp16 via AMP) and 8-bit optimizer states (bitsandbytes) where appropriate.
-- Parameter-efficiency: LoRA (via the `peft` library) is provided as the recommended path for single-GPU fine-tuning of large embedding models.
 
-All code paths now prefer CUDA when available and use the following combination to balance memory, speed, and embedding fidelity: LoRA adapters + fp16 (AMP) + bitsandbytes 8-bit optimizer (when training adapters or weights). If an OOM occurs, the runner falls back gracefully and produces diagnostics.
-
-## Key dependencies (installed and used)
-- torch (CUDA-enabled build) — primary runtime for model forward/backward and tensor ops.
-- bitsandbytes — 8-bit optimizer support (e.g., `AdamW8bit`) to drastically reduce optimizer-state memory.
-- peft — LoRA (PEFT) adapter application and utilities.
-- sentence-transformers / transformers — model wrapper and underlying transformer backbone.
-
-Installation example (done in the venv used by this project):
-
-```powershell
-.\.venv\Scripts\Activate.ps1
-python -m pip install -U peft bitsandbytes
-```
-
-## Decisions and rationale
+## Tuniong decisions and rationale
 
 ### 1) Prefer CUDA (NVIDIA) for all heavy compute
 - Why: CUDA gives native PyTorch acceleration and reliable performance on the RTX 5060 Ti.
@@ -35,7 +16,7 @@ python -m pip install -U peft bitsandbytes
 - Impact on memory/perf: roughly 30–60% lower activation memory and faster tensor kernels on supported hardware. This allows larger batches or more activations per forward.
 - Impact on embedding quality: with GradScaler and a conservative learning rate, fp16 typically preserves final quality close to fp32. However fp16 can be fragile (NaNs) if LR is too high or the model contains unstable ops. We added diagnostics and a one-time retry with fp16 disabled when NaNs are detected.
 
-### 3) 8-bit optimizer (bitsandbytes)
+### 3) 8-bit optimizer (bitsandbytes) NOT DONE: requires Linux. 
 - Why: optimizer state (Adam) requires two or more full-size tensors per parameter (exp_avg, exp_avg_sq). For large models this is the dominant memory cost. bitsandbytes stores those optimizer states in 8-bit, reducing memory by ~4x for optimizer state.
 - How: when LoRA/adapters are used we prefer `bitsandbytes.optim.AdamW8bit` for adapter params if available; if not available we fall back to regular AdamW but with small parameter sets.
 - Impact on memory/perf: large reduction in optimizer memory, enabling training that otherwise would OOM. It also tends to reduce host-to-device bandwidth for optimizer state. CPU cost is similar; bitsandbytes implements efficient kernels.
@@ -212,394 +193,72 @@ If later you want to squeeze a bit more compute out, you can switch to a DataCol
 
 
 
-# Embedding model tuning: https://www.sbert.net/docs/usage/finetuning.html
-# https://medium.com/@diagnosta/lora-fine-tuning-of-embedding-models-using-llamaindex-a60b823a2c94 Mar 18, 2024
-# https://docs.llamaindex.ai/en/stable/module_guides/models/embeddings/
-# https://medium.com/@tuhinsharma121/fine-tuning-embedding-models-with-llamaindex-a-hands-on-guide-with-hugging-face-and-proprietary-ae1732dc814a
-
-# Process
-# Install a local model (bi-encoder). For embedding model rankings, see https://huggingface.co/spaces/mteb/leaderboard
-# Prepare training data: triplets of (anchor, positive, negative) sentences. Anchor and positive are semantically similar; negative is not.
-# Fine-tune the model using the triplet loss function.
-# Evaluate the model using a relevant dataset.
-# Use the fine-tuned model to generate embeddings for your documents at Int8 or desired precision.
-# Note: You can train the embedding model and the reranker model separately or together using SBERT. 
-
 
 
 =====================
 
 combined_data = dataset1 + dataset2 # Combine datasets and interleave
+
+
 random.shuffle(combined_data)    	# Reshuffle after each epoch
-train_model(combined_data, epochs=3)
 
-loader = MultiDatasetDataLoader(
-    datasets=[loaderA, loaderB],
-    sampling_ratios=[0.5, 0.5] # sampling weights (e.g., 50/50; not raw size).
-)
 
-# Mine/insert hard negatives across sets if possible; it improves a shared space.
-# Build embeddings with current model, index, then mine per epoch
-emb = model.encode(corpus_union, convert_to_tensor=True, normalize_embeddings=True)
-index = faiss.IndexFlatIP(emb.shape[1]); index.add(emb.cpu().numpy())
-for (a,p,_) in triplets:  # ignore old negative
-    D,I = index.search(a_emb, k=50)
-    neg = first_non_match(I, same_group=False)  # prefer other set
-    new_triplets.append((a, p, neg))
-# Train TripletLoss on new_triplets; repeat next epoch.
 
 
 
-Stop/measure: early-stop on per-domain R@k and MRR to avoid overfitting one set.
+### Exp 35 — Fixed broken codenames in chunk content (DONE)
 
-During training, evaluate separately on each dataset’s dev set to make sure your model improves both—and doesn’t overfit one.
+**What:** Fixed 493 line-break artifacts in chunk content where FDK constants were split by spaces during web crawling (e.g. `FE_BadParamete r` → `FE_BadParameter`). User also reviewed and edited ~6500 friendly name expansions in the CSV. Content quality improved but no pipeline code changes.
 
-- R@k (Recall@k): checks if the correct match is among the top-k retrieved items.
-- MRR (Mean Reciprocal Rank): measures average 1/rank of the correct match.
+**Results (alpha sweep, best alpha = 0.65):**
 
-Example: every epoch, run retrieval eval on devA and devB; if devA keeps rising but devB drops, stop early or rebalance sampling. This prevents one dataset from dominating the shared embedding space.
+| Metric | Exp 34 | Exp 35 | Delta |
+|--------|--------|--------|-------|
+| Best alpha | 0.65 | 0.65 | — |
+| Blended MRR (all) | 0.810 | **0.811** | **+0.1pp** |
+| ID-test MRR | 0.836 | 0.835 | -0.1pp |
+| ID-test R@5 | 0.891 | **0.896** | **+0.5pp** |
+| Top1% | 0.728 | **0.733** | **+0.5pp** |
+| Val accuracy | 0.933 | 0.934 | +0.1pp |
 
+**Key observations:**
+- Essentially flat — within noise margins. Fixing broken tokens helped content quality but the cross-encoder was already handling broken subwords via WordPiece tokenization
+- The real payoff from fixed codenames + friendly name enrichment will come when bi-encoder embeddings are re-generated (retriever improvement, not reranker)
+- Confirms the reranker is near plateau with current retriever quality — further gains require improving the top-200 retrieval slate
 
+---
 
-============= triplet eval ===========
+## Final Complete Experiment Summary (All Phases)
 
-✅ Your Negatives Are Good Quality - You Can Start Training
-Why They're Good:
-Example 1:
+| Phase | Experiments | Model | Best MRR (test) | vs Baseline |
+|---|---|---|---|---|
+| 1 (Hyperparams) | 0-9 | Qwen3-Reranker-0.6B (FSC) | 0.495 | -14.2% |
+| 2.1 (Listwise) | 11-13 | Qwen3-Reranker-0.6B (FSC) | 0.190 | -67.1% |
+| 2 (Freeze) | 14 | Qwen3-Reranker-0.6B (FSC) | 0.070 | -87.9% |
+| Discovery | 15 | Qwen3-Reranker-0.6B (CLM) | 0.092 | -84.1% |
+| 3 (Model swap) | 16-28 | ms-marco-MiniLM-L-6-v2 | 0.685* | +18.7% |
+| 4 (Interpolation) | 29 | blend α=0.73 | 0.707* | +22.5% |
+| **5 (More data)** | **30** | **51 train queries + α=0.67** | **0.770** | **+30.5%** |
+| **6 (Leakage fix)** | **31-32** | **16 ID-only train + α=0.70** | **0.748 (ID: 0.762)** | **+26.0% (ID: +19.8%)** |
+| **6 (Relabel)** | **33** | **43 ID-labeled train + α=0.80** | **0.792 (ID: 0.824)** | **+34.1% (ID: +29.5%)** |
+| **6 (Expand)** | **34** | **69 ID-labeled train + α=0.65** | **0.810 (ID: 0.836)** | **+37.2% (ID: +31.4%)** |
+| **7 (Content fix)** | **35** | **Fixed broken codenames + α=0.65** | **0.811 (ID: 0.835)** | **+37.3% (ID: +31.3%)** |
 
-Anchor: "Array of TypedVal objects..."
-Positive: "Removes last element... Returns: TypedVal"
-Negative: "Removes last element... Returns: Tab"
-Quality: Semi-hard - Same function (pop), but different return type. This is excellent! The model must learn the difference between TypedVal and Tab arrays.
-Example 2:
+\* Phases 3-4 evaluated on 188 test queries; Phase 5 on 148 (harder subset).
 
-Anchor: About Pantone color constants
-Positive: About constants and formatting flags
-Negative: Just a list: "Delete, GetProps, MoveComponent..."
-Quality: Easy-medium - Both are about FrameMaker concepts, but negative lacks semantic connection to color/constants. Good enough.
-Example 3:
+### Final Lessons Learned
 
-Anchor: Array of objects
-Positive: concat function for Ints
-Negative: GetExportDefaultParams function
-Quality: Medium - Both are functions, but semantically unrelated (arrays vs export). Good challenge.
-Example 4:
+1. **Model architecture > hyperparameters**: 15 experiments of hyperparameter tuning on the wrong model architecture yielded nothing. One model swap gave a +18.7% improvement.
+2. **Verify model compatibility**: The Qwen3-Reranker was a causal LM loaded as ForSequenceClassification — its entire pre-trained capability was being discarded.
+3. **Start with established baselines**: MS MARCO cross-encoders are the standard for re-ranking. Should have been the starting point.
+4. **Zero-shot is a strong baseline**: The ms-marco model beat our baseline with zero-shot (MRR 0.650). Pre-training data quality matters more than domain-specific fine-tuning.
+5. **Small models can win**: 22M parameter MiniLM dramatically outperformed 600M parameter Qwen3 — because the small model was trained correctly for the task.
+6. **Don't discard retriever signal**: Blending reranker + baseline outperforms either alone. The reranker complements the retriever, it doesn't replace it.
+7. **Score interpolation is free precision**: No retraining, no extra inference — just weighted arithmetic on already-computed scores.
+8. **Training data quantity matters enormously**: Going from 11 → 51 queries (2,200 → 13,894 pairs) was the single largest improvement. The reranker's quality is directly proportional to how many diverse query patterns it has seen during training.
+9. **Watch for label leakage**: Filter-based positive labels (keyword contains) inflated MRR by +30pp on filter queries. The model learned to score keyword-containing candidates higher — a shortcut, not real relevance. Removing those queries improved the honest metric by +3.5pp. Always split metrics by label type.
+10. **Report honest metrics**: A single blended number can hide that your model is great at the easy thing and mediocre at the hard thing. Split reporting (Exp 31) should be permanent.
+11. **Manual labeling pays off**: Converting 27 noisy filter-labeled queries to hand-picked chunk IDs produced +6.2pp on ID-test MRR — the single largest gain in the project. Clean labels > more labels.
+12. **Content fixes help retrieval, not reranking**: Fixing 493 broken codenames in chunk text had negligible reranker impact because the cross-encoder's subword tokenizer was already handling broken tokens. The fix will matter more for bi-encoder embeddings where exact token matching drives similarity.
 
-Anchor: Notifications system overview
-Positive: Notifications handler example
-Negative: GetProps for Group
-Quality: Medium-hard - Negative is same domain but completely different topic. Good.
-Assessment:
-✅ Your negatives are well-constructed - they're semi-hard (same domain, but semantically different)
 
-✅ Mix of difficulty levels - some are subtle (Example 1), others more obvious
-
-✅ All from same domain - this is actually good for your use case (FrameMaker/JSX documentation)
-
-Recommendation:
-Skip the negative generation step - start training now!
-
-Your negatives are good enough for first-pass training. You can always implement hard negative mining between epochs (as your document suggests) if you want to improve quality later.
-
-=========================================
-training gigs rquired: Param X 
-
-Model size (GB) ≈ Parameters × bytes per parameter ÷ 1 billion
-
-Param times quant value (32 =1) 
-
-=========
-
-What I would change
-
-MAX_CONTENT_LENGTH = 2000
-For modern encoder or instruction models, this is conservative. For technical docs, 3–4k chars is often safe and improves semantic completeness.
-→ Recommend 3000–4000 unless you’re explicitly targeting short-context models.
-
-MIN_TRIPLETS_PER_CATEGORY = 100
-This is low for training anything beyond a toy model. It’s fine for evaluation, not learning robust representations.
-→ Recommend 300–500 minimum if the category matters.
-
-Difficulty balance (implicit issue)
-If GENERATE_DIFFICULTY_LEVELS = True but you don’t enforce ratios, you’ll likely over-generate EASY negatives.
-→ Enforce something like 30% easy / 40% medium / 30% hard (or heavier on hard if this is for reranking).
-
-Missing but important
-
-Per-query negative count (e.g., 1 positive : N negatives). This matters more than triplet totals.
-
-Cross-category hard negatives (same surface terms, different domain) — especially important for technical RAG.
-
-Dedup / near-dup filtering before split to avoid leakage between train/test.
-
-========== meed twp sets of training data =============
-
-Embedding model (Qwen)
-Content length: 3–5k chars
-Triplet mix: 25% easy / 40% medium / 35% hard
-Negatives: cross-topic, cross-doc, sibling sections
-Min triplets/category: 300–500 (25% of the number of chunks)
-Truncation: section-aware (no random cuts)
-
-Reranker model (Qwen)
-
-Content length: 2–4k chars
-Triplet mix: 20% easy / 35% medium / 45% hard
-Negatives: same-topic, near-duplicate, “looks-right” wrong answers
-Min triplets/category: 300–500 (25% of the number of chunks)
-Hard-negative mining: required
-Truncation: section-aware (no random cuts)
-
-## Creating training data
-
-Why generate all difficulties at once:
-
-Single pass through data - You only need to load and process your chunks once
-Consistent strategy - All negatives use the same criteria/logic
-Time efficient - Don't need to re-run the script multiple times
-Data consistency - All epochs use the same positive/anchor pairs, just different negatives
-Easy comparison - You can see the difficulty progression clearly
-
-Required safeguards
-
-Per-epoch negative resampling: do not reuse the same negatives every epoch, especially for HARD.
-Difficulty caps per anchor: limit how many EASY/MEDIUM/HARD negatives attach to one positive to avoid memorization.
-
-======= configuring Negative generation: cross-topic, cross-doc, sibling sections  ==========
-
-Negative sampling is spread across two layers in 1create_training_data.py:250-520:
-
-Difficulty-based negatives (generate_negatives_by_difficulty) craft the anchor’s easy/medium/hard negatives individually.
-
-Easy (“cross-topic”): _select_easy_negative first picks from different domain groups (category/title buckets built earlier). If that pool is exhausted it falls back to different filenames or any other chunk. Adjusting the domain-grouping logic inside group_chunks_by_domain is how you widen/narrow what “cross-topic” means.
-Medium (“cross-doc / different section”): _select_medium_negative looks for partial header-path overlap (20–50%) or same file but different sections, and can also fall back to moderate lexical overlap. Tweaking the overlap thresholds or the length of the header slices lets you control how “sibling sections” are defined.
-Hard (“sibling sections with confusing overlap”): _select_hard_negative enforces >50% path overlap or >40% lexical overlap, then ranks candidates by a weighted combo. Changing those percentages or the weighting shifts how strictly “sibling” has to match.
-Strategy-based negatives (generate_negative_pairs) add extra random negatives per anchor, using five strategies in order: cross-domain, different file, different header path, low lexical overlap, and pure random. Each strategy’s behavior is influenced by helper constants like NEGATIVE_SAMPLING_RATIO, plus the same grouping/path logic mentioned above.
-
-So to control each negative flavor you either tweak the grouping heuristics (what counts as a domain, file, or section), or adjust the similarity thresholds within _select_easy_negative, _select_medium_negative, _select_hard_negative, and the subsequent strategy loops. No centralized config exists yet, but those functions encapsulate the behaviors you’re seeing.
-
----------- best practice: 
-
-I have two docs I've merged for my Framemaker scripting RAG setup: MIF reference and JSX scripting guide. The hunks exist in a single JSON and are defined by "category" = JSX|MIF. I need a best practice for training data coverage for these two categories which are related to he same domain and used together in practice, but are actually quite differrent. 
-
-Best practice: treat them as two categories during sampling, even if they live in one JSON.
-
-Why
-
-Same domain, different function:
-MIF = declarative, structural, low-level
-JSX = procedural, imperative, higher-level
-
-If you don’t separate them, the embed space will blur “how-to code” with “file-format semantics.”
-
-Recommended coverage strategy
-
-Define category = source doc (mif, jsx)
-50% each balanced sampled anchors: ~50/50 across the two source categories
-70% same source positives: anchor ↔ same-doc chunks for semantic cohesion
-30% cross-source hard negatives: same terms (“text”, “paragraph”, “page”) but wrong layer to enforce disambiguation
-
-
-Optional: Limit cross-source positives to truly conceptual overlaps (rare, curated)
-
-
-Key rule
-Train them together, but never let one doc explain the other implicitly unless that relationship exists in real usage. This yields embeddings that retrieve the right layer (format vs scripting) instead of just the right words.
-
-==============
-
-ok. So now I need to train a reranker. Can i use the same training data?
-
-Yes! You can use the same triplets data to train a reranker. In fact, it's the ideal approach:
-
-Same data structure works:
-
-Reranker also learns from anchor/positive/negative triplets
-Your existing triplets_train.json files are perfect
-The difference is in what the model learns:
-Embeddings: Maps text → vectors (semantic similarity in vector space)
-Reranker: Takes (query, document) pairs → relevance score (0-1)
-Reranker training differences:
-
-Uses a cross-encoder architecture (not bi-encoder like embeddings)
-Sees both query and document together (more context)
-Slower at inference but more accurate
-Typically smaller models work well (BERT-base, etc.)
-
-
-================================================================================
-📈 RESULTS
-================================================================================
-Accuracy:               82.13% (positive closer than negative)
-Mean Positive Similarity: 0.8618 (higher is better)
-Mean Negative Similarity: 0.3932 (lower is better)
-Margin (pos - neg):      0.4686 (higher is better)
-
-
-
-
-✅ Training epoch 2 - Training with medium negatives (harder examples) completed successfully
-INFO: Using pre-tokenized DataLoader fast path
-INFO: Batch 0, Loss: 0.4904, GPU: Active
-INFO: Batch 10, Loss: 0.7701, GPU: Active
-INFO: Batch 20, Loss: 0.7412, GPU: Active
-INFO: Batch 30, Loss: 0.7276, GPU: Active
-INFO: Batch 40, Loss: 0.7150, GPU: Active
-INFO: Batch 50, Loss: 0.7032, GPU: Active
-INFO: Batch 60, Loss: 0.6913, GPU: Active
-INFO: Batch 70, Loss: 0.6822, GPU: Active
-INFO: Batch 80, Loss: 0.6646, GPU: Active
-INFO: Batch 90, Loss: 0.6436, GPU: Active
-INFO: Batch 100, Loss: 0.6175, GPU: Active
-INFO: Batch 110, Loss: 0.5963, GPU: Active
-INFO: Batch 120, Loss: 0.5697, GPU: Active
-INFO: Batch 130, Loss: 0.5490, GPU: Active
-INFO: Batch 140, Loss: 0.5283, GPU: Active
-INFO: Batch 150, Loss: 0.5072, GPU: Active
-INFO: Batch 160, Loss: 0.4895, GPU: Active
-INFO: Batch 170, Loss: 0.4712, GPU: Active
-INFO: Batch 180, Loss: 0.4549, GPU: Active
-INFO: Batch 190, Loss: 0.4422, GPU: Active
-INFO: Batch 200, Loss: 0.4323, GPU: Active
-INFO: Batch 210, Loss: 0.4229, GPU: Active
-INFO: Batch 220, Loss: 0.4143, GPU: Active
-INFO: Batch 230, Loss: 0.4073, GPU: Active
-
-✅ Training epoch 3 - Training with hard negatives (challenging examples) completed successfully
-INFO: Using pre-tokenized DataLoader fast path
-INFO: Batch 0, Loss: 0.8251, GPU: Active
-INFO: Batch 10, Loss: 0.8044, GPU: Active
-INFO: Batch 20, Loss: 0.8437, GPU: Active
-INFO: Batch 30, Loss: 0.8698, GPU: Active
-INFO: Batch 40, Loss: 0.8832, GPU: Active
-INFO: Batch 50, Loss: 0.8839, GPU: Active
-INFO: Batch 60, Loss: 0.8710, GPU: Active
-INFO: Batch 70, Loss: 0.8701, GPU: Active
-INFO: Batch 80, Loss: 0.8623, GPU: Active
-INFO: Batch 90, Loss: 0.8498, GPU: Active
-INFO: Batch 100, Loss: 0.8348, GPU: Active
-INFO: Batch 110, Loss: 0.8182, GPU: Active
-INFO: Batch 120, Loss: 0.7958, GPU: Active
-INFO: Batch 130, Loss: 0.7707, GPU: Active
-INFO: Batch 140, Loss: 0.7615, GPU: Active
-INFO: Batch 150, Loss: 0.7455, GPU: Active
-INFO: Batch 160, Loss: 0.7349, GPU: Active
-INFO: Batch 170, Loss: 0.7158, GPU: Active
-INFO: Batch 180, Loss: 0.6961, GPU: Active
-INFO: Batch 190, Loss: 0.6934, GPU: Active
-INFO: Batch 200, Loss: 0.6798, GPU: Active
-INFO: Batch 210, Loss: 0.6773, GPU: Active
-INFO: Batch 220, Loss: 0.6693, GPU: Active
-INFO: Batch 230, Loss: 0.6574, GPU: Active
-
-## Problem to resolve: Negatives to easy: 
-
-===============Unified json data =====================
-
-Accuracy:               76.98% (positive closer than negative)
-Mean Positive Similarity: 0.9245 (higher is better)
-Mean Negative Similarity: 0.5339 (lower is better)
-Margin (pos - neg):      0.3906 (higher is better)
-
-3 epochs + other tweaks:
-
-Accuracy:               76.19% (positive closer than negative)
-Mean Positive Similarity: 0.9560 (higher is better)
-Mean Negative Similarity: 0.5287 (lower is better)
-Margin (pos - neg):      0.4273 (higher is better)
-
-
-=============== MIF only =================
-
-Accuracy:               79.37% (positive closer than negative)
-Mean Positive Similarity: 0.8861 (higher is better)
-Mean Negative Similarity: 0.2525 (lower is better)
-Margin (pos - neg):      0.6336 (higher is better)
-
-==============  JSX only ==================
-Accuracy:               64.83% (positive closer than negative)
-Mean Positive Similarity: 0.9536 (higher is better)
-Mean Negative Similarity: 0.7587 (lower is better)
-Margin (pos - neg):      0.1948 (higher is better)
-
-=========== JSX without tables ==================
-
-Accuracy:               60.00% (positive closer than negative)
-Mean Positive Similarity: 0.8602 (higher is better)
-Mean Negative Similarity: 0.6281 (lower is better)
-Margin (pos - neg):      0.2321 (higher is better)
-
-========== JSX with table title and summary in content ============
-Accuracy:               55.10% (positive closer than negative)
-Mean Positive Similarity: 0.9225 (higher is better)
-Mean Negative Similarity: 0.6858 (lower is better)
-Margin (pos - neg):      0.2367 (higher is better)
-====================================================================
-
-======JSX with query instruction removed from pos and neg triplet =========
-Accuracy:               63.27% (positive closer than negative)
-Mean Positive Similarity: 0.9583 (higher is better)
-Mean Negative Similarity: 0.6136 (lower is better)
-Margin (pos - neg):      0.3447 (higher is better)
-================================================================================
-
-==============Enforce different heading 1 for easy negative/anchor =========
-Accuracy:               75.51% (positive closer than negative)
-Mean Positive Similarity: 0.9163 (higher is better)
-Mean Negative Similarity: 0.4073 (lower is better)
-Margin (pos - neg):      0.5090 (higher is better)
-================================================================================
-
-================= Use Cosign similarity check to discard triplets =======================
-Accuracy:               87.10% (positive closer than negative)
-Mean Positive Similarity: 0.8815 (higher is better)
-Mean Negative Similarity: 0.4668 (lower is better)
-Margin (pos - neg):      0.4148 (higher is better)
-================================================================================
-
-
-
-================================================================================
-📈 RESULTS — Easy
-================================================================================
-Accuracy:               100.00% (positive closer than negative)
-Mean Positive Similarity: 0.9526 (higher is better)
-Mean Negative Similarity: 0.0208 (lower is better)
-Margin (pos - neg):      0.9318 (higher is better)
-Triplets removed:        8 of 243 candidates
-================================================================================
-
-================================================================================
-📈 RESULTS — Medium
-================================================================================
-Accuracy:               100.00% (positive closer than negative)
-Mean Positive Similarity: 0.9286 (higher is better)
-Mean Negative Similarity: -0.0033 (lower is better)
-Margin (pos - neg):      0.9319 (higher is better)
-Triplets removed:        1 of 243 candidates
-================================================================================
-
-================================================================================
-📈 RESULTS — Hard
-================================================================================
-Accuracy:               83.87% (positive closer than negative)
-Mean Positive Similarity: 0.9063 (higher is better)
-Mean Negative Similarity: 0.4092 (lower is better)
-Margin (pos - neg):      0.4971 (higher is better)
-Triplets removed:        91 of 243 candidates
-================================================================================
-
-Force medium negatives to share the parent heading with the anchor so they aren't too easy. 
-
-
-
-Changed the m
-
-
-Difficulty: medium
-Accuracy: 100.00% — percentage of triplets where the positive outranks the negative.
-Mean Positive similarity: 0.8563
-Mean Negative similarity: -0.0224
-Margin (positive - negative): 0.8788
-Triplets removed before export: 134 of 243.
-📊 Loaded 25 test triplets from hard difficulty
