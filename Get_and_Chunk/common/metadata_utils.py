@@ -4,8 +4,7 @@ from typing import Dict, Any
 
 """Shared metadata loading and front matter utilities.
 
-Loads metadataconfig.csv once (module-level cache) and exposes helper functions
-for crawlers to avoid duplication.
+Provides front matter merge/format helpers shared by crawlers.
 
 I AM NOT USING THIS AT THE MOMENT AS THE METADATA SIMPLY COMES FROM run_settings.py
 via common.run_context.get_run_context().
@@ -35,7 +34,6 @@ def build_front_matter_block(meta: dict) -> str:
 
 # Module-level cache
 _METADATA_ROWS: Dict[str, Dict[str, str]] | None = None
-_CSV_PATH = 'metadataconfig.csv'
 
 # Ordered mapping from front matter display label -> internal CSV key.
 # The commented out lines appear in the input Data Table, but are not used in the front matter.

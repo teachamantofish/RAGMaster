@@ -1,7 +1,6 @@
 # This crawler code reads the crawlconfig.py file and fetches webpages which meet the requirements.
-# The crawlconfig also supplies the crawlid which is an index to the metadataconfig.csv file 
-# containing one row for each document to crawl. That file contains the crawlid, the url, 
-# and the other items needed which will be stored as metadata later.
+# Run selection and metadata now come from run_settings.py via common.run_context,
+# while crawl behavior is still configured in crawlconfig.py.
 import os  # For directory and file operations
 import re
 from pathlib import Path
