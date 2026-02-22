@@ -1,3 +1,7 @@
+'''
+Create the embeddings in a parquet file. 
+'''
+
 import os
 import copy
 import json
@@ -8,7 +12,16 @@ import numpy as np
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from config.embedconfig import *
-from common.utils import (get_csv_to_process, setup_global_logger)
+
+repo_root = Path(__file__).resolve().parents[1]
+pipeline_root = repo_root / "AI_RAG" / "pipeline"
+if str(pipeline_root) not in sys.path:
+    sys.path.insert(0, str(pipeline_root))
+import common.utils as common_utils
+
+common_utils._CSV_PATH = str((pipeline_root / "metadataconfig.csv").resolve())
+get_csv_to_process = common_utils.get_csv_to_process
+setup_global_logger = common_utils.setup_global_logger
 
 _DATA_CONTEXT = get_csv_to_process()
 DATASET_ROOT = _DATA_CONTEXT['cwd']

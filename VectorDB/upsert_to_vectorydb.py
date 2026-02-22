@@ -15,13 +15,24 @@ import json
 import os
 import logging
 import sys
+import hashlib
+import re
 from pathlib import Path
 import psycopg2
 from pgvector.psycopg2 import register_vector
 from psycopg2.extras import execute_batch
 from config.vectorconfig import *
 from config.embedconfig import USE_PARQUET
-from common.utils import (get_csv_to_process, setup_global_logger)
+
+repo_root = Path(__file__).resolve().parents[1]
+pipeline_root = repo_root / "AI_RAG" / "pipeline"
+if str(pipeline_root) not in sys.path:
+    sys.path.insert(0, str(pipeline_root))
+import common.utils as common_utils
+
+common_utils._CSV_PATH = str((pipeline_root / "metadataconfig.csv").resolve())
+get_csv_to_process = common_utils.get_csv_to_process
+setup_global_logger = common_utils.setup_global_logger
 
 TABLE_NAME = DB_TABLE_NAME if 'DB_TABLE_NAME' in globals() else 'chunks'
 EMBEDDING_FIELDS = (
@@ -29,7 +40,6 @@ EMBEDDING_FIELDS = (
     'embedding_summary_chunk',
     'embedding_summary_page',
 )
-DEFAULT_VECTOR_DIM = 2560
 
 CWD: Path = get_csv_to_process()['cwd'] # Get working directory from CSV config
 
@@ -194,9 +204,10 @@ if embedding_stats.get('embedding', 0) == 0:
     logger.error("No primary content embeddings available from Parquet or JSON; aborting to avoid empty vector data.")
     sys.exit(1)
 
-vector_dimension = _infer_vector_dimension(valid_chunks) or DEFAULT_VECTOR_DIM
-if vector_dimension == DEFAULT_VECTOR_DIM:
-    logger.warning("Using default vector dimension %s; unable to infer from data.", DEFAULT_VECTOR_DIM)
+vector_dimension = _infer_vector_dimension(valid_chunks)
+if not vector_dimension:
+    logger.error("Unable to infer vector dimension from embedding data. Aborting.")
+    sys.exit(1)
 
 logger.info(
     "Validated %s chunks (skipped %s). Embedding availability -> content=%s, chunk_summary=%s, page_summary=%s | vector_dim=%s",
@@ -276,6 +287,7 @@ def ensure_chunk_table(conn, vector_dim):
         concat_header_path TEXT,
         chunk_type TEXT,
         content TEXT,
+        code_friendly_name TEXT,
         examples JSONB,
         chunk_summary TEXT,
         page_summary TEXT,
@@ -294,6 +306,51 @@ def ensure_chunk_table(conn, vector_dim):
     with conn.cursor() as cur:
         cur.execute('SET search_path TO public;')
         cur.execute(ddl)
+        cur.execute(f"ALTER TABLE {qualified_name} ADD COLUMN IF NOT EXISTS code_friendly_name TEXT;")
+
+        # If table already exists with old vector dimensions, reconcile only when table is empty.
+        cur.execute(
+            "SELECT atttypmod FROM pg_attribute WHERE attrelid = %s::regclass AND attname = 'embedding' AND NOT attisdropped;",
+            (qualified_name,),
+        )
+        row = cur.fetchone()
+        existing_dim = None
+        if row and row[0] and row[0] > 0:
+            existing_dim = row[0] - 4
+
+        if existing_dim and existing_dim != vector_dim:
+            cur.execute(f"SELECT COUNT(*) FROM {qualified_name};")
+            row_count = cur.fetchone()[0]
+            if row_count == 0:
+                logger.warning(
+                    "Existing table %s has vector dimension %s; rebuilding vector columns to %s (table empty)",
+                    qualified_name,
+                    existing_dim,
+                    vector_dim,
+                )
+                cur.execute(
+                    f"""
+                    ALTER TABLE {qualified_name}
+                    DROP COLUMN IF EXISTS embedding,
+                    DROP COLUMN IF EXISTS embedding_summary_chunk,
+                    DROP COLUMN IF EXISTS embedding_summary_page,
+                    ADD COLUMN embedding vector({vector_dim}),
+                    ADD COLUMN embedding_summary_chunk vector({vector_dim}),
+                    ADD COLUMN embedding_summary_page vector({vector_dim});
+                    """
+                )
+            else:
+                logger.error(
+                    "Table %s uses vector dimension %s but incoming data is %s and table has %s rows. "
+                    "Aborting to avoid destructive migration.",
+                    qualified_name,
+                    existing_dim,
+                    vector_dim,
+                    row_count,
+                )
+                conn.rollback()
+                sys.exit(1)
+
         conn.commit()
         logger.info("Ensured chunks table exists (%s) with vector dimension %s", qualified_name, vector_dim)
 
@@ -343,7 +400,7 @@ def upsert_chunks(conn, chunks, batch_size=BATCH_SIZE):
     INSERT INTO {TABLE_NAME} (
         id, filename, parent_id, id_prev, id_next,
         heading, header_level, concat_header_path, chunk_type,
-        content, examples,
+        content, code_friendly_name, examples,
         chunk_summary, page_summary, title, author, category, description, language,
         token_count,
         embedding, embedding_summary_chunk, embedding_summary_page,
@@ -351,7 +408,7 @@ def upsert_chunks(conn, chunks, batch_size=BATCH_SIZE):
     ) VALUES (
         %(id)s, %(filename)s, %(parent_id)s, %(id_prev)s, %(id_next)s,
         %(heading)s, %(header_level)s, %(concat_header_path)s, %(chunk_type)s,
-        %(content)s, %(examples)s,
+        %(content)s, %(code_friendly_name)s, %(examples)s,
         %(chunk_summary)s, %(page_summary)s, %(title)s, %(author)s, %(category)s, %(description)s, %(language)s,
         %(token_count)s,
         %(embedding)s, %(embedding_summary_chunk)s, %(embedding_summary_page)s,
@@ -367,6 +424,7 @@ def upsert_chunks(conn, chunks, batch_size=BATCH_SIZE):
         concat_header_path = EXCLUDED.concat_header_path,
         chunk_type = EXCLUDED.chunk_type,
         content = EXCLUDED.content,
+        code_friendly_name = EXCLUDED.code_friendly_name,
         examples = EXCLUDED.examples,
         chunk_summary = EXCLUDED.chunk_summary,
         page_summary = EXCLUDED.page_summary,
@@ -402,6 +460,7 @@ def upsert_chunks(conn, chunks, batch_size=BATCH_SIZE):
             
             # 3) content
             'content': chunk.get('content'),
+            'code_friendly_name': chunk.get('code_friendly_name'),
             'examples': json.dumps(chunk.get('examples')) if 'examples' in chunk else None,
             
             # 4) summaries / metadata
@@ -509,11 +568,20 @@ def upsert_provenance(conn, provenance_data):
         except Exception:
             summary_size = None
 
-        # Require prov_id in the provenance file
+        # Require prov_id in the provenance file; if absent, generate a stable one
         prov_id = root.get('prov_id')
         if not prov_id:
-            logger.error("Provenance file missing required 'prov_id'. Skipping provenance upsert.")
-            return None
+            fingerprint_payload = {
+                'chunk': root.get('chunk', {}),
+                'summary': root.get('summary', {}),
+                'embed': root.get('embed', {}),
+            }
+            digest = hashlib.sha1(
+                json.dumps(fingerprint_payload, sort_keys=True, ensure_ascii=False).encode('utf-8')
+            ).hexdigest()[:12]
+            prov_id = f"prov_{digest}"
+            root['prov_id'] = prov_id
+            logger.warning("Provenance file missing 'prov_id'. Generated deterministic prov_id=%s", prov_id)
 
         return {
             'prov_id': prov_id,
@@ -557,6 +625,23 @@ if not provenance_payload:
     logger.warning("Required provenance payload missing after read. Aborting.")
     sys.exit(1)
 upsert_provenance(conn, provenance_payload)
+
+# Apply provenance id to chunks that do not already have one
+if isinstance(provenance_payload, dict):
+    resolved_prov_id = provenance_payload.get('prov_id')
+elif isinstance(provenance_payload, list):
+    resolved_prov_id = next((p.get('prov_id') for p in provenance_payload if isinstance(p, dict) and p.get('prov_id')), None)
+else:
+    resolved_prov_id = None
+
+if resolved_prov_id:
+    reassigned = 0
+    for chunk in valid_chunks:
+        if chunk.get('prov_id') != resolved_prov_id:
+            chunk['prov_id'] = resolved_prov_id
+            reassigned += 1
+    if reassigned:
+        logger.info("Normalized prov_id=%s on %s chunk(s) for consistent FK linkage", resolved_prov_id, reassigned)
 
 # Call the upsert function with validated chunks
 upsert_chunks(conn, valid_chunks)

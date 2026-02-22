@@ -12,8 +12,8 @@ CODE_CHANGE = "Exp39: DeBERTa-v3-base (86M) + expanded synthetic query training 
 
 # Directory naming for reranker artifacts ------------------------------------
 RERANK_TRAINING_SUBDIR = "reranker_training_data"
-RERANK_OUTPUT_SUBDIR = "rerank_model_adapter"
-RETRIEVER_BASELINE_SUBDIR = "embed_model_adapter"  # existing retriever export
+RERANK_OUTPUT_SUBDIR = "DeBERTa-v3-base86M-trained"
+RETRIEVER_BASELINE_SUBDIR = "Qwen3Embed.6B-trained"  # existing retriever export
 CROSS_ENCODER_PAIR_SUBDIR = "cross_encoder_pairs"
 # Historical embed exports that get merged into RERANK_TRAINING_SUBDIR.
 EMBED_SOURCE_SUBDIRS = ("embedding_training_data", "embedding_training_data1")

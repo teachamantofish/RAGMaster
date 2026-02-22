@@ -84,7 +84,7 @@ Return ONLY a JSON object mapping chunk_id to score. Example:
 RETRIEVER_TOP_K = 200          # how many candidates to retrieve
 LEXICAL_WEIGHT = 0.35          # BM25 weight in hybrid retrieval
 DENSE_WEIGHT = 0.65            # dense weight in hybrid retrieval
-EMBED_MODEL_PATH = WORKSPACE_ROOT / "Data" / "framemaker" / "mif_jsx" / "embed_model_adapter"
+EMBED_MODEL_PATH = WORKSPACE_ROOT / "Data" / "framemaker" / "mif_jsx" / "Qwen3Embed.6B-trained"
 
 # ---------------------------------------------------------------------------
 # Query ID numbering

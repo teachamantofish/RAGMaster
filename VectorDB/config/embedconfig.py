@@ -1,7 +1,7 @@
 
 # ====== Embedding configuration =======
 ENABLE_EMBEDDING = True # Enable or disable embedding step for tests
-EMBED_MODEL = "embed_model_adapter" # HF model ID or local dir name (resolved relative to DATASET_ROOT)
+EMBED_MODEL = "Qwen3Embed.6B-trained" # HF model ID or local dir name (resolved relative to DATASET_ROOT)
 ADAPTER_PATH = "" # Relative path to LoRA/PEFT adapter dir. Empty = no adapter (model already has fine-tuned weights).
 EMBED_LOG_LEVEL = "INFO" # Options: "DEBUG", "INFO", "WARNING", "ERROR".
 

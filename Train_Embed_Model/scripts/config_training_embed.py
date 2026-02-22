@@ -18,7 +18,7 @@ LOG_FILES = BASE_CWD
 # Shared subdirectory names so every script references the same structure.
 EMBED_TRAINING_SUBDIR = "embedding_training_data1"
 TOKENIZED_SUBDIR = "tokenized_HFTrainer"
-EMBED_OUTPUT_SUBDIR = "embed_model_adapter"
+EMBED_OUTPUT_SUBDIR = "Qwen3Embed.6B-trained"
 
 # Model configuration
 BASE_MODEL = "C:\\GIT\\Z_Master_Rag\\Data\\framemaker\\mif_jsx\\Qwen3-Embedding-0.6B"
