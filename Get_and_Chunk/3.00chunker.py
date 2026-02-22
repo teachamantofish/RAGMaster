@@ -335,9 +335,9 @@ def build_candidates_from_linear(linear_nodes: List[Tuple[Dict, str]]) -> Tuple[
             # Heading with no text, only subheadings: when a heading is immediately followed by
             # subheadings, _extract_heading_blocks yields an empty body for the parent. This function
             # still emits a chunk, logs “Empty heading chunk encountered,” and sets its token count to
-            # zero (3chunker.py:242-337). Downstream, chunks_to_dicts sees the zero tokens and forces
+            # zero. Downstream, chunks_to_dicts sees the zero tokens and forces
             # embedding/summary flags to "false", so later stages skip embedding while keeping the
-            # header path so the UI can show the empty node in context (3chunker.py:815-844). The child
+            # header path so the UI can show the empty node in context. The child
             # subheadings, each with their own content, are chunked normally when their blocks are
             # processed.
             logger.error(
@@ -823,7 +823,7 @@ def enforce_chunk_size(chunks: List[LeafChunk]) -> List[LeafChunk]:
             # Heading with only a code example: the chunk is emitted as a normal heading chunk unless
             # it exceeds MAX_TOKENS_FOR_NODE. When it’s oversized, the largest fenced block is peeled
             # into its own chunk_type="example" chunk, and the parent heading shrinks accordingly
-            # (3chunker.py:602-658). If that was the only content, the heading chunk becomes empty; the
+            # If that was the only content, the heading chunk becomes empty; the
             # script logs it, but still keeps the chunk so the hierarchy remains intact, and later marks
             # it non-embeddable (embedding="false") because its token count is zero. In short, the 
             # code example survives as a separate component chunk while the heading stub persists for structure.

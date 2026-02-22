@@ -3,7 +3,7 @@
 Pipeline Manager - Orchestrates the complete RAG pipeline
 
 Executes the numbered pipeline scripts in order:
-1. Crawler (selected based on PARSER column from CSV)
+1. Crawler (selected based on PARSER field in run_settings metadata)
 2. Markdown cleanup
 3. Chunking
 4. Summarization
@@ -11,9 +11,9 @@ Executes the numbered pipeline scripts in order:
 6. Vector database upload
 
 The crawler selection is based on the PARSER field in run_settings.py metadata:
-- crawlweb -> 1crawler_web.py
-- crawlpdf -> 1crawler_pdf.py
-- crawlgit -> 1crawler_github.py
+- crawlweb -> Get_and_Chunk/1crawlweb.py
+- crawlpdf -> Get_and_Chunk/1crawlpdf.py
+- crawlgit -> Get_and_Chunk/1crawlgit.py
 """
 
 import subprocess
@@ -35,18 +35,18 @@ logger = setup_global_logger(script_name=script_base, log_level='INFO', headers=
 
 # Mapping from PARSER column to crawler script
 CRAWLER_MAPPING = {
-    'crawlweb': '1crawler_web.py',
-    'crawlpdf': '1crawler_pdf.py', 
-    'crawlgit': '1crawler_github.py'
+    'crawlweb': 'Get_and_Chunk/1crawlweb.py',
+    'crawlpdf': 'Get_and_Chunk/1crawlpdf.py', 
+    'crawlgit': 'Get_and_Chunk/1crawlgit.py'
 }
 
 # Pipeline steps (after crawler selection)
 PIPELINE_STEPS = [
-    '2markdown_cleanup.py',
-    '3chunker.py',
-    '4summary.py',
-    '5embedding.py',
-    '6vector.py'
+    'Get_and_Chunk/2markdown_cleanup.py',
+    'Get_and_Chunk/3.00chunker.py',
+    'Get_and_Chunk/4.01summary.py',
+    'VectorDB/embedding.py',
+    'VectorDB/upsert_to_vectorydb.py'
 ]
 
 def run_script(script_name: str, step_number: int = None) -> int:

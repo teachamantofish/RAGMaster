@@ -132,7 +132,7 @@ Keep combined if all are true:
 
 Decision: have a discrete summarization script/pass. 
 
-Doing rollups as a separate pass (in 4summary.py) — what you already planned Pros
+Doing rollups as a separate pass (in 4.01summary.py) — what you already planned Pros
 
 Clear separation: chunker only produces canonical chunks.json; summarizer consumes that. Easier to maintain and test.
 Safer to retry and re-run: you can re-run rollups with different prompts/models without re-chunking.
@@ -147,7 +147,7 @@ Slightly more I/O and orchestration (but minimal compared to LLM cost).
 
 1: Verify the HF model is set in huggingface_wrapper.py:13-26 (ENDPOINT_NAME, CHUNK_SUMMARY_MODEL, TRANSFORMERS_CACHE) to match the Hugging Face inference endpoint you intend to use.
 2: Ensure HF_TOKEN is exported in your shell (PowerShell example: $Env:HF_TOKEN = 'hf_xxx') so the wrapper can authenticate before starting the endpoint.
-3: From pipeline, run python [huggingface_wrapper.py](http://_vscodecontentref_/5) [optional args]; this script resumes the endpoint, injects HF_ENDPOINT_URL and other env vars, and then calls [[sys.executable, "4summary.py", sys.argv[1:]]](http://vscodecontentref/6) (see huggingface_wrapper.py:28-94).
-4: Monitor the terminal output for “Loaded chunks…” and “Summarized chunks saved…” from 4summary.py:96-222 to confirm chunk summaries and page rollups completed.
+3: From pipeline, run python `Get_and_Chunk/4.00summary_wrapper_hf.py` [optional args]; this script resumes the endpoint, injects HF_ENDPOINT_URL and other env vars, and then calls `4.01summary.py`.
+4: Monitor the terminal output for “Loaded chunks…” and “Summarized chunks saved…” from `Get_and_Chunk/4.01summary.py` to confirm chunk summaries and page rollups completed.
 5: Go to https://endpoints.huggingface.co/brogersao/endpoints/dedicated
 6: When the wrapper finishes, confirm it auto-paused the endpoint (look for “Endpoint … paused successfully.”); if you disabled auto-pause, manually pause it in the Hugging Face console to avoid extra charges.

@@ -123,7 +123,7 @@ EMBED_OUTPUT_PRECISION: controls the dtype you save (cast before serialization).
 Allowed: "float32", "float16", "bfloat16"
 ENABLE_TF32: toggles TF32 acceleration for float32/tf32 paths.
 Left the old VECTOR_SIZE for compatibility, but marked it deprecated.
-Script updates in 5embedding.py:
+Script updates in VectorDB/embedding.py:
 
 Enforce CUDA-only still.
 Map your precision strings to torch dtypes; validate and log errors if invalid.
@@ -258,7 +258,7 @@ Minimal mapping for your pipeline
 
 Keep metadata in JSON (or a lean JSON).
 Store embeddings in a Parquet sidecar keyed by chunk id with a float32 fixed-size list column.
-In your 6vector.py, load the Parquet, join on id, and insert float32 vectors into pgvector.
+In VectorDB/upsert_to_vectorydb.py, load the Parquet, join on id, and insert float32 vectors into pgvector.
 This gives:
 
 Much smaller on-disk size vs JSON.
@@ -273,7 +273,7 @@ You compute embeddings on CUDA (with your chosen compute precision).
 If USE_PARQUET is True, embeddings are written to a_embeddings.parquet (float32), and the JSON metadata drops the heavy vectors by setting them to None.
 During ingestion:
 
-6vector.py detects the sidecar and merges vectors back via id, so pgvector inserts get the float32 arrays they expect.
+VectorDB/upsert_to_vectorydb.py detects the sidecar and merges vectors back via id, so pgvector inserts get the float32 arrays they expect.
 Retrieval quality:
 Identical to storing embeddings in JSON; we don’t quantize or binarize, we just store float32 in a better container.
 
@@ -287,7 +287,7 @@ Storage: still float32 so pgvector accepts it. You can compute in fp16 on GPU (f
 
 After running the RAG pipeline so that the chunks are in order and training the embedding model create the embeddings: 
 
-1. Set the base model: The base model is pulled from Hugging Face by ID: SentenceTransformer(EMBED_MODEL, device=device) in 5embedding.py:66-126 passes whatever string you put in EMBED_MODEL (currently Qwen/Qwen3-Embedding-4B). The sentence-transformers library downloads/loads that model from the HF hub into the default local cache (~/.cache/huggingface unless TRANSFORMERS_CACHE is set) without needing an explicit local path.
+1. Set the base model: The base model is pulled from Hugging Face by ID in `VectorDB/embedding.py` via `SentenceTransformer(EMBED_MODEL, device=device)` and downloads/loads from the HF cache (`~/.cache/huggingface` unless `TRANSFORMERS_CACHE` is set).
 #. **Check whether a reusable .venv Python environment with SentenceTransformers already exists.**
 #. Activate the environment: ``<path>.venv\Scripts\Activate.ps1``
 #. Install dependencies as needed; for example: torch, numpy, sentence-transformers, and (when USE_PARQUET=True) pyarrow in addition to local modules.

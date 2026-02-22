@@ -1,5 +1,5 @@
 # summary_wrapper_hf.py uses a large model on Hugging Face.  
-# While you can run 4summary.py directly if you have access to a large model,
+# While you can run 4.01summary.py directly if you have access to a large model,
 # it is slow on a local machine.  This wrapper uses a Hugging Face Inference Endpoint
 #
 # wrapper_qwen80b_subprocess.py
