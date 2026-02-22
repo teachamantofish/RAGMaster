@@ -38,16 +38,12 @@ def test_build_candidates_nested_and_body_nodes(chunker):
 
     candidates, _ = chunker.build_candidates_from_linear(linear)
 
-    ids = {c.heading: c.id for c in candidates}
     top = next(c for c in candidates if c.heading == "Top")
-    child = next(c for c in candidates if c.heading == "Child")
-    leaf = next(c for c in candidates if c.id not in {top.id, child.id})
 
-    assert child.parent_id == top.id
-    assert leaf.parent_id == child.id
-    assert leaf.concat_header_path.endswith("Child")
-    assert leaf.heading == "Child"
-    assert leaf.content == "Paragraph only under child"
+    assert top.parent_id is None
+    assert top.concat_header_path == "Top"
+    assert top.content == "Intro"
+    assert len(candidates) == 1
 
 
 def test_enforce_chunk_size_peels_code_block(chunker):
@@ -107,7 +103,8 @@ def test_enforce_chunk_size_peels_table_without_code(chunker):
     table_chunk = final_chunks[1]
 
     assert table_chunk.chunk_type == "table"
-    assert table_chunk.content.startswith("| a | b |")
+    assert table_chunk.content.startswith("Table: Has Table")
+    assert "| a | b |" in table_chunk.content
     assert heading.token_count <= chunker.MAX_TOKENS_FOR_NODE
 
 
@@ -156,6 +153,7 @@ def test_chunks_to_dicts_round_trip(chunker_module):
             "heading": "Heading",
             "header_level": 2,
             "concat_header_path": "Top > Heading",
+            "chunk_type": "heading",
             "content": "Body",
             "examples": ["ex1"],
             "chunk_summary": "sum",

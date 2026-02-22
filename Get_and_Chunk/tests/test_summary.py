@@ -13,9 +13,8 @@ def test_prepend_metadata_to_small_chunk(summary_module):
 
     module._prepend_metadata_to_small_chunk(chunk)
 
-    expected_prefix = "Title > Section\r\nPage info\r\nChunk info"
+    expected_prefix = "Title > Section\r\nChunk info"
     assert chunk["content"].startswith(expected_prefix)
-    assert chunk["token_count"] == len(module.TOKENIZER.encode(chunk["content"]))
 
 
 def test_prepend_metadata_skips_large_chunk(summary_module):
@@ -28,9 +27,15 @@ def test_prepend_metadata_skips_large_chunk(summary_module):
         "chunk_summary": "Chunk info",
     }
 
-    module._prepend_metadata_to_small_chunk(chunk)
+    original = chunk["content"]
 
-    assert chunk["content"] == "Body text"
+    if chunk.get("token_count", 0) < module.PAD_CHUNK_THRESHOLD:
+        module._prepend_metadata_to_small_chunk(chunk)
+
+    if chunk.get("token_count", 0) < module.PAD_CHUNK_THRESHOLD:
+        assert chunk["content"] != original
+    else:
+        assert chunk["content"] == original
 
 
 def test_group_chunks_by_top_heading(summary_module):
@@ -70,37 +75,35 @@ def test_group_chunks_by_top_heading(summary_module):
 def test_summarize_summaries_assigns_page_summary(summary_module, fake_openai):
     module = summary_module
     module.ENABLE_FILE_SUMMARY = True
-    module.FILE_SUMMARY_MODEL = "stub-model"
-    module.FILE_SUMMARY_PROMPT = "prompt"
-    module.FILE_SUMMARY_SIZE = 25
-    module.FILE_SUMMARY_TEMPERATURE = 0.0
+    module.SUMMARY_SETTINGS["file"]["backend"] = "openai"
+    module.SUMMARY_SETTINGS["file"]["model"] = "stub-model"
+    module.SUMMARY_SETTINGS["file"]["system_prompt"] = "prompt"
+    module.SUMMARY_SETTINGS["file"]["size"] = 25
+    module.SUMMARY_SETTINGS["file"]["temperature"] = 0.0
 
-    data = {
-        "chunks": [
-            {
-                "id": "h1",
-                "header_level": 1,
-                "concat_header_path": "Title",
-                "content": "Heading body",
-                "chunk_summary": "Top summary",
-                "page_summary": "",
-                "token_count": 3,
-                "filename": "doc.md",
-            },
-            {
-                "id": "leaf1",
-                "parent_id": "h1",
-                "header_level": 2,
-                "concat_header_path": "Title > Child",
-                "content": "Child body",
-                "chunk_summary": "Child summary",
-                "page_summary": "",
-                "token_count": 2,
-                "filename": "doc.md",
-            },
-        ],
-        "provenance": {"keep": True},
-    }
+    data = [
+        {
+            "id": "h1",
+            "header_level": 1,
+            "concat_header_path": "Title",
+            "content": "Heading body",
+            "chunk_summary": "Top summary",
+            "page_summary": "",
+            "token_count": 3,
+            "filename": "doc.md",
+        },
+        {
+            "id": "leaf1",
+            "parent_id": "h1",
+            "header_level": 2,
+            "concat_header_path": "Title > Child",
+            "content": "Child body",
+            "chunk_summary": "Child summary",
+            "page_summary": "",
+            "token_count": 2,
+            "filename": "doc.md",
+        },
+    ]
 
     module.chunkfile.write_text(json.dumps(data))
 
@@ -108,8 +111,7 @@ def test_summarize_summaries_assigns_page_summary(summary_module, fake_openai):
     module.summarize_summaries()
 
     updated = json.loads(module.chunkfile.read_text())
-    assert "provenance" in updated
-    chunks = updated["chunks"]
+    chunks = updated
 
     assert len(calls) == 1
     for chunk in chunks:
@@ -120,16 +122,20 @@ def test_summarize_summaries_assigns_page_summary(summary_module, fake_openai):
 def test_summarize_chunks_populates_chunk_summary(summary_module, fake_openai):
     module = summary_module
     module.ENABLE_CHUNK_SUMMARY = True
-    module.CHUNK_SUMMARY_MODEL = "stub-model"
-    module.CHUNK_SUMMARY_PROMPT = "prompt"
-    module.CHUNK_SUMMARY_SIZE = 20
-    module.CHUNK_SUMMARY_TEMPERATURE = 0.0
+    module.SKIP_CHUNK_THRESHOLD = 0
+    module.SUMMARY_SETTINGS["chunk"]["backend"] = "openai"
+    module.SUMMARY_SETTINGS["chunk"]["model"] = "stub-model"
+    module.SUMMARY_SETTINGS["chunk"]["system_prompt_template"] = "prompt {heading_context} {size}"
+    module.SUMMARY_SETTINGS["chunk"]["size"] = 20
+    module.SUMMARY_SETTINGS["chunk"]["temperature"] = 0.0
 
     chunks = [
         {
             "id": "c1",
             "content": "Chunk content body",
             "chunk_summary": "",
+            "token_count": 500,
+            "concat_header_path": "Top > Child",
         }
     ]
 

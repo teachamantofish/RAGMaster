@@ -148,30 +148,16 @@ def fake_openai():
 
     calls = []
 
-    class _Message:
-        def __init__(self, content: str):
-            self.content = content
-
-    class _Choice:
-        def __init__(self, content: str):
-            self.message = _Message(content)
-
-    class _Response:
-        def __init__(self, content: str):
-            self.choices = [_Choice(content)]
-
-    def _fake_create(*args, **kwargs):
-        payload = kwargs.get("messages", [])
+    def _fake_run_summary_backend(_backend, text, _params, **_kwargs):
         calls.append(
             {
-                "model": kwargs.get("model"),
-                "messages": payload,
+                "backend": _backend,
+                "text": text,
             }
         )
-        label = payload[-1]["content"] if payload else ""
-        return _Response(f"stub:{len(calls)}:{label[:20]}")
+        return f"stub:{len(calls)}:{str(text)[:20]}"
 
-    summary_module.openai.chat.completions.create = _fake_create
+    summary_module.run_summary_backend = _fake_run_summary_backend
     return calls
 
 
