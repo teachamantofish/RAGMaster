@@ -9,7 +9,7 @@ import sys
 ############### LOGGING ###############
 
 # --- Global Logging Setup ---
-# opttional:   - exc_info=True for tracebacks: a single CSV-safe string (commas escaped, newlines flattened).
+# optional:   - exc_info=True for tracebacks: a single CSV-safe string (commas escaped, newlines flattened).
 def setup_global_logger(
     script_name: str = None,
     cwd: Path = None,

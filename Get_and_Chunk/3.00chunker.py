@@ -31,7 +31,7 @@ prepended to their content to provide more context during retrieval.
 
 Empty headings should be chunked. However, "embedding" should be set to "false" so that the embedding
 script skips them. This allows us to retain the document structure without bloating the vector DB with
-empty chunks. We also preserver the concat_header_path so that the UI can display the full context.
+empty chunks. We also preserve the concat_header_path so that the UI can display the full context.
 """
 
 import os
@@ -62,7 +62,7 @@ CWD: Path = ctx['cwd']
 MD_TO_CHUNK: Path = ctx['md_to_chunk']
 CHUNK_OUTPUT = ctx['output_path']
 
-# Set up global loger with script-specific CSV header; overwrite existing log
+# Set up global logger with script-specific CSV header; overwrite existing log
 script_base = os.path.splitext(os.path.basename(__file__))[0]
 LOG_HEADER = ["Date", "Level", "Message", "Parent Page", "Token Count"]
 logger = setup_global_logger(script_name=script_base, log_level='INFO', headers=LOG_HEADER)
@@ -840,7 +840,7 @@ def enforce_chunk_size(chunks: List[LeafChunk]) -> List[LeafChunk]:
 
 # ----------------- prev/next -----------------
 def link_prev_next(chunks: List[LeafChunk]) -> None:
-    """Populate ``id_prev``/``id_next`` to facility retreival and so pointers so downstream UIs can paginate."""
+    """Populate ``id_prev``/``id_next`` to support retrieval and downstream UI pagination."""
     for i, ch in enumerate(chunks):
         ch.id_prev = chunks[i-1].id if i > 0 else None
         ch.id_next = chunks[i+1].id if i < len(chunks)-1 else None

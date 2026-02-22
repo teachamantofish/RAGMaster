@@ -8,7 +8,7 @@ from Logger.custom_logger import setup_global_logger
 ctx = get_run_context()
 CWD: Path = ctx['cwd']
 
-# Set up global loger with script-specific CSV header; overwrite existing log
+# Set up global logger with script-specific CSV header; overwrite existing log
 script_base = os.path.splitext(os.path.basename(__file__))[0]
 LOG_HEADER = ["Date", "Level", "Message"]
 logger = setup_global_logger(script_name=script_base, log_level='INFO', headers=LOG_HEADER)

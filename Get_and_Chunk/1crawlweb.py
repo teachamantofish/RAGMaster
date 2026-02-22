@@ -28,7 +28,7 @@ metadata = ctx['metadata']
 CWD: Path = ctx['cwd']
 CRAWL_URL = metadata['CRAWL_URL']
 
-# Set up global loger with script-specific CSV header; overwrite existing log
+# Set up global logger with script-specific CSV header; overwrite existing log
 script_base = os.path.splitext(os.path.basename(__file__))[0]
 LOG_HEADER = ["Date", "Level", "Message", "TBD", "TBD"]
 logger = setup_global_logger(script_name=script_base, log_level='INFO', headers=LOG_HEADER)
@@ -58,7 +58,7 @@ def save_markdown(markdown_content: str, save_dir: str, url: str):
         f.write(full_content)
 
 # Simplified deep crawl function using Crawl4AI's built-in BFSDeepCrawlStrategy
-# All configuration values are read directly from crawllconfig.py for consistency
+# All configuration values are read directly from crawlconfig.py for consistency
 def deep_crawl_urls():
     """
     Execute deep crawling using Crawl4AI's BFS strategy with all settings from config.
@@ -192,7 +192,7 @@ def deep_crawl_urls():
 # ---- Command-line Interface ----
 def main():
     """
-    Start the crawl process using configuration values from crawllconfig.py.
+    Start the crawl process using configuration values from crawlconfig.py.
     All settings are read directly from config for consistency and simplicity.
     """
     

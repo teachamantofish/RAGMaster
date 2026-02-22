@@ -22,7 +22,7 @@ SRC_PDF     = JOB_CWD / f"{base_dir}.pdf"        # PDF file (trimmed in-place)
 TOC_JSON    = JOB_CWD / "toc.json"               # logical TOC
 MD_FILE     = JOB_CWD / f"{base_dir}.md"         # markdown file (processed in-place)
 
-# Set up global loger with script-specific CSV header; overwrite existing log
+# Set up global logger with script-specific CSV header; overwrite existing log
 script_base = os.path.splitext(os.path.basename(__file__))[0]
 LOG_HEADER = ["Date", "Level", "Message"]
 logger = setup_global_logger(script_name=script_base, log_level='INFO', headers=LOG_HEADER)

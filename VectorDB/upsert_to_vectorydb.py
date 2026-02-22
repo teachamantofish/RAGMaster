@@ -1,5 +1,5 @@
 """
-todo: 
+TODO:
 Verify data integrity after upload (to be implemented)
 
 Load the data into the vector db by upserting the following artifacts:
@@ -33,7 +33,7 @@ EMBEDDING_FIELDS = (
     'embedding_summary_page',
 )
 
-# Set up global loger with script-specific CSV header; overwrite existing log
+# Set up global logger with script-specific CSV header; overwrite existing log
 script_base = os.path.splitext(os.path.basename(__file__))[0]
 LOG_HEADER = ["Date", "Level", "Message"]
 logger = setup_global_logger(script_name=script_base, log_level='INFO', headers=LOG_HEADER)

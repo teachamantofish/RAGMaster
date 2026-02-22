@@ -20,7 +20,7 @@
   - Chunk by heading only. We are not using any other chunking method (for example, token length)
   - Headings 1, 2, 3, and 4 should be discrete chunks. 
   - Group any headings 5 and 6 with heading 4. 
-  - Extact any code example over 5 lines and store it as a separate chunk. Reference the code example from the source chunk. 
+  - Extract any code example over 5 lines and store it as a separate chunk. Reference the code example from the source chunk. 
   - Additional metadata should be created for each chunk according to the table below. At a high level: 
     - Get data from metadata.yaml
     - Use openai to create page (heading 1) and chunk summaries
