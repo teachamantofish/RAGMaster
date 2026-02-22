@@ -12,12 +12,12 @@ Prerequisites:
     - a_chunks.json must exist in the CWD (run 3.00chunker.py first)
 
 Pipeline conventions:
-    - Uses get_csv_to_process() for CWD resolution from metadataconfig.csv
+    - Uses get_run_context() for CWD resolution from run_settings.py
     - Uses setup_global_logger() for CSV-formatted logging
     - Creates a .json.bak backup before mutating a_chunks.json
 
 Implementation steps:
-    1. Bootstrap: get_csv_to_process() -> CWD, setup logger
+    1. Bootstrap: get_run_context() -> CWD, setup logger
     2. Load codename_friendlyname.csv into a codename->friendlyname dict
        (skip rows with blank friendlyname)
     3. Build search variants for each codename:
@@ -30,7 +30,7 @@ Implementation steps:
     7. Backup a_chunks.json -> .json.bak, then write updated JSON
 
 Usage:
-    python 3.01add_codefriendly_names2chunk.py
+    python 3.02add_codefriendly_names2chunk.py
 """
 
 import csv
@@ -42,10 +42,12 @@ import sys
 from collections import OrderedDict
 from pathlib import Path
 
-from common.utils import setup_global_logger
+from common.run_context import get_run_context
+from Logger.custom_logger import setup_global_logger
 
 # ── Bootstrap ─────────────────────────────────────────────────────────────────
-CWD = Path(r"C:\GIT\Z_Master_Rag\Data\framemaker\mif_jsx")
+ctx = get_run_context()
+CWD = ctx["cwd"]
 
 CHUNKS_PATH = CWD / "a_chunks.json"
 

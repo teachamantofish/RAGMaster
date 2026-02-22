@@ -23,16 +23,8 @@ from pgvector.psycopg2 import register_vector
 from psycopg2.extras import execute_batch
 from config.vectorconfig import *
 from config.embedconfig import USE_PARQUET
-
-repo_root = Path(__file__).resolve().parents[1]
-pipeline_root = repo_root / "AI_RAG" / "pipeline"
-if str(pipeline_root) not in sys.path:
-    sys.path.insert(0, str(pipeline_root))
-import common.utils as common_utils
-
-common_utils._CSV_PATH = str((pipeline_root / "metadataconfig.csv").resolve())
-get_csv_to_process = common_utils.get_csv_to_process
-setup_global_logger = common_utils.setup_global_logger
+from run_settings import CWD
+from Logger.custom_logger import setup_global_logger
 
 TABLE_NAME = DB_TABLE_NAME if 'DB_TABLE_NAME' in globals() else 'chunks'
 EMBEDDING_FIELDS = (
@@ -40,8 +32,6 @@ EMBEDDING_FIELDS = (
     'embedding_summary_chunk',
     'embedding_summary_page',
 )
-
-CWD: Path = get_csv_to_process()['cwd'] # Get working directory from CSV config
 
 # Set up global loger with script-specific CSV header; overwrite existing log
 script_base = os.path.splitext(os.path.basename(__file__))[0]

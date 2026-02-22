@@ -1,17 +1,14 @@
 
 from __future__ import annotations
-import csv
-from pathlib import Path
 from typing import Dict, Any
-from common.utils import (get_csv_to_process)
 
 """Shared metadata loading and front matter utilities.
 
 Loads metadataconfig.csv once (module-level cache) and exposes helper functions
 for crawlers to avoid duplication.
 
-I AM NOT USING THIS AT THE MOMENT AS THE METADATA SIMPLY COMES FROM metadata = crawl_info['input_csv_row']
-VIA get_csv_to_process.
+I AM NOT USING THIS AT THE MOMENT AS THE METADATA SIMPLY COMES FROM run_settings.py
+via common.run_context.get_run_context().
 """
 
 def inject_standard_metadata(chunk: dict, meta: dict) -> None:

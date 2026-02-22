@@ -2,10 +2,11 @@ import os
 import sys
 from pathlib import Path
 from common.markdown_utils import *
-# Shared metadata utilities (centralized CSV loading + merge rules)
-from common.utils import *
+from common.run_context import get_run_context
+from Logger.custom_logger import setup_global_logger
 
-CWD: Path = get_csv_to_process()['cwd'] # Get working directory from CSV config
+ctx = get_run_context()
+CWD: Path = ctx['cwd']
 
 # Set up global loger with script-specific CSV header; overwrite existing log
 script_base = os.path.splitext(os.path.basename(__file__))[0]
@@ -30,7 +31,7 @@ def clean_markdown_file_inplace(md_file):
 		f.write(cleaned)
 
 if __name__ == "__main__":
-	# Use CWD resolved from get_csv_to_process() at module import time
+	# Use CWD resolved from run_settings.py at module import time
 	CWD.mkdir(parents=True, exist_ok=True)
 	# Find markdown files recursively (include .md, .markdown, .mdx)
 	md_files = []

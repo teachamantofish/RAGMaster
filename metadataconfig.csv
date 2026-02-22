@@ -1,4 +1,10 @@
 ID,PARSER,CRAWL_URL,BASE_DIR,METADATA_TITLE,METADATA_AUTHOR,METADATA_CATEGORY,METADATA_DESCRIPTION,TAGS,METADATA_DATE,PAGES
+0,crawlpdf,"C:/GIT/Z_Master_Rag/Data/framemaker","mif_jsx","Extendscript and MIF merged","Adobe","JSX and MIF","FrameMaker Scripting with JSX","[]","9/19/25",n/a
+
+
+
+
+============== for future use ==============
 1,crawlweb,"https://adrienbrignon.github.io/mkdocs-exporter/","mkdocs-exporter","Mkdocs Exporter","adrienbrignon","mkdocs","Create a PDF from mkdocs using mkdocs-exporter","[]","6/16/2025"
 2,crawlweb,"https://docs.crawl4ai.com/","crawl4AI","Crawl4AI Documentation","UncodeCode","web scraping","Scrape web sites with crawl4AI","[]","6/16/2025"
 3,crawlpdf,"https://help.adobe.com/en_US/framemaker/pdfs/fdk-reference.pdf","FDKprgrammers_reference","FrameMaker SDK","Adobe","FDK","FrameMaker SDK API reference for scripting FM and MIF","[]","5/1/2023",20-1063
@@ -13,7 +19,6 @@ ID,PARSER,CRAWL_URL,BASE_DIR,METADATA_TITLE,METADATA_AUTHOR,METADATA_CATEGORY,ME
 13,crawlweb,"https://docs.llamaindex.ai/en/stable/api_reference/","llamaindex_api_reference","LlamaIndex API Reference","LlamaIndex","Llamaindex API","API reference documentation for LlamaIndex","[]","9/12/2025"
 14,crawlpdf,"C:/GIT/Z_Master_Rag/Data/framemaker","extendscript","Extendscript Scripting Guide","Adobe","JSX","FrameMaker Scripting with JSX","[]","9/19/25",70-1078
 15,crawlweb,"https://helpx.adobe.com/adobe-connect/connect-tech-spec","adobe_connect","Adobe Connect User Guide","Adobe","Adobe Connect","User guide for Adobe Connect","[]","10/12/25","",70-1078
-16,crawlpdf,"C:/GIT/Z_Master_Rag/Data/framemaker","mif_jsx","Extendscript and MIF merged","Adobe","JSX and MIF","FrameMaker Scripting with JSX","[]","9/19/25",n/a
 
 
 

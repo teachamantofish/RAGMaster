@@ -21,12 +21,13 @@ import os
 from urllib.parse import urlparse
 # Shared metadata utilities (centralized CSV loading + merge rules)
 from common.metadata_utils import merge_page_metadata
-from common.utils import (get_csv_to_process, setup_global_logger)
+from common.run_context import get_run_context
+from Logger.custom_logger import setup_global_logger
 
-csvrow_data = get_csv_to_process() # Get the entire csv row to process, based dir, url, user metadata, etc. 
-metadata = csvrow_data['input_csv_row'] # Store the row data in a var
-CWD: Path = csvrow_data['cwd'] # Extract the rootdir/basedir from the csv row data
-CRAWL_URL = metadata['CRAWL_URL'] # Get the URL rom the CRAWL_URL field in the csv row
+ctx = get_run_context()
+metadata = ctx['metadata']
+CWD: Path = ctx['cwd']
+CRAWL_URL = metadata['CRAWL_URL']
 
 # Set up global loger with script-specific CSV header; overwrite existing log
 script_base = os.path.splitext(os.path.basename(__file__))[0]
@@ -155,7 +156,7 @@ def save_markdown_files(files_meta, owner: str, repo: str, subpath: str, out_roo
         except Exception:
             token_count = 0
 
-        # Log a CSV row for this saved file. The CSVFormatter in common.utils
+        # Log a CSV row for this saved file. The CSV formatter in Logger/custom_logger.py
         # will map the 'Filename' and 'Token Count' extras to the declared
         # header columns in LOG_HEADER.
         try:

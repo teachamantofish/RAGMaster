@@ -94,19 +94,24 @@ def _load_module(name: str, path: Path):
 
 @pytest.fixture
 def chunker_module(monkeypatch, tmp_path, project_root):
-    import common.utils as utils
+    import common.run_context as run_context
 
     fake_cwd = tmp_path / "workspace"
     fake_cwd.mkdir()
 
     metadata_row = {"ID": "test", "BASE_DIR": fake_cwd.name, "SOURCE": "test"}
 
-    def _fake_get_csv_to_process(crawl_id=None):
-        return {"input_csv_row": metadata_row, "cwd": fake_cwd}
+    def _fake_get_run_context(output_name=None):
+        return {
+            "cwd": fake_cwd,
+            "metadata": metadata_row,
+            "md_to_chunk": fake_cwd / f"{fake_cwd.name}.md",
+            "output_path": (fake_cwd / output_name) if output_name else None,
+        }
 
-    monkeypatch.setattr(utils, "get_csv_to_process", _fake_get_csv_to_process)
+    monkeypatch.setattr(run_context, "get_run_context", _fake_get_run_context)
 
-    module = _load_module("chunker_under_test", project_root / "3chunker.py")
+    module = _load_module("chunker_under_test", project_root / "3.00chunker.py")
     module.TOKENIZER = DummyTokenizer()
     module.MAX_TOKENS_FOR_NODE = 20
     return module
@@ -114,19 +119,24 @@ def chunker_module(monkeypatch, tmp_path, project_root):
 
 @pytest.fixture
 def summary_module(monkeypatch, tmp_path, project_root):
-    import common.utils as utils
+    import common.run_context as run_context
 
     fake_cwd = tmp_path / "workspace"
     fake_cwd.mkdir()
 
     metadata_row = {"ID": "test", "BASE_DIR": fake_cwd.name, "SOURCE": "test"}
 
-    def _fake_get_csv_to_process(crawl_id=None):
-        return {"input_csv_row": metadata_row, "cwd": fake_cwd}
+    def _fake_get_run_context(output_name=None):
+        return {
+            "cwd": fake_cwd,
+            "metadata": metadata_row,
+            "md_to_chunk": fake_cwd / f"{fake_cwd.name}.md",
+            "output_path": (fake_cwd / output_name) if output_name else None,
+        }
 
-    monkeypatch.setattr(utils, "get_csv_to_process", _fake_get_csv_to_process)
+    monkeypatch.setattr(run_context, "get_run_context", _fake_get_run_context)
 
-    module = _load_module("summary_under_test", project_root / "4summary.py")
+    module = _load_module("summary_under_test", project_root / "4.01summary.py")
     module.TOKENIZER = DummyTokenizer()
     module.CHUNK_MIN_THRESHOLD = 10
     return module
@@ -167,17 +177,22 @@ def fake_openai():
 
 @pytest.fixture
 def markdown_cleanup_module(monkeypatch, tmp_path, project_root):
-    import common.utils as utils
+    import common.run_context as run_context
 
     fake_cwd = tmp_path / "workspace"
     fake_cwd.mkdir()
 
     metadata_row = {"ID": "test", "BASE_DIR": fake_cwd.name, "SOURCE": "test"}
 
-    def _fake_get_csv_to_process(crawl_id=None):
-        return {"input_csv_row": metadata_row, "cwd": fake_cwd}
+    def _fake_get_run_context(output_name=None):
+        return {
+            "cwd": fake_cwd,
+            "metadata": metadata_row,
+            "md_to_chunk": fake_cwd / f"{fake_cwd.name}.md",
+            "output_path": (fake_cwd / output_name) if output_name else None,
+        }
 
-    monkeypatch.setattr(utils, "get_csv_to_process", _fake_get_csv_to_process)
+    monkeypatch.setattr(run_context, "get_run_context", _fake_get_run_context)
 
     module = _load_module("markdown_cleanup_under_test", project_root / "2markdown_cleanup.py")
     return module

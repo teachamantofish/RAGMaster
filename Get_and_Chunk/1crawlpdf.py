@@ -3,16 +3,17 @@ import os
 from pathlib import Path
 import fitz, json
 from common.metadata_utils import merge_page_metadata
-from common.utils import (get_csv_to_process, setup_global_logger)
+from common.run_context import get_run_context
+from Logger.custom_logger import setup_global_logger
 from common.pdftools.docling_pdf2md import convert_in_two_jobs              # your docling code (returns MD path)
 from common.pdftools.pdftoc_fixer import rebuild_md_headings_from_toc    # your JSON-driven heading fixer
 from common.codeexample_fixer import process_markdown                     # your code fence fixer
 from config.crawlpdfconfig import *  # import all config toggles and constants
 
-csvrow_data = get_csv_to_process() # Get the entire csv row to process, based dir, url, user metadata, etc. 
-metadata = csvrow_data['input_csv_row'] # Store the row data in a var
+ctx = get_run_context()
+metadata = ctx['metadata']
 CRAWL_URL = metadata['CRAWL_URL']
-CWD: Path = csvrow_data['cwd'] # Extract the rootdir/basedir from the csv row data
+CWD: Path = ctx['cwd']
 
 # derive paths directly from CSV: CRAWL_URL / BASE_DIR, PDF name = BASE_DIR.pdf
 base_dir = metadata['BASE_DIR']
@@ -86,7 +87,7 @@ def run_pipeline():
 
     # B) docling on reduced PDF -> returns path to merged .md
     if RUN_DOCLING:
-        md_path = Path(convert_in_two_jobs(str(SRC_PDF), str(JOB_CWD), csvrow_data=csvrow_data))
+        md_path = Path(convert_in_two_jobs(str(SRC_PDF), str(JOB_CWD), csvrow_data=metadata))
         print(f"[docling] wrote: {md_path}")
     else:
         # If skipping docling, assume the MD file exists from previous run

@@ -52,14 +52,15 @@ from pygments.lexers import guess_lexer, ClassNotFound
 from config.chunkerconfig import *
 from config.summaryconfig import *
 from config.embedconfig import *
-from common.utils import (get_csv_to_process, setup_global_logger)
+from common.run_context import get_run_context
+from Logger.custom_logger import setup_global_logger
 from common.token_counter import main as run_token_counter
 
-csvrow_data = get_csv_to_process() # Get the entire csv row to process, based dir, url, user metadata, etc. 
-metadata = csvrow_data['input_csv_row'] # Store the row data in a var
-CWD: Path = csvrow_data['cwd'] # Extract the rootdir/basedir from the csv row data
-MD_TO_CHUNK: Path = CWD / f"{CWD.name}.md"
-CHUNK_OUTPUT = CWD / OUTPUT_NAME
+ctx = get_run_context(output_name=OUTPUT_NAME)
+metadata = ctx['metadata']
+CWD: Path = ctx['cwd']
+MD_TO_CHUNK: Path = ctx['md_to_chunk']
+CHUNK_OUTPUT = ctx['output_path']
 
 # Set up global loger with script-specific CSV header; overwrite existing log
 script_base = os.path.splitext(os.path.basename(__file__))[0]
@@ -1020,7 +1021,7 @@ def process_directory_llamaindex():
     link_prev_next(final_chunks)
 
     # Log a CSV row per chunk using the declared extra columns in LOG_HEADER.
-    # The CSVFormatter in common.utils will place these extras into the
+    # The CSV formatter in Logger/custom_logger.py will place these extras into the
     # corresponding columns (e.g. "Parent Page", "Token Count").
     for ch in final_chunks:
         # Message column: include chunk id and a short heading for context

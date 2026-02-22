@@ -12,19 +12,9 @@ import numpy as np
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 from config.embedconfig import *
+from run_settings import CWD as DATASET_ROOT
+from Logger.custom_logger import setup_global_logger
 
-repo_root = Path(__file__).resolve().parents[1]
-pipeline_root = repo_root / "AI_RAG" / "pipeline"
-if str(pipeline_root) not in sys.path:
-    sys.path.insert(0, str(pipeline_root))
-import common.utils as common_utils
-
-common_utils._CSV_PATH = str((pipeline_root / "metadataconfig.csv").resolve())
-get_csv_to_process = common_utils.get_csv_to_process
-setup_global_logger = common_utils.setup_global_logger
-
-_DATA_CONTEXT = get_csv_to_process()
-DATASET_ROOT = _DATA_CONTEXT['cwd']
 embedfile = DATASET_ROOT / "a_chunks.json"  # Get json file with chunks to embed.
 post_embed_file = embedfile.with_name("a_chunks_postembedding.json")
 ADAPTER_DIR = (DATASET_ROOT / Path(ADAPTER_PATH)).resolve() if ADAPTER_PATH else None

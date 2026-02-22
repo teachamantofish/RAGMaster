@@ -11,7 +11,8 @@ from pathlib import Path
 from typing import Dict, List, Optional
 import numpy as np
 from config.summaryevalconfig import *
-from common.utils import get_csv_to_process, setup_global_logger
+from common.run_context import get_run_context
+from Logger.custom_logger import setup_global_logger
 
 
 def log_eval_settings(active_logger: Optional[object] = None) -> None:
@@ -119,7 +120,9 @@ if SUMMAC_AVAILABLE:
 else:
     print("[INFO] SummaC evaluation disabled via config (SUMMAC_AVAILABLE=False)")
 
-chunkfile = get_csv_to_process()['cwd'] / "a_chunks.json"
+ctx = get_run_context()
+CWD = ctx['cwd']
+chunkfile = CWD / "a_chunks.json"
 
 # Set up global logger with script-specific CSV header
 script_base = os.path.splitext(os.path.basename(__file__))[0]

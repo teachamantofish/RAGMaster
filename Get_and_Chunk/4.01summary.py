@@ -6,10 +6,13 @@ from typing import Optional
 from config.summaryconfig import *
 from config.chunkerconfig import TOKENIZER
 # Shared metadata utilities (centralized CSV loading + merge rules)
-from common.utils import (get_csv_to_process, setup_global_logger)
+from common.run_context import get_run_context
+from Logger.custom_logger import setup_global_logger
 from common.token_counter import main as run_token_counter
 
-chunkfile = get_csv_to_process()['cwd'] / "a_chunks.json"
+ctx = get_run_context()
+CWD = ctx['cwd']
+chunkfile = CWD / "a_chunks.json"
 
 # Set up global loger with script-specific CSV header; overwrite existing log
 script_base = os.path.splitext(os.path.basename(__file__))[0]
@@ -45,7 +48,7 @@ def update_provenance_with_summary():
     """Load a_provenance.json, add summary details, and save back."""
     from datetime import datetime
     
-    prov_path = get_csv_to_process()['cwd'] / "a_provenance.json"
+    prov_path = CWD / "a_provenance.json"
     
     # Load existing provenance
     try:

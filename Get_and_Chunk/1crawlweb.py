@@ -21,11 +21,12 @@ from crawl4ai.deep_crawling.filters import FilterChain, URLPatternFilter
 from config.crawlconfig import *
 # Shared metadata utilities (centralized CSV loading + merge rules)
 from common.metadata_utils import merge_page_metadata
-from common.utils import (get_csv_to_process, setup_global_logger)
+from common.run_context import get_run_context
+from Logger.custom_logger import setup_global_logger
 
-csvrow_data = get_csv_to_process() # Get the entire csv row to process, based dir, url, user metadata, etc. 
-metadata = csvrow_data['input_csv_row'] # Store the row data in a var
-CWD: Path = csvrow_data['cwd'] # Extract the rootdir/basedir from the csv row data
+ctx = get_run_context()
+metadata = ctx['metadata']
+CWD: Path = ctx['cwd']
 CRAWL_URL = metadata['CRAWL_URL']
 
 # Set up global loger with script-specific CSV header; overwrite existing log

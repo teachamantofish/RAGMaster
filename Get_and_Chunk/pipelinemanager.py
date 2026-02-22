@@ -10,7 +10,7 @@ Executes the numbered pipeline scripts in order:
 5. Embedding
 6. Vector database upload
 
-The crawler selection is based on the PARSER field in metadataconfig.csv:
+The crawler selection is based on the PARSER field in run_settings.py metadata:
 - crawlweb -> 1crawler_web.py
 - crawlpdf -> 1crawler_pdf.py
 - crawlgit -> 1crawler_github.py
@@ -20,12 +20,13 @@ import subprocess
 import sys
 import os
 from pathlib import Path
-from common.utils import (get_csv_to_process, setup_global_logger)
+from common.run_context import get_run_context
+from Logger.custom_logger import setup_global_logger
 
-# Get CSV configuration
-csvrow_data = get_csv_to_process()
-metadata = csvrow_data['input_csv_row']
-CWD = csvrow_data['cwd']
+# Get run configuration
+ctx = get_run_context()
+metadata = ctx['metadata']
+CWD = ctx['cwd']
 
 # Set up global logger
 script_base = os.path.splitext(os.path.basename(__file__))[0]
@@ -102,7 +103,7 @@ def run_pipeline() -> bool:
     Returns:
         True if all steps completed successfully, False if any step failed
     """
-    # Get parser type from CSV metadata
+    # Get parser type from run metadata
     parser_type = metadata.get('PARSER', '').strip().lower()
     crawl_id = metadata.get('ID', 'unknown')
     
