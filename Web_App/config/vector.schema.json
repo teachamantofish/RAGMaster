@@ -1,0 +1,69 @@
+{
+  "configFile": "VectorDB/config/vectorconfig.py",
+  "runScript": "VectorDB/upsert_to_vectorydb.py",
+  "phase": "vector",
+  "fields": [
+    {
+      "key": "VECTOR_DB_NAME",
+      "label": "Database Name",
+      "type": "text",
+      "help": "PostgreSQL database name to connect to."
+    },
+    {
+      "key": "VECTOR_DB_USER",
+      "label": "Database User",
+      "type": "text",
+      "help": "PostgreSQL login username."
+    },
+    {
+      "key": "VECTOR_DB_PASSWORD",
+      "label": "Database Password",
+      "type": "text",
+      "help": "PostgreSQL login password."
+    },
+    {
+      "key": "VECTOR_DB_HOST",
+      "label": "Database Host",
+      "type": "text",
+      "help": "PostgreSQL server hostname or IP address."
+    },
+    {
+      "key": "VECTOR_DB_PORT",
+      "label": "Database Port",
+      "type": "text",
+      "help": "PostgreSQL server port (default 5432)."
+    },
+    {
+      "key": "BATCH_SIZE",
+      "label": "Batch Size",
+      "type": "number",
+      "min": 1,
+      "help": "Number of rows to upsert per database transaction."
+    },
+    {
+      "key": "LOG_LEVEL",
+      "label": "Log Level",
+      "type": "select",
+      "options": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+      "help": "Logging verbosity for the upsert pipeline."
+    },
+    {
+      "key": "CHUNKS_FILE_NAME",
+      "label": "Chunks File Name",
+      "type": "text",
+      "help": "Name of the JSON chunks file to ingest (e.g. 'a_chunks.json')."
+    },
+    {
+      "key": "PARQUET_FILENAME",
+      "label": "Parquet Filename",
+      "type": "text",
+      "help": "Name of the Parquet sidecar file containing embeddings."
+    },
+    {
+      "key": "DB_TABLE_NAME",
+      "label": "DB Table Name",
+      "type": "text",
+      "help": "Target table in the vector database where rows are upserted."
+    }
+  ]
+}

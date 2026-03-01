@@ -1,0 +1,269 @@
+{
+  "configFile": "Get_and_Chunk/config/crawlconfig.py",
+  "runScript": "Get_and_Chunk/1crawlweb.py",
+  "phase": "crawl",
+  "fields": [
+    {
+      "key": "WEB_CRAWL",
+      "label": "Web Crawl Description",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Descriptive constant. Not a runtime setting.",
+      "help": "Description string for the web crawl source type."
+    },
+    {
+      "key": "GIT_CRAWL",
+      "label": "Git Crawl Description",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Descriptive constant. Not a runtime setting.",
+      "help": "Description string for the git crawl source type."
+    },
+    {
+      "key": "MAX_CRAWL_DEPTH",
+      "label": "Max Crawl Depth",
+      "type": "number",
+      "min": 1,
+      "help": "How many levels deep to follow links from the starting URL. A depth of 1 fetches only the seed page; 2 also follows links found on that page, etc."
+    },
+    {
+      "key": "MAX_URLS",
+      "label": "Max URLs",
+      "type": "number",
+      "min": 1,
+      "help": "Hard cap on the total number of pages the crawler will fetch in a single run."
+    },
+    {
+      "key": "MIN_CONTENT_LENGTH",
+      "label": "Min Content Length",
+      "type": "number",
+      "min": 0,
+      "help": "Minimum character count for a page's extracted text. Pages below this threshold are skipped."
+    },
+    {
+      "key": "MIN_CONTENT_LINES",
+      "label": "Min Content Lines",
+      "type": "number",
+      "min": 0,
+      "help": "Minimum number of text lines (crawl4AI counts from 0). Pages with fewer lines are skipped."
+    },
+    {
+      "key": "INCLUDE_EXTERNAL_DOMAIN",
+      "label": "Include External Domain",
+      "type": "boolean",
+      "help": "When enabled, the crawler follows links to domains other than the seed URL's domain."
+    },
+    {
+      "key": "LANGUAGE",
+      "label": "Language",
+      "type": "text",
+      "help": "ISO 639-1 language code. Pages not matching this language are skipped."
+    },
+    {
+      "key": "URL_PATTERN_FILTERS",
+      "label": "URL Pattern Filters",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Python list expression. Edit the config file directly.",
+      "help": "A Python list of URL substring patterns. Only URLs containing at least one pattern are crawled."
+    },
+    {
+      "key": "USE_URL_LIST",
+      "label": "Use URL List",
+      "type": "boolean",
+      "help": "When enabled, the crawler reads a predefined URL list instead of performing deep crawling from a seed."
+    },
+    {
+      "key": "URL_LIST_FILE",
+      "label": "URL List File",
+      "type": "text",
+      "help": "Filename (relative to the data directory) containing one URL per line to crawl."
+    },
+    {
+      "key": "CUSTOM_REGEX",
+      "label": "Custom Regex",
+      "type": "boolean",
+      "help": "Enable custom regex-based post-processing on the crawled markdown output."
+    },
+    {
+      "key": "ADDLINES_TO_CODEBLOCKS",
+      "label": "Add Lines to Code Blocks",
+      "type": "boolean",
+      "help": "Copies the line immediately preceding a code fence into the block as a code comment for added context."
+    },
+    {
+      "key": "IGNORE_LINKS",
+      "label": "Ignore Links",
+      "type": "boolean",
+      "help": "Strip hyperlinks from the generated markdown, keeping only the link text."
+    },
+    {
+      "key": "IGNORE_IMAGES",
+      "label": "Ignore Images",
+      "type": "boolean",
+      "help": "Remove image references from the generated markdown."
+    },
+    {
+      "key": "ESCAPE_HTML",
+      "label": "Escape HTML",
+      "type": "boolean",
+      "help": "HTML-encode special characters in the markdown output."
+    },
+    {
+      "key": "BODY_WIDTH",
+      "label": "Body Width",
+      "type": "number",
+      "min": 0,
+      "help": "Maximum line width for the markdown generator. 0 means no wrapping."
+    },
+    {
+      "key": "SKIP_INTERNAL_LINKS",
+      "label": "Skip Internal Links",
+      "type": "boolean",
+      "help": "Remove same-page anchor links (e.g. #section) from the markdown."
+    },
+    {
+      "key": "INCLUDE_SUP_SUB",
+      "label": "Include Sup/Sub",
+      "type": "boolean",
+      "help": "Preserve <sup> and <sub> HTML tags in the markdown output."
+    },
+    {
+      "key": "HEADING_STYLE",
+      "label": "Heading Style",
+      "type": "select",
+      "options": [
+        { "value": "ATX", "label": "ATX (# Heading)" },
+        { "value": "SETEXT", "label": "SETEXT (underline)" }
+      ],
+      "help": "Markdown heading format. ATX uses hash marks (# Heading); SETEXT uses underlines."
+    },
+    {
+      "key": "LIST_STYLE",
+      "label": "List Style",
+      "type": "select",
+      "options": [
+        { "value": "dash", "label": "dash (-)" },
+        { "value": "asterisk", "label": "asterisk (*)" },
+        { "value": "plus", "label": "plus (+)" }
+      ],
+      "help": "Character used for unordered list items in the generated markdown."
+    },
+    {
+      "key": "STRIP_COMMENTS",
+      "label": "Strip Comments",
+      "type": "boolean",
+      "help": "Remove HTML comments from the output."
+    },
+    {
+      "key": "PRESERVE_TABLES",
+      "label": "Preserve Tables",
+      "type": "boolean",
+      "help": "Keep HTML tables in the markdown output rather than converting or stripping them."
+    },
+    {
+      "key": "COLLAPSE_WHITESPACE",
+      "label": "Collapse Whitespace",
+      "type": "boolean",
+      "help": "Merge consecutive blank lines and spaces into single spaces."
+    },
+    {
+      "key": "STRIP_FOOTNOTES",
+      "label": "Strip Footnotes",
+      "type": "boolean",
+      "help": "Remove footnote references and definitions from the markdown."
+    },
+    {
+      "key": "STRIP_CODE_BLOCKS",
+      "label": "Strip Code Blocks",
+      "type": "boolean",
+      "help": "Remove fenced code blocks entirely from the markdown output."
+    },
+    {
+      "key": "STRIP_BLOCKQUOTES",
+      "label": "Strip Blockquotes",
+      "type": "boolean",
+      "help": "Remove blockquote markup from the markdown output."
+    },
+    {
+      "key": "STRIP_MATH",
+      "label": "Strip Math",
+      "type": "boolean",
+      "help": "Remove LaTeX/math blocks from the markdown output."
+    },
+    {
+      "key": "MARKDOWN_GENERATOR",
+      "label": "Markdown Generator",
+      "type": "text",
+      "help": "Name of the markdown generator module used by CrawlerRunConfig."
+    },
+    {
+      "key": "CACHE_MODE",
+      "label": "Cache Mode",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Python enum expression (CacheMode.BYPASS). Edit the config file directly.",
+      "help": "CrawlerRunConfig cache strategy. Controls whether pages are served from cache or re-fetched."
+    },
+    {
+      "key": "EXCLUDED_TAGS",
+      "label": "Excluded Tags",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Python list expression. Edit the config file directly.",
+      "help": "HTML tags to strip before conversion. The crawler removes these elements and their children."
+    },
+    {
+      "key": "REMOVE_FORMS",
+      "label": "Remove Forms",
+      "type": "boolean",
+      "help": "Strip <form> elements from the page before markdown conversion."
+    },
+    {
+      "key": "REMOVE_OVERLAY_ELEMENTS",
+      "label": "Remove Overlay Elements",
+      "type": "boolean",
+      "help": "Attempt to detect and remove modals, popups, and overlay elements."
+    },
+    {
+      "key": "CSS_SELECTOR",
+      "label": "CSS Selector",
+      "type": "text",
+      "help": "CSS selector that limits extraction to a specific page region (e.g. '.main'). Leave empty to extract the full page."
+    },
+    {
+      "key": "EXCLUDED_SELECTOR",
+      "label": "Excluded Selector",
+      "type": "text",
+      "help": "Comma-separated CSS selectors for elements to remove before extraction (e.g. '.sidebar, #toc')."
+    },
+    {
+      "key": "EXCLUDE_EXTERNAL_LINKS",
+      "label": "Exclude External Links",
+      "type": "boolean",
+      "help": "Remove links pointing to external domains from the final markdown content."
+    },
+    {
+      "key": "EXCLUDE_SOCIAL_MEDIA_LINKS",
+      "label": "Exclude Social Media Links",
+      "type": "boolean",
+      "help": "Remove links to known social media sites from the markdown."
+    },
+    {
+      "key": "EXCLUDE_DOMAINS",
+      "label": "Exclude Domains",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Python list expression. Edit the config file directly.",
+      "help": "Python list of domain names whose links are stripped from the output."
+    },
+    {
+      "key": "EXCLUDE_SOCIAL_MEDIA_DOMAINS",
+      "label": "Exclude Social Media Domains",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Python list expression. Edit the config file directly.",
+      "help": "Python list extending the default social media domain blocklist."
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "configFile": "Get_and_Chunk/config/crawlpdfconfig.py",
+  "runScript": "Get_and_Chunk/1crawlpdf.py",
+  "phase": "crawl_pdf",
+  "fields": [
+    {
+      "key": "RUN_DOCLING",
+      "label": "Run Docling",
+      "type": "boolean",
+      "help": "Convert PDF pages to markdown using the Docling library."
+    },
+    {
+      "key": "RUN_TOC_FIXER",
+      "label": "Run TOC Fixer",
+      "type": "boolean",
+      "help": "Post-process the converted markdown to create proper headings from the extracted table of contents (toc.json)."
+    },
+    {
+      "key": "RUN_CODE_FIXER",
+      "label": "Run Code Fixer",
+      "type": "boolean",
+      "help": "Add language identifiers to fenced code blocks and pretty-print the code."
+    },
+    {
+      "key": "RUN_PDF_TRIM",
+      "label": "Run PDF Trim",
+      "type": "boolean",
+      "help": "Remove unwanted pages from the PDF and save the table of contents as toc.json before conversion."
+    },
+    {
+      "key": "REMOVE_FRONT",
+      "label": "Remove Front Pages",
+      "type": "number",
+      "min": 0,
+      "help": "Number of pages to remove from the beginning of the PDF (e.g. title page). 0-based: the first page is page 0."
+    },
+    {
+      "key": "TOC_RANGE",
+      "label": "TOC Range",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Python tuple expression. Edit the config file directly.",
+      "help": "1-based inclusive page range to extract as the table of contents, stored as a Python tuple (start, end)."
+    },
+    {
+      "key": "REMOVE_RANGES",
+      "label": "Remove Ranges",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Python list-of-tuples expression. Edit the config file directly.",
+      "help": "List of (start, end) page ranges to remove from the PDF. Multiple ranges are allowed, e.g. [(4, 12), (217, 234)]."
+    },
+    {
+      "key": "REMOVE_BACK",
+      "label": "Remove Back Pages",
+      "type": "number",
+      "min": 0,
+      "help": "Number of pages to remove from the end of the PDF."
+    }
+  ]
+}

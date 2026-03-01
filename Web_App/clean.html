@@ -1,43 +1,26 @@
-<section>
-  <form>
-    <!-- Flex container for two columns -->
-    <div class="fw-flex-container">
-      <!-- First column -->
-      <div class="fw-column1">
-        <div class="fw-panel-label">Clean configuration</div>
-        <div class="save-btn-container">
-          <!-- Buttons -->
-          <div style="margin: 0 0 10px 0; display: flex; flex-wrap: wrap; gap: 10px;">
-            <sl-button variant="primary" id="save-btn">
-              <sl-icon name="floppy"></sl-icon>
-            </sl-button>
-            <sl-button variant="primary" id="run-btn">
-              <sl-icon name="play-fill"></sl-icon>
-            </sl-button>
-            <sl-button variant="primary" id="clear-btn">
-              <sl-icon name="arrow-clockwise"></sl-icon>
-            </sl-button>
-            <sl-button variant="secondary" id="reload-config-btn" onclick="reloadConfigFile()">
-              <sl-icon name="arrow-repeat"></sl-icon>
-            </sl-button>
-          </div>
+﻿<section>
+  <form id="clean-form">
+    <div class="config-form-container">
+      <div class="config-form-column config-form-column--controls">
+        <div class="config-form-panel-label">Clean configuration</div>
+        <div class="config-action-buttons">
+          <sl-button variant="primary" id="clean-save-btn"><sl-icon name="floppy"></sl-icon></sl-button>
+          <sl-button variant="primary" id="clean-reload-btn"><sl-icon name="arrow-clockwise"></sl-icon></sl-button>
+          <sl-button variant="primary" id="clean-run-btn"><sl-icon name="play-fill"></sl-icon></sl-button>
         </div>
-        
-        <!-- Clean form fields go here -->
-        <label>Remove Images: <input type="checkbox" name="remove_images"></label><br>
-        <label>Normalize Formatting: <input type="checkbox" name="normalize_formatting"></label><br>
-        <!-- Add more fields as needed -->
+        <div class="config-field"><sl-radio-group id="clean-remove_images" data-config-key="REMOVE_IMAGES" size="small" label="Remove Images" name="clean_remove_images" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="clean-normalize_formatting" data-config-key="NORMALIZE_FORMATTING" size="small" label="Normalize Formatting" name="clean_normalize_formatting" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="clean-remove_extra_whitespace" data-config-key="REMOVE_EXTRA_WHITESPACE" size="small" label="Remove Extra Whitespace" name="clean_remove_extra_whitespace" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="clean-strip_html_comments" data-config-key="STRIP_HTML_COMMENTS" size="small" label="Strip HTML Comments" name="clean_strip_html_comments" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="clean-normalize_line_endings" data-config-key="NORMALIZE_LINE_ENDINGS" size="small" label="Normalize Line Endings" name="clean_normalize_line_endings" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-input id="clean-input_directory" data-config-key="INPUT_DIRECTORY" label="Input Directory" type="text"></sl-input></div>
+        <div class="config-field"><sl-input id="clean-output_directory" data-config-key="OUTPUT_DIRECTORY" label="Output Directory" type="text"></sl-input></div>
+        <div class="config-field"><sl-radio-group id="clean-backup_original" data-config-key="BACKUP_ORIGINAL" size="small" label="Backup Original" name="clean_backup_original" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <sl-textarea id="clean-status-display" class="config-status-display" label="Notes" placeholder="Configuration notes will appear here" readonly resize="none" rows="3"></sl-textarea>
       </div>
-
-      <!-- Second column -->
-      <div class="fw-column2">
-        <div class="fw-panel-label">File reader</div>
-        <div class="fields">
-          <sl-textarea id="cleanconfig" class="filereader-textarea" resize="auto"
-            placeholder="Loading file. . . ">
-          </sl-textarea>
-        </div>
-        </div>
+      <div class="config-form-column config-form-column--viewer">
+        <div class="config-form-panel-label">File reader</div>
+        <div class="fields"><sl-textarea id="clean-config-viewer" class="config-file-viewer" resize="auto" placeholder="Loading file..."></sl-textarea></div>
       </div>
     </div>
   </form>

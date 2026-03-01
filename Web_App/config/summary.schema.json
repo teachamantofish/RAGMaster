@@ -1,0 +1,191 @@
+{
+  "configFile": "Get_and_Chunk/config/summaryconfig.py",
+  "runScript": "Get_and_Chunk/4.01summary.py",
+  "phase": "summary",
+  "fields": [
+    {
+      "key": "CHUNK_SUMMARY_MODEL",
+      "label": "Chunk Summary Model",
+      "type": "text",
+      "help": "Model used for chunk-level summaries. Format: 'model_name' or 'backend:model_name'."
+    },
+    {
+      "key": "TESTINGMODE",
+      "label": "Testing Mode",
+      "type": "text",
+      "help": "Set to 'Null' to run the full pipeline, or a number (e.g. '20') to limit processing to N chunks for faster testing."
+    },
+    {
+      "key": "ENABLE_CHUNK_SUMMARY",
+      "label": "Enable Chunk Summary",
+      "type": "boolean",
+      "help": "Master toggle for chunk-level summary generation. Disable during testing to skip the LLM summary step."
+    },
+    {
+      "key": "CHUNK_SUMMARY_SIZE",
+      "label": "Chunk Summary Size (tokens)",
+      "type": "number",
+      "min": 1,
+      "help": "Maximum token count for each chunk summary."
+    },
+    {
+      "key": "CHUNK_SUMMARY_PROMPT_TEMPLATE",
+      "label": "Chunk Summary Prompt",
+      "type": "text",
+      "help": "Prompt template sent to the LLM for chunk summaries. Use {heading_context} and {size} as placeholders."
+    },
+    {
+      "key": "CHUNK_SUMMARY_TEMPERATURE",
+      "label": "Chunk Summary Temperature",
+      "type": "number",
+      "min": 0,
+      "step": 0.1,
+      "help": "LLM temperature for chunk summaries. Lower values produce more deterministic output."
+    },
+    {
+      "key": "SKIP_CHUNK_THRESHOLD",
+      "label": "Skip Chunk Threshold",
+      "type": "number",
+      "min": 0,
+      "help": "Chunks with fewer tokens than this are not summarized at all."
+    },
+    {
+      "key": "PAD_CHUNK_THRESHOLD",
+      "label": "Pad Chunk Threshold",
+      "type": "number",
+      "min": 0,
+      "help": "Chunks below this token count get extra context (heading path, summaries) appended to their content."
+    },
+    {
+      "key": "ADD_CONCAT_HEADER_PATH",
+      "label": "Add Concat Header Path",
+      "type": "boolean",
+      "help": "For small chunks, prepend the concatenated heading path to provide document-structure context."
+    },
+    {
+      "key": "ADD_CHUNK_SUMMARY",
+      "label": "Add Chunk Summary",
+      "type": "boolean",
+      "help": "For small chunks, append the chunk's own summary to its content."
+    },
+    {
+      "key": "ADD_PAGE_SUMMARY",
+      "label": "Add Page Summary",
+      "type": "boolean",
+      "help": "For small chunks, append the parent page summary to the chunk content."
+    },
+    {
+      "key": "ENABLE_FILE_SUMMARY",
+      "label": "Enable File Summary",
+      "type": "boolean",
+      "help": "Generate a summary for each file / top-level heading. Disable to avoid content that competes with granular chunks."
+    },
+    {
+      "key": "FILE_SUMMARY_MODEL",
+      "label": "File Summary Model",
+      "type": "text",
+      "help": "Model name for file-level summaries (e.g. 'openai:gpt-5-mini' or a local model identifier)."
+    },
+    {
+      "key": "FILE_SUMMARY_SIZE",
+      "label": "File Summary Size (tokens)",
+      "type": "number",
+      "min": 1,
+      "help": "Maximum token count for file-level summaries."
+    },
+    {
+      "key": "FILE_SUMMARY_PROMPT",
+      "label": "File Summary Prompt",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Python f-string expression referencing FILE_SUMMARY_SIZE.",
+      "help": "Prompt used for file-level summaries. Auto-generated from FILE_SUMMARY_SIZE."
+    },
+    {
+      "key": "FILE_SUMMARY_TEMPERATURE",
+      "label": "File Summary Temperature",
+      "type": "number",
+      "min": 0,
+      "step": 0.1,
+      "help": "LLM temperature for file-level summaries."
+    },
+    {
+      "key": "ENABLE_SUMMARY_SUMMARY",
+      "label": "Enable Summary of Summaries",
+      "type": "boolean",
+      "help": "Generate a roll-up summary when a heading has multiple child summaries."
+    },
+    {
+      "key": "CHILD_COUNT",
+      "label": "Child Count Threshold",
+      "type": "number",
+      "min": 1,
+      "help": "Minimum number of sibling summaries required before a summary-of-summaries is generated."
+    },
+    {
+      "key": "SUMMARY_SUMMARY_MODEL",
+      "label": "Summary-Summary Model",
+      "type": "text",
+      "help": "Model name for summary-of-summaries generation."
+    },
+    {
+      "key": "SUMMARY_SUMMARY_SIZE",
+      "label": "Summary-Summary Size (tokens)",
+      "type": "number",
+      "min": 1,
+      "help": "Maximum token count for summary-of-summaries."
+    },
+    {
+      "key": "SUMMARY_SUMMARY_PROMPT",
+      "label": "Summary-Summary Prompt",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Python f-string expression referencing SUMMARY_SUMMARY_SIZE.",
+      "help": "Prompt for summary-of-summaries. Auto-generated from SUMMARY_SUMMARY_SIZE."
+    },
+    {
+      "key": "SUMMARY_SUMMARY_TEMPERATURE",
+      "label": "Summary-Summary Temperature",
+      "type": "number",
+      "min": 0,
+      "step": 0.1,
+      "help": "LLM temperature for summary-of-summaries."
+    },
+    {
+      "key": "ENABLE_CODE_SUMMARY",
+      "label": "Enable Code Summary",
+      "type": "boolean",
+      "help": "Generate summaries for standalone code chunks. Currently unused in the pipeline."
+    },
+    {
+      "key": "CODE_SUMMARY_MODEL",
+      "label": "Code Summary Model",
+      "type": "text",
+      "help": "Model name for code-chunk summaries."
+    },
+    {
+      "key": "CODE_SUMMARY_SIZE",
+      "label": "Code Summary Size (tokens)",
+      "type": "number",
+      "min": 1,
+      "help": "Maximum token count for code summaries."
+    },
+    {
+      "key": "CODE_SUMMARY_PROMPT",
+      "label": "Code Summary Prompt",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Python f-string expression referencing CODE_SUMMARY_SIZE.",
+      "help": "Prompt for code summaries. Auto-generated from CODE_SUMMARY_SIZE."
+    },
+    {
+      "key": "CODE_SUMMARY_TEMPERATURE",
+      "label": "Code Summary Temperature",
+      "type": "number",
+      "min": 0,
+      "step": 0.1,
+      "help": "LLM temperature for code summaries. Lower values (0.1–0.3) suit deterministic code descriptions."
+
+    }
+  ]
+}

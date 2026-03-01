@@ -1,36 +1,36 @@
 
 # ====== Embedding configuration =======
-ENABLE_EMBEDDING = True # Enable or disable embedding step for tests
-EMBED_MODEL = "Qwen3Embed.6B-trained" # HF model ID or local dir name (resolved relative to DATASET_ROOT)
-ADAPTER_PATH = "" # Relative path to LoRA/PEFT adapter dir. Empty = no adapter (model already has fine-tuned weights).
-EMBED_LOG_LEVEL = "INFO" # Options: "DEBUG", "INFO", "WARNING", "ERROR".
+ENABLE_EMBEDDING = True                 # Enable or disable embedding step for tests
+EMBED_MODEL = "Qwen3Embed.6B-trained"   # HF model ID or local dir name (resolved relative to DATASET_ROOT)
+ADAPTER_PATH = ""                       # Relative path to LoRA/PEFT adapter dir. Empty = no adapter (model already has fine-tuned weights).
+EMBED_LOG_LEVEL = "INFO"                # Options: "DEBUG", "INFO", "WARNING", "ERROR".
 
 # ====== Precision controls for embeddings ======
-EMBED_COMPUTE_PRECISION = "float16"   # Rationale: fast on RTX; negligible impact for retrieval
-EMBED_OUTPUT_PRECISION  = "float32"   # Rationale: pgvector and most tools expect float32
-ENABLE_TF32 = True # Enable TensorFloat-32 on supported GPUs when EMBED_COMPUTE_PRECISION=tf32 or float32. TF32 accelerates matmul/convolution on Ampere+ architectures.
-EMBED_VECTOR_DIM = 1024 # Embedding dimension. Must have model support. Higher is better but bigger.
-ENFORCE_EMBED_VECTOR_DIM = False # When True, the script will fail if the model-reported dimension does not match EMBED_VECTOR_DIM. 
+EMBED_COMPUTE_PRECISION = "float16"     # Rationale: fast on RTX; negligible impact for retrieval
+EMBED_OUTPUT_PRECISION  = "float32"     # Rationale: pgvector and most tools expect float32
+ENABLE_TF32 = True                      # Enable TensorFloat-32 on supported GPUs when EMBED_COMPUTE_PRECISION=tf32 or float32. TF32 accelerates matmul/convolution on Ampere+ architectures.
+EMBED_VECTOR_DIM = 1024                 # Embedding dimension. Must have model support. Higher is better but bigger.
+ENFORCE_EMBED_VECTOR_DIM = False        # When True, the script will fail if the model-reported dimension does not match EMBED_VECTOR_DIM. 
 
 # ====== Parquet sidecar for embeddings ======
-USE_PARQUET = True # Use lossless Parquet sidecar for embeddings to reduce JSON size and speed I/O
+USE_PARQUET = True                      # Use lossless Parquet sidecar for embeddings to reduce JSON size and speed I/O
 PARQUET_FILENAME = "a_embeddings.parquet" # Parquet output file name (next to a_chunks.json)
-PARQUET_COMPRESSION = "zstd" # Lossless compression codec. 'zstd' provides good ratio/speed. Alternatives: 'snappy', 'gzip'.
-PARQUET_ROW_GROUP_SIZE = 8192 # Optional row group size for Parquet writes (number of rows per group).
+PARQUET_COMPRESSION = "zstd"            # Lossless compression codec. 'zstd' provides good ratio/speed. Alternatives: 'snappy', 'gzip'.
+PARQUET_ROW_GROUP_SIZE = 8192           # Optional row group size for Parquet writes (number of rows per group).
 
 # ====== Quality, batching, and serialization I/O ======
-NORMALIZE_EMBEDDINGS = True # Normalize to unit length (L2) before persistence.
-JSON_INDENT = 2 # 0 or None shrinks file size (harder to read); 2 is human-friendly.
-STRIP_EMBEDDINGS_IN_JSON = True # Strip embeddings from JSON (set them to None) to keep it lightweight.
-PROVENANCE_REQUIRED = True # If provenance file is missing, fail or create a minimal one.
+NORMALIZE_EMBEDDINGS = True             # Normalize to unit length (L2) before persistence.
+JSON_INDENT = 2                         # 0 or None shrinks file size (harder to read); 2 is human-friendly.
+STRIP_EMBEDDINGS_IN_JSON = True         # Strip embeddings from JSON (set them to None) to keep it lightweight.
+PROVENANCE_REQUIRED = True              # If provenance file is missing, fail or create a minimal one.
 
 # ====== Sampling controls for tests ============================
-MAX_EMBED_CHUNKS = None  # For test runs. None = embed all chunks. Override with EMBED_MAX_CHUNKS env var.
-CHUNK_SAMPLE_SEED = 42 # Seed for random sampling when CHUNK_SAMPLE_MODE="random".
-CHUNK_SAMPLE_MODE = "head"  # For testing only: Use "head" for speed; use "random" to improve representativeness.
+MAX_EMBED_CHUNKS = None                 # For test runs. None = embed all chunks. Override with EMBED_MAX_CHUNKS env var.
+CHUNK_SAMPLE_SEED = 42                  # Seed for random sampling when CHUNK_SAMPLE_MODE="random".
+CHUNK_SAMPLE_MODE = "head"              # For testing only: Use "head" for speed; use "random" to improve representativeness.
 
 # ====== Hardware control ======
-DEVICE_ID = 0 # CUDA device index to use (0-based). Set to None to auto-select first visible GPU.
+DEVICE_ID = 0                           # CUDA device index to use (0-based). Set to None to auto-select first visible GPU.
 
 
 # ====== Precision controls for embeddings ======

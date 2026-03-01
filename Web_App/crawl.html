@@ -1,243 +1,60 @@
-<section>
+﻿<section>
   <form id="crawl-form">
-    <!-- Flex container for two columns -->
-    <div class="fw-flex-container">
-      <!-- First column -->
-      <div class="fw-column1">
-        <div class="fw-panel-label">Crawl configuration</div>
-        <div class="save-btn-container">
-          <!-- Buttons -->
-          <div style="margin: 0 0 10px 0; display: flex; flex-wrap: wrap; gap: 10px;">
-            <sl-button variant="primary" id="save-btn">
-              <sl-icon name="floppy"></sl-icon>
-            </sl-button>
-            <sl-button variant="primary" id="run-btn">
-              <sl-icon name="play-fill"></sl-icon>
-            </sl-button>
-            <sl-button variant="primary" id="clear-btn">
-              <sl-icon name="arrow-clockwise"></sl-icon>
-            </sl-button>
-          </div>
+    <div class="config-form-container">
+      <div class="config-form-column config-form-column--controls">
+        <div class="config-form-panel-label">Crawl Web configuration</div>
+        <div class="config-action-buttons">
+          <sl-button variant="primary" id="crawl-save-btn"><sl-icon name="floppy"></sl-icon></sl-button>
+          <sl-button variant="primary" id="crawl-reload-btn"><sl-icon name="arrow-clockwise"></sl-icon></sl-button>
+          <sl-button variant="primary" id="crawl-run-btn"><sl-icon name="play-fill"></sl-icon></sl-button>
         </div>
-
-        <!-- Crawl Type Selector -->
-        <sl-radio-group id="crawl_type" name="crawl_type" label="Crawl Type" value="web"
-          style="--sl-spacing-large: 1rem;">
-          <sl-radio value="web" style="display: inline-block; margin-right: 1.5rem;">Web</sl-radio>
-          <sl-radio value="git" style="display: inline-block;">GIT</sl-radio>
-        </sl-radio-group>
-
-        <!-- GIT Crawl Fields -->
-        <div class="git-fields" style="display: none;">
-          <sl-input class="fw-io-input" name="git_repo_url" label="GIT repo documentation URL" type="text"
-            placeholder="https://github.com/user/repo">
-          </sl-input>
-        </div>
-
-        <!-- Web Crawl Fields -->
-        <div class="web-fields">
-          <!-- Section 1: Crawling Behavior and Limits -->
-          <sl-input class="fw-io-input" name="max_crawl_depth" label="Max Crawl Depth" type="number" value="2" min="1"
-            help-text="">
-          </sl-input>
-
-          <sl-input class="fw-io-input" name="max_urls" label="Max URLs" type="number" value="500" min="1"
-            help-text="">
-          </sl-input>
-
-          <sl-input class="fw-io-input" name="min_content_length" label="Min Content Length" type="number" value="100"
-            min="0" help-text="">
-          </sl-input>
-
-          <sl-input class="fw-io-input" name="min_content_lines" label="Min Content Lines" type="number" value="2"
-            min="0" help-text="">
-          </sl-input>
-
-          <sl-radio-group name="include_external_domain" label="Include External Domain" value="off">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-input class="fw-io-input" name="language" label="Language" type="text" value="en">
-          </sl-input>
-
-          <sl-input class="fw-io-input" name="url_pattern_filters" label="URL Pattern Filters" rows="2"
-            help-text="">
-          </sl-input>
-
-          <div class="section-divider">
-            <hr>
-            <span>URL List Mode - Alternative to deep crawling</span>
-            <hr>
-          </div>
-
-          <sl-radio-group name="use_url_list" label="Use URL List" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-input class="fw-io-input" name="url_list_file" label="URL List File" type="text" value="crawlurls.md"
-            help-text="">
-          </sl-input>
-
-          <div class="section-divider">
-            <hr>
-            <span>Post processing options</span>
-            <hr>
-          </div>
-
-          <sl-radio-group name="custom_regex" label="Custom Regex" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-radio-group name="addlines_to_codeblocks" label="Add Lines to Code Blocks" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <div class="section-divider">
-            <hr>
-            <span>Markdown generator options</span>
-            <hr>
-          </div>
-
-          <sl-radio-group name="ignore_links" label="Ignore Links" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-radio-group name="ignore_images" label="Ignore Images" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-radio-group name="escape_html" label="Escape HTML" value="off">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-input class="fw-io-input" name="body_width" label="Body Width" type="number" value="0" min="0">
-          </sl-input>
-
-          <sl-radio-group name="skip_internal_links" label="Skip Internal Links" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-radio-group name="include_sup_sub" label="Include Sup/Sub" value="off">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-input class="fw-io-input" name="heading_style" label="Heading Style" type="text" value="ATX">
-          </sl-input>
-
-          <sl-input class="fw-io-input" name="list_style" label="List Style" type="text" value="dash">
-          </sl-input>
-
-          <sl-radio-group name="strip_comments" label="Strip Comments" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-radio-group name="preserve_tables" label="Preserve Tables" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-radio-group name="collapse_whitespace" label="Collapse Whitespace" value="off">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-radio-group name="strip_footnotes" label="Strip Footnotes" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-radio-group name="strip_code_blocks" label="Strip Code Blocks" value="off">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-radio-group name="strip_blockquotes" label="Strip Blockquotes" value="off">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-radio-group name="strip_math" label="Strip Math" value="off">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <div class="section-divider">
-            <hr>
-            <span>CrawlerRunConfig parameters</span>
-            <hr>
-          </div>
-
-          <sl-input class="fw-io-input" name="markdown_generator" label="Markdown Generator" type="text"
-            value="md_generator">
-          </sl-input>
-
-          <sl-input class="fw-io-input" name="cache_mode" label="Cache Mode" type="text" value="BYPASS">
-          </sl-input>
-
-          <sl-input class="fw-io-input" name="excluded_tags" label="Excluded Tags" rows="2"
-            help-text="">
-          </sl-input>
-
-          <sl-radio-group name="remove_forms" label="Remove Forms" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-radio-group name="remove_overlay_elements" label="Remove Overlay Elements" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-input class="fw-io-input" name="css_selector" label="CSS Selector" type="text" value=".main"
-            help-text="">
-          </sl-input>
-
-          <sl-input class="fw-io-input" name="excluded_selector" label="Excluded Selector" type="text"
-            help-text="">
-          </sl-input>
-
-          <sl-radio-group name="exclude_external_links" label="Exclude External Links" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-radio-group name="exclude_social_media_links" label="Exclude Social Media Links" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-          </sl-radio-group>
-
-          <sl-input class="fw-io-input" name="exclude_domains" label="Exclude Domains" rows="2"
-            help-text="">
-          </sl-input>
-
-          <sl-input class="fw-io-input" name="exclude_social_media_domains" label="Exclude Social Media Domains"
-            rows="2" help-text="">
-          </sl-input>
-        </div>
-        <!-- End of web-fields -->
-
+        <div class="config-field"><sl-input id="crawl-max_crawl_depth" data-config-key="MAX_CRAWL_DEPTH" label="Max Crawl Depth" type="number" min="1"></sl-input></div>
+        <div class="config-field"><sl-input id="crawl-max_urls" data-config-key="MAX_URLS" label="Max URLs" type="number" min="1"></sl-input></div>
+        <div class="config-field"><sl-input id="crawl-min_content_length" data-config-key="MIN_CONTENT_LENGTH" label="Min Content Length" type="number" min="0"></sl-input></div>
+        <div class="config-field"><sl-input id="crawl-min_content_lines" data-config-key="MIN_CONTENT_LINES" label="Min Content Lines" type="number" min="0"></sl-input></div>
+        <div class="config-field"><sl-radio-group id="crawl-include_external_domain" data-config-key="INCLUDE_EXTERNAL_DOMAIN" size="small" label="Include External Domain" name="crawl_include_external_domain" value="false"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-input id="crawl-language" data-config-key="LANGUAGE" label="Language" type="text"></sl-input></div>
+        <div class="config-field"><sl-input id="crawl-url_pattern_filters" data-config-key="URL_PATTERN_FILTERS" label="URL Pattern Filters" disabled></sl-input></div>
+        <div class="section-divider"><hr><span>URL List Mode</span><hr></div>
+        <div class="config-field"><sl-radio-group id="crawl-use_url_list" data-config-key="USE_URL_LIST" size="small" label="Use URL List" name="crawl_use_url_list" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-input id="crawl-url_list_file" data-config-key="URL_LIST_FILE" label="URL List File" type="text"></sl-input></div>
+        <div class="section-divider"><hr><span>Post Processing</span><hr></div>
+        <div class="config-field"><sl-radio-group id="crawl-custom_regex" data-config-key="CUSTOM_REGEX" size="small" label="Custom Regex" name="crawl_custom_regex" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-addlines_to_codeblocks" data-config-key="ADDLINES_TO_CODEBLOCKS" size="small" label="Add Lines to Code Blocks" name="crawl_addlines_to_codeblocks" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="section-divider"><hr><span>Markdown Generator Options</span><hr></div>
+        <div class="config-field"><sl-radio-group id="crawl-ignore_links" data-config-key="IGNORE_LINKS" size="small" label="Ignore Links" name="crawl_ignore_links" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-ignore_images" data-config-key="IGNORE_IMAGES" size="small" label="Ignore Images" name="crawl_ignore_images" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-escape_html" data-config-key="ESCAPE_HTML" size="small" label="Escape HTML" name="crawl_escape_html" value="false"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-input id="crawl-body_width" data-config-key="BODY_WIDTH" label="Body Width" type="number" min="0"></sl-input></div>
+        <div class="config-field"><sl-radio-group id="crawl-skip_internal_links" data-config-key="SKIP_INTERNAL_LINKS" size="small" label="Skip Internal Links" name="crawl_skip_internal_links" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-include_sup_sub" data-config-key="INCLUDE_SUP_SUB" size="small" label="Include Sup/Sub" name="crawl_include_sup_sub" value="false"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-select id="crawl-heading_style" data-config-key="HEADING_STYLE" label="Heading Style"><sl-option value="ATX">ATX (# Heading)</sl-option><sl-option value="SETEXT">SETEXT (underline)</sl-option></sl-select></div>
+        <div class="config-field"><sl-select id="crawl-list_style" data-config-key="LIST_STYLE" label="List Style"><sl-option value="dash">dash (-)</sl-option><sl-option value="asterisk">asterisk (*)</sl-option><sl-option value="plus">plus (+)</sl-option></sl-select></div>
+        <div class="config-field"><sl-radio-group id="crawl-strip_comments" data-config-key="STRIP_COMMENTS" size="small" label="Strip Comments" name="crawl_strip_comments" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-preserve_tables" data-config-key="PRESERVE_TABLES" size="small" label="Preserve Tables" name="crawl_preserve_tables" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-collapse_whitespace" data-config-key="COLLAPSE_WHITESPACE" size="small" label="Collapse Whitespace" name="crawl_collapse_whitespace" value="false"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-strip_footnotes" data-config-key="STRIP_FOOTNOTES" size="small" label="Strip Footnotes" name="crawl_strip_footnotes" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-strip_code_blocks" data-config-key="STRIP_CODE_BLOCKS" size="small" label="Strip Code Blocks" name="crawl_strip_code_blocks" value="false"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-strip_blockquotes" data-config-key="STRIP_BLOCKQUOTES" size="small" label="Strip Blockquotes" name="crawl_strip_blockquotes" value="false"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-strip_math" data-config-key="STRIP_MATH" size="small" label="Strip Math" name="crawl_strip_math" value="false"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="section-divider"><hr><span>CrawlerRunConfig Parameters</span><hr></div>
+        <div class="config-field"><sl-input id="crawl-markdown_generator" data-config-key="MARKDOWN_GENERATOR" label="Markdown Generator" type="text"></sl-input></div>
+        <div class="config-field"><sl-input id="crawl-cache_mode" data-config-key="CACHE_MODE" label="Cache Mode" disabled></sl-input></div>
+        <div class="config-field"><sl-input id="crawl-excluded_tags" data-config-key="EXCLUDED_TAGS" label="Excluded Tags" disabled></sl-input></div>
+        <div class="config-field"><sl-radio-group id="crawl-remove_forms" data-config-key="REMOVE_FORMS" size="small" label="Remove Forms" name="crawl_remove_forms" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-remove_overlay_elements" data-config-key="REMOVE_OVERLAY_ELEMENTS" size="small" label="Remove Overlay Elements" name="crawl_remove_overlay_elements" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-input id="crawl-css_selector" data-config-key="CSS_SELECTOR" label="CSS Selector" type="text"></sl-input></div>
+        <div class="config-field"><sl-input id="crawl-excluded_selector" data-config-key="EXCLUDED_SELECTOR" label="Excluded Selector" type="text"></sl-input></div>
+        <div class="config-field"><sl-radio-group id="crawl-exclude_external_links" data-config-key="EXCLUDE_EXTERNAL_LINKS" size="small" label="Exclude External Links" name="crawl_exclude_external_links" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-exclude_social_media_links" data-config-key="EXCLUDE_SOCIAL_MEDIA_LINKS" size="small" label="Exclude Social Media Links" name="crawl_exclude_social_media_links" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-input id="crawl-exclude_domains" data-config-key="EXCLUDE_DOMAINS" label="Exclude Domains" disabled></sl-input></div>
+        <div class="config-field"><sl-input id="crawl-exclude_social_media_domains" data-config-key="EXCLUDE_SOCIAL_MEDIA_DOMAINS" label="Exclude Social Media Domains" disabled></sl-input></div>
+        <sl-textarea id="crawl-status-display" class="config-status-display" label="Notes" placeholder="Configuration notes will appear here" readonly resize="none" rows="3"></sl-textarea>
       </div>
-      <!-- Second column -->
-      <div class="fw-column2">
-    <div class="fw-panel-label">File reader</div>
-    <div class="fields">
-      <sl-textarea id="crawlconfig" class="filereader-textarea" resize="auto"
-        placeholder="Loading file. . . ">
-      </sl-textarea>
-    </div>
+      <div class="config-form-column config-form-column--viewer">
+        <div class="config-form-panel-label">File reader</div>
+        <div class="fields"><sl-textarea id="crawl-config-viewer" class="config-file-viewer" resize="auto" placeholder="Loading file..."></sl-textarea></div>
       </div>
     </div>
   </form>
 </section>
-
-

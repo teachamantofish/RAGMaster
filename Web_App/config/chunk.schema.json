@@ -1,0 +1,71 @@
+{
+  "configFile": "Get_and_Chunk/config/chunkerconfig.py",
+  "runScript": "Get_and_Chunk/3.00chunker.py",
+  "phase": "chunk",
+  "fields": [
+    {
+      "key": "TOKENIZER",
+      "label": "Tokenizer",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Python expression (tiktoken object). Edit the config file directly to change this value.",
+      "help": "The tiktoken encoding used to count tokens per chunk. Currently set via tiktoken.get_encoding(\"cl100k_base\"). This determines how text is tokenized for length measurement."
+    },
+    {
+      "key": "MAX_TOKENS_FOR_NODE",
+      "label": "Max Tokens per Node",
+      "type": "number",
+      "min": 1,
+      "help": "Maximum token count allowed in a single chunk node before the chunker splits it. Higher values produce larger chunks with more context but may reduce retrieval precision."
+    },
+    {
+      "key": "CHUNK_SIZE_RANGE",
+      "label": "Chunk Size Range",
+      "type": "text",
+      "readOnly": true,
+      "readOnlyReason": "Derived automatically from MAX_TOKENS_FOR_NODE via an f-string expression.",
+      "help": "An f-string expression that resolves to the max token constraint string (e.g. \"max=500\"). It changes automatically when you update Max Tokens per Node."
+    },
+    {
+      "key": "CHUNK_MODEL",
+      "label": "Chunk Model",
+      "type": "select",
+      "options": [
+        { "value": "", "label": "Select a chunk model" },
+        { "value": "heading-safe", "label": "heading-safe" },
+        { "value": "greedy", "label": "greedy" },
+        { "value": "fixed", "label": "fixed" }
+      ],
+      "help": "Chunking strategy that controls how text is divided.\n\n• heading-safe — preserves markdown heading boundaries so chunks align with document structure.\n• greedy — maximizes chunk size up to the token limit, splitting only when necessary.\n• fixed — uses fixed-size token windows with no awareness of document structure."
+    },
+    {
+      "key": "CODE_LENGTH",
+      "label": "Code Length (lines)",
+      "type": "number",
+      "min": 1,
+      "max": 50,
+      "help": "Minimum number of lines for a code block to be treated as a standalone extractable unit. Code blocks shorter than this are kept inline with surrounding text."
+    },
+    {
+      "key": "KEYWORD_DENSITY",
+      "label": "Keyword Density",
+      "type": "number",
+      "step": 0.01,
+      "min": 0,
+      "max": 1,
+      "help": "Threshold ratio of keyword tokens to total tokens in a chunk. Chunks with a density above this value may be flagged or handled differently during processing."
+    },
+    {
+      "key": "ENABLE_CODE_EXTRACTION",
+      "label": "Enable Code Extraction",
+      "type": "boolean",
+      "help": "When enabled, code blocks meeting the Code Length threshold are extracted into separate chunks. Disable this to skip component extraction during testing or for text-only content."
+    },
+    {
+      "key": "OUTPUT_NAME",
+      "label": "Output File Name",
+      "type": "text",
+      "help": "Base filename for the chunker output JSON file. The file is written to the dataset output directory."
+    }
+  ]
+}

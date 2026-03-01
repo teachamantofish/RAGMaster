@@ -1,43 +1,28 @@
 <section>
-  <form>
-    <!-- Flex container for two columns -->
-    <div class="fw-flex-container">
-      <!-- First column -->
-      <div class="fw-column1">
-        <div class="fw-panel-label">Vector configuration</div>
-        <div class="save-btn-container">
-          <!-- Buttons -->
-          <div style="margin: 0 0 10px 0; display: flex; flex-wrap: wrap; gap: 10px;">
-            <sl-button variant="primary" id="save-btn">
-              <sl-icon name="floppy"></sl-icon>
-            </sl-button>
-            <sl-button variant="primary" id="run-btn">
-              <sl-icon name="play-fill"></sl-icon>
-            </sl-button>
-            <sl-button variant="primary" id="clear-btn">
-              <sl-icon name="arrow-clockwise"></sl-icon>
-            </sl-button>
-            <sl-button variant="secondary" id="reload-config-btn" onclick="reloadConfigFile()">
-              <sl-icon name="arrow-repeat"></sl-icon>
-            </sl-button>
-          </div>
+  <form id="vector-form">
+    <div class="config-form-container">
+      <div class="config-form-column config-form-column--controls">
+        <div class="config-form-panel-label">Upsert to DB configuration</div>
+        <div class="config-action-buttons">
+          <sl-button variant="primary" id="vector-save-btn"><sl-icon name="floppy"></sl-icon></sl-button>
+          <sl-button variant="primary" id="vector-reload-btn"><sl-icon name="arrow-clockwise"></sl-icon></sl-button>
+          <sl-button variant="primary" id="vector-run-btn"><sl-icon name="play-fill"></sl-icon></sl-button>
         </div>
-        
-        <!-- Vector form fields go here -->
-        <label>Vector DB Host: <input type="text" name="vector_db_host"></label><br>
-        <label>Upsert Mode: <input type="checkbox" name="upsert_mode"></label><br>
-        <!-- Add more fields as needed -->
+        <div class="config-field"><sl-input id="vector-vector_db_name" data-config-key="VECTOR_DB_NAME" label="Database Name" type="text"></sl-input></div>
+        <div class="config-field"><sl-input id="vector-vector_db_user" data-config-key="VECTOR_DB_USER" label="Database User" type="text"></sl-input></div>
+        <div class="config-field"><sl-input id="vector-vector_db_password" data-config-key="VECTOR_DB_PASSWORD" label="Database Password" type="text"></sl-input></div>
+        <div class="config-field"><sl-input id="vector-vector_db_host" data-config-key="VECTOR_DB_HOST" label="Database Host" type="text"></sl-input></div>
+        <div class="config-field"><sl-input id="vector-vector_db_port" data-config-key="VECTOR_DB_PORT" label="Database Port" type="text"></sl-input></div>
+        <div class="config-field"><sl-input id="vector-batch_size" data-config-key="BATCH_SIZE" label="Batch Size" type="number" min="1"></sl-input></div>
+        <div class="config-field"><sl-select id="vector-log_level" data-config-key="LOG_LEVEL" label="Log Level"><sl-option value="DEBUG">DEBUG</sl-option><sl-option value="INFO">INFO</sl-option><sl-option value="WARNING">WARNING</sl-option><sl-option value="ERROR">ERROR</sl-option><sl-option value="CRITICAL">CRITICAL</sl-option></sl-select></div>
+        <div class="config-field"><sl-input id="vector-chunks_file_name" data-config-key="CHUNKS_FILE_NAME" label="Chunks File Name" type="text"></sl-input></div>
+        <div class="config-field"><sl-input id="vector-parquet_filename" data-config-key="PARQUET_FILENAME" label="Parquet Filename" type="text"></sl-input></div>
+        <div class="config-field"><sl-input id="vector-db_table_name" data-config-key="DB_TABLE_NAME" label="DB Table Name" type="text"></sl-input></div>
+        <sl-textarea id="vector-status-display" class="config-status-display" label="Notes" placeholder="Configuration notes will appear here" readonly resize="none" rows="3"></sl-textarea>
       </div>
-
-      <!-- Second column -->
-      <div class="fw-column2">
-        <div class="fw-panel-label">File reader</div>
-        <div class="fields">
-          <sl-textarea id="vectorconfig" class="filereader-textarea" resize="auto"
-            placeholder="Loading file. . . ">
-          </sl-textarea>
-        </div>
-        </div>
+      <div class="config-form-column config-form-column--viewer">
+        <div class="config-form-panel-label">File reader</div>
+        <div class="fields"><sl-textarea id="vector-config-viewer" class="config-file-viewer" resize="auto" placeholder="Loading file..."></sl-textarea></div>
       </div>
     </div>
   </form>

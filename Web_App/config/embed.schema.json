@@ -1,0 +1,143 @@
+{
+  "configFile": "VectorDB/config/embedconfig.py",
+  "runScript": "VectorDB/embedding.py",
+  "phase": "embed",
+  "fields": [
+    {
+      "key": "ENABLE_EMBEDDING",
+      "label": "Enable Embedding",
+      "type": "boolean",
+      "help": "Master toggle for the embedding step. Disable to skip embedding during test runs."
+    },
+    {
+      "key": "EMBED_MODEL",
+      "label": "Embed Model",
+      "type": "text",
+      "help": "Hugging Face model ID or local directory name for the embedding model. Resolved relative to DATASET_ROOT."
+    },
+    {
+      "key": "ADAPTER_PATH",
+      "label": "Adapter Path",
+      "type": "text",
+      "help": "Relative path to a LoRA/PEFT adapter directory. Leave empty if the model already has fine-tuned weights baked in."
+    },
+    {
+      "key": "EMBED_LOG_LEVEL",
+      "label": "Embed Log Level",
+      "type": "select",
+      "options": ["DEBUG", "INFO", "WARNING", "ERROR"],
+      "help": "Logging verbosity for the embedding step."
+    },
+    {
+      "key": "EMBED_COMPUTE_PRECISION",
+      "label": "Compute Precision",
+      "type": "select",
+      "options": ["float32", "float16", "bfloat16", "tf32"],
+      "help": "Model parameter and math precision during forward pass on GPU. Lower precision (fp16/bf16) is faster with negligible retrieval quality impact."
+    },
+    {
+      "key": "EMBED_OUTPUT_PRECISION",
+      "label": "Output Precision",
+      "type": "select",
+      "options": ["float32", "float16", "bfloat16"],
+      "help": "Dtype used for vectors persisted to disk. pgvector and most tools expect float32."
+    },
+    {
+      "key": "ENABLE_TF32",
+      "label": "Enable TF32",
+      "type": "boolean",
+      "help": "Enable TensorFloat-32 on supported GPUs. Accelerates matmul/convolution on Ampere+ architectures."
+    },
+    {
+      "key": "EMBED_VECTOR_DIM",
+      "label": "Embedding Dimension",
+      "type": "number",
+      "min": 1,
+      "help": "Embedding vector dimension. Must be supported by the model. Higher is better but increases storage."
+    },
+    {
+      "key": "ENFORCE_EMBED_VECTOR_DIM",
+      "label": "Enforce Embed Dimension",
+      "type": "boolean",
+      "help": "When True, the script fails if the model-reported dimension does not match EMBED_VECTOR_DIM."
+    },
+    {
+      "key": "USE_PARQUET",
+      "label": "Use Parquet Sidecar",
+      "type": "boolean",
+      "help": "Use a lossless Parquet sidecar for embeddings to reduce JSON size and speed I/O."
+    },
+    {
+      "key": "PARQUET_FILENAME",
+      "label": "Parquet Filename",
+      "type": "text",
+      "help": "Output filename for the Parquet sidecar (written next to a_chunks.json)."
+    },
+    {
+      "key": "PARQUET_COMPRESSION",
+      "label": "Parquet Compression",
+      "type": "select",
+      "options": ["zstd", "snappy", "gzip"],
+      "help": "Lossless compression codec for Parquet. 'zstd' provides a good ratio/speed trade-off."
+    },
+    {
+      "key": "PARQUET_ROW_GROUP_SIZE",
+      "label": "Parquet Row Group Size",
+      "type": "number",
+      "min": 1,
+      "help": "Number of rows per Parquet row group. Smaller groups improve parallelism; larger groups improve compression. Typical: 4096–65536."
+    },
+    {
+      "key": "NORMALIZE_EMBEDDINGS",
+      "label": "Normalize Embeddings",
+      "type": "boolean",
+      "help": "Normalize vectors to unit length (L2) before persistence. Cosine similarity assumes unit vectors."
+    },
+    {
+      "key": "JSON_INDENT",
+      "label": "JSON Indent",
+      "type": "number",
+      "min": 0,
+      "help": "JSON indentation level. 0 or None shrinks file size; 2 is human-friendly."
+    },
+    {
+      "key": "STRIP_EMBEDDINGS_IN_JSON",
+      "label": "Strip Embeddings in JSON",
+      "type": "boolean",
+      "help": "Strip embedding arrays from JSON (set to None) to keep the JSON file lightweight when using Parquet."
+    },
+    {
+      "key": "PROVENANCE_REQUIRED",
+      "label": "Provenance Required",
+      "type": "boolean",
+      "help": "If the provenance file is missing, fail rather than create a minimal one. Production should be True."
+    },
+    {
+      "key": "MAX_EMBED_CHUNKS",
+      "label": "Max Embed Chunks",
+      "type": "text",
+      "help": "For test runs: limit to N chunks. Set to None to embed all chunks."
+    },
+    {
+      "key": "CHUNK_SAMPLE_SEED",
+      "label": "Chunk Sample Seed",
+      "type": "number",
+      "min": 0,
+      "help": "Random seed for sampling when CHUNK_SAMPLE_MODE is 'random'. Ensures reproducible subsets."
+    },
+    {
+      "key": "CHUNK_SAMPLE_MODE",
+      "label": "Chunk Sample Mode",
+      "type": "select",
+      "options": ["head", "random"],
+      "help": "How to choose the subset when MAX_EMBED_CHUNKS is set. 'head' = first N (stable, fast); 'random' = uniform sample."
+    },
+    {
+      "key": "DEVICE_ID",
+      "label": "CUDA Device ID",
+      "type": "number",
+      "min": 0,
+      "help": "CUDA device index (0-based). Set to None to auto-select the first visible GPU."
+    }
+  ]
+}

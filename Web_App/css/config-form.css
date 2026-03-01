@@ -1,0 +1,189 @@
+/* ============================================================
+   config-form.css
+   Shared config form styles for all phase tabs.
+   No inline styles. Uses Shoelace design tokens where possible.
+   ============================================================ */
+
+/* ---- Layout ---- */
+
+.config-form-container {
+  display: flex;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.config-form-column {
+  border: 1px solid var(--sl-color-neutral-300, #ccc);
+  border-radius: var(--sl-border-radius-large, 10px);
+  padding: 0.75rem;
+  background: var(--sl-color-neutral-50, #fafafa);
+  min-height: 300px;
+  position: relative;
+}
+
+.config-form-column--controls {
+  width: 400px;
+}
+
+.config-form-column--viewer {
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+}
+
+.config-form-panel-label {
+  position: absolute;
+  top: -13px;
+  left: 18px;
+  background: var(--sl-color-neutral-0, #fff);
+  padding: 2px 8px;
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--sl-color-neutral-500, #666);
+  border-radius: 4px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ---- Action buttons row ---- */
+
+.config-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 10px 0;
+}
+
+.config-action-buttons sl-button {
+  --sl-input-height-medium: 32px;
+  --sl-button-font-size-medium: 16px;
+  width: 32px;
+  height: 32px;
+}
+
+.config-action-buttons sl-button::part(base) {
+  padding: 2px 0 0 0;
+  margin: 0;
+  border-radius: var(--sl-border-radius-medium, 6px);
+}
+
+.config-action-buttons sl-button sl-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---- Field containers ---- */
+
+.config-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 0.25rem;
+}
+
+.config-field > sl-input,
+.config-field > sl-select,
+.config-field > sl-radio-group {
+  flex: 1;
+}
+
+/* ---- Help (?) icon ---- */
+
+.config-help-btn {
+  font-size: 1rem;
+  color: var(--sl-color-neutral-500, #888);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.config-help-btn:hover {
+  color: var(--sl-color-primary-600, #1473e6);
+}
+
+/* ---- Help dialog ---- */
+
+.help-dialog .help-dialog-body {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--sl-color-neutral-700, #444);
+  white-space: pre-wrap;
+}
+
+/* ---- Validation error state ---- */
+
+.config-field-invalid {
+  --sl-input-border-color: var(--sl-color-danger-600, #d32f2f);
+  --sl-input-border-color-focus: var(--sl-color-danger-600, #d32f2f);
+}
+
+.config-field-invalid::part(form-control-help-text) {
+  color: var(--sl-color-danger-600, #d32f2f);
+}
+
+/* ---- Read-only control styling ---- */
+
+.config-field sl-input[disabled],
+.config-field sl-select[disabled],
+.config-field sl-radio-group[disabled] {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* ---- Raw file viewer textarea ---- */
+
+.config-file-viewer {
+  width: 100%;
+  min-height: 500px;
+  resize: vertical;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  border: none;
+}
+
+.config-file-viewer::part(base),
+.config-file-viewer::part(textarea) {
+  border: none;
+  box-shadow: none;
+}
+
+/* ---- Radio group inline layout ---- */
+
+.config-field sl-radio-group::part(form-control) {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.config-field sl-radio-group::part(form-control-label) {
+  width: 150px;
+  margin: 0;
+  padding-top: 0;
+}
+
+.config-field sl-radio {
+  display: inline-flex;
+  margin-right: 1.5rem;
+}
+
+/* ---- Status textarea ---- */
+
+.config-status-display {
+  margin-top: 0.5rem;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 768px) {
+  .config-form-container {
+    flex-direction: column;
+  }
+
+  .config-form-column--controls {
+    width: 100%;
+  }
+
+  .config-form-column--viewer {
+    width: 100%;
+  }
+}

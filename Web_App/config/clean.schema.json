@@ -1,0 +1,55 @@
+{
+  "configFile": "Get_and_Chunk/config/cleanconfig.py",
+  "runScript": "Get_and_Chunk/2markdown_cleanup.py",
+  "phase": "clean",
+  "fields": [
+    {
+      "key": "REMOVE_IMAGES",
+      "label": "Remove Images",
+      "type": "boolean",
+      "help": "Strip image references (![alt](url)) from the markdown files."
+    },
+    {
+      "key": "NORMALIZE_FORMATTING",
+      "label": "Normalize Formatting",
+      "type": "boolean",
+      "help": "Standardize markdown formatting (heading levels, list markers, emphasis syntax)."
+    },
+    {
+      "key": "REMOVE_EXTRA_WHITESPACE",
+      "label": "Remove Extra Whitespace",
+      "type": "boolean",
+      "help": "Collapse runs of blank lines and trailing spaces."
+    },
+    {
+      "key": "STRIP_HTML_COMMENTS",
+      "label": "Strip HTML Comments",
+      "type": "boolean",
+      "help": "Remove <!-- … --> HTML comment blocks from the markdown."
+    },
+    {
+      "key": "NORMALIZE_LINE_ENDINGS",
+      "label": "Normalize Line Endings",
+      "type": "boolean",
+      "help": "Convert all line endings to Unix-style (LF)."
+    },
+    {
+      "key": "INPUT_DIRECTORY",
+      "label": "Input Directory",
+      "type": "text",
+      "help": "Folder name (relative to the data root) containing the raw markdown files to clean."
+    },
+    {
+      "key": "OUTPUT_DIRECTORY",
+      "label": "Output Directory",
+      "type": "text",
+      "help": "Folder name where cleaned markdown files are written."
+    },
+    {
+      "key": "BACKUP_ORIGINAL",
+      "label": "Backup Original",
+      "type": "boolean",
+      "help": "Create a backup copy of each file before overwriting it with the cleaned version."
+    }
+  ]
+}

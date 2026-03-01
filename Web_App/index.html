@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.11.0/cdn/themes/light.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.11.0/cdn/themes/dark.css">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/config-form.css">
   <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.11.0/cdn/shoelace.js"></script>
   <script type="module" src="./vite/src/main.ts"></script> <!-- or .js -->
   <script type="module">
@@ -47,8 +48,9 @@
       <sl-tab slot="nav" panel="clean">Clean</sl-tab>
       <sl-tab slot="nav" panel="chunk">Chunk</sl-tab>
       <sl-tab slot="nav" panel="summary">Summarize</sl-tab>
+      <sl-tab slot="nav" panel="training_data">Training Data</sl-tab>
       <sl-tab slot="nav" panel="embed">Embed</sl-tab>
-      <sl-tab slot="nav" panel="vector">Upload to Vector DB</sl-tab>
+      <sl-tab slot="nav" panel="vector">Upsert to DB</sl-tab>
       <sl-tab-panel name="source">
         <section id="tab-content-source"></section>
       </sl-tab-panel>
@@ -67,6 +69,9 @@
       <sl-tab-panel name="summary">
         <section id="tab-content-summary"></section>
       </sl-tab-panel>
+      <sl-tab-panel name="training_data">
+        <section id="tab-content-training_data"></section>
+      </sl-tab-panel>
       <sl-tab-panel name="embed">
         <section id="tab-content-embed"></section>
       </sl-tab-panel>
@@ -74,6 +79,10 @@
         <section id="tab-content-vector"></section>
       </sl-tab-panel>
     </sl-tab-group>
+  <!-- Shared help dialog (used by all config tabs) -->
+  <sl-dialog id="help-dialog" label="Help">
+    <div id="help-dialog-body" class="help-dialog-body"></div>
+  </sl-dialog>
 </main>
 </body>
 <script type="module" src="js/app-config.js"></script>
@@ -90,19 +99,20 @@ const tabFiles = {
   clean: 'clean.html',
   chunk: 'chunk.html',
   summary: 'summary.html',
+  training_data: 'training_data.html',
   embed: 'embed.html',
   vector: 'vector.html'
 };
 
 // Python config file mapping for each tab
 const tabConfigFiles = {
-  crawl: '../pipeline/config/crawlconfig.py',
-  crawl_pdf: '../pipeline/config/crawlpdfconfig.py',
-  clean: '../pipeline/config/cleanconfig.py',
-  chunk: '../pipeline/config/chunkerconfig.py',
-  summary: '../pipeline/config/summaryconfig.py',
-  embed: '../pipeline/config/embedconfig.py',
-  vector: '../pipeline/config/vectorconfig.py'
+  crawl: './Get_and_Chunk/config/crawlconfig.py',
+  crawl_pdf: './Get_and_Chunk/config/crawlpdfconfig.py',
+  clean: './Get_and_Chunk/config/cleanconfig.py',
+  chunk: './Get_and_Chunk/config/chunkerconfig.py',
+  summary: './Get_and_Chunk/config/summaryconfig.py',
+  embed: './VectorDB/config/embedconfig.py',
+  vector: './VectorDB/config/vectorconfig.py'
 };
 
 // Which tabs should attempt to auto-load a config file.
@@ -259,10 +269,50 @@ function loadTab(tab) {
               document.body.appendChild(tag);
             });
 
-            // Initialize summary/crawl/source handlers if needed
-            if (tab === 'summary') setTimeout(initializeSummaryToggle, 100);
-            if (tab === 'crawl') setTimeout(initializeCrawlToggle, 100);
+            // Initialize tab-specific handlers
             if (tab === 'source') setTimeout(() => loadSourceTab(), 50);
+            if (tab === 'chunk') {
+              import('./js/chunk/chunk-init.js').then(mod => {
+                const container = document.getElementById('tab-content-chunk');
+                if (container) mod.initChunkTab(container);
+              }).catch(err => console.error('[index] Failed to init chunk tab:', err));
+            }
+            if (tab === 'crawl') {
+              import('./js/crawl/crawl-init.js').then(mod => {
+                const container = document.getElementById('tab-content-crawl');
+                if (container) mod.initCrawlTab(container);
+              }).catch(err => console.error('[index] Failed to init crawl tab:', err));
+            }
+            if (tab === 'crawl_pdf') {
+              import('./js/crawl-pdf/crawl-pdf-init.js').then(mod => {
+                const container = document.getElementById('tab-content-crawl_pdf');
+                if (container) mod.initCrawlPdfTab(container);
+              }).catch(err => console.error('[index] Failed to init crawl_pdf tab:', err));
+            }
+            if (tab === 'clean') {
+              import('./js/clean/clean-init.js').then(mod => {
+                const container = document.getElementById('tab-content-clean');
+                if (container) mod.initCleanTab(container);
+              }).catch(err => console.error('[index] Failed to init clean tab:', err));
+            }
+            if (tab === 'summary') {
+              import('./js/summary/summary-init.js').then(mod => {
+                const container = document.getElementById('tab-content-summary');
+                if (container) mod.initSummaryTab(container);
+              }).catch(err => console.error('[index] Failed to init summary tab:', err));
+            }
+            if (tab === 'embed') {
+              import('./js/embed/embed-init.js').then(mod => {
+                const container = document.getElementById('tab-content-embed');
+                if (container) mod.initEmbedTab(container);
+              }).catch(err => console.error('[index] Failed to init embed tab:', err));
+            }
+            if (tab === 'vector') {
+              import('./js/vector/vector-init.js').then(mod => {
+                const container = document.getElementById('tab-content-vector');
+                if (container) mod.initVectorTab(container);
+              }).catch(err => console.error('[index] Failed to init vector tab:', err));
+            }
           })();
         });
       })
@@ -273,73 +323,7 @@ function loadTab(tab) {
   }
 }
 
-// Toggle between Local and HuggingFace fields in summary tab
-function initializeSummaryToggle() {
-  const modelBackendRadio = document.getElementById('model_backend');
-  if (!modelBackendRadio) {
-    console.log('Radio group not found');
-    return;
-  }
-  
-  function toggleFields() {
-    const selectedValue = modelBackendRadio.value;
-    console.log('Selected backend:', selectedValue);
-    
-    const localFields = document.querySelectorAll('.local-fields');
-    const hfFields = document.querySelectorAll('.hf-fields');
-    
-    console.log('Local fields found:', localFields.length);
-    console.log('HF fields found:', hfFields.length);
-    
-    if (selectedValue === 'huggingface') {
-      // Hide local fields, show HF fields
-      localFields.forEach(field => field.style.display = 'none');
-      hfFields.forEach(field => field.style.display = 'block');
-    } else {
-      // Show local fields, hide HF fields
-      localFields.forEach(field => field.style.display = 'block');
-      hfFields.forEach(field => field.style.display = 'none');
-    }
-  }
-  
-  console.log('Attaching event listener to model backend radio');
-  modelBackendRadio.addEventListener('sl-change', toggleFields);
-  toggleFields(); // Initialize
-}
-
-// Toggle between Web and GIT crawl fields
-function initializeCrawlToggle() {
-  const crawlTypeRadio = document.getElementById('crawl_type');
-  if (!crawlTypeRadio) {
-    console.log('Crawl type radio group not found');
-    return;
-  }
-  
-  function toggleFields() {
-    const selectedValue = crawlTypeRadio.value;
-    console.log('Selected crawl type:', selectedValue);
-    
-    const webFields = document.querySelectorAll('.web-fields');
-    const gitFields = document.querySelectorAll('.git-fields');
-    
-    console.log('Web fields found:', webFields.length);
-    console.log('GIT fields found:', gitFields.length);
-    
-    if (selectedValue === 'git') {
-      // Hide web fields, show GIT fields
-      webFields.forEach(field => field.style.display = 'none');
-      gitFields.forEach(field => field.style.display = 'block');
-    } else {
-      // Show web fields, hide GIT fields
-      webFields.forEach(field => field.style.display = 'block');
-      gitFields.forEach(field => field.style.display = 'none');
-    }
-  }
-  
-  console.log('Attaching event listener to crawl type radio');
-  crawlTypeRadio.addEventListener('sl-change', toggleFields);
-  toggleFields(); // Initialize
-}
+// Legacy toggle functions removed — crawl/summary tabs now use config-binder.
 
 // API functions for loading config files
 async function loadConfigForTab(tabName, attempt = 0) {

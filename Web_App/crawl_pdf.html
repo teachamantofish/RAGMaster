@@ -1,84 +1,27 @@
-<section>
-  <form>
-<!-- Flex container for two columns -->
-<div class="fw-flex-container">
-  <!-- First column -->
-  <div class="fw-column1">
-    <div class="fw-panel-label">Crawl PDF configuration</div>
-             <div class="save-btn-container">
-          <!-- Buttons -->
-          <div style="margin: 0 0 10px 0; display: flex; flex-wrap: wrap; gap: 10px;">
-            <sl-button variant="primary" id="save-btn">
-              <sl-icon name="floppy"></sl-icon>
-            </sl-button>
-            <sl-button variant="primary" id="run-btn">
-              <sl-icon name="play-fill"></sl-icon>
-            </sl-button>
-            <sl-button variant="primary" id="clear-btn">
-              <sl-icon name="arrow-clockwise"></sl-icon>
-            </sl-button>
-          </div>
+﻿<section>
+  <form id="crawl-pdf-form">
+    <div class="config-form-container">
+      <div class="config-form-column config-form-column--controls">
+        <div class="config-form-panel-label">Crawl PDF configuration</div>
+        <div class="config-action-buttons">
+          <sl-button variant="primary" id="crawl-pdf-save-btn"><sl-icon name="floppy"></sl-icon></sl-button>
+          <sl-button variant="primary" id="crawl-pdf-reload-btn"><sl-icon name="arrow-clockwise"></sl-icon></sl-button>
+          <sl-button variant="primary" id="crawl-pdf-run-btn"><sl-icon name="play-fill"></sl-icon></sl-button>
         </div>
-
-      <sl-radio-group id="run_pdf_trim" size="small" label="Run PDF Trim" name="run_pdf_trim" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-      </sl-radio-group>
-
-      <sl-radio-group id="run_docling" size="small" label="Run Docling" name="run_docling" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-      </sl-radio-group>
-
-      <sl-radio-group id="run_toc_fixer" size="small" label="Run TOC Fixer" name="run_toc_fixer" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-      </sl-radio-group>
-
-      <sl-radio-group id="run_code_fixer" size="small" label="Run Code Fixer" name="run_code_fixer" value="on">
-        <sl-radio value="on" style="display: inline-block; margin-right: 1.5rem;">On</sl-radio>
-        <sl-radio value="off" style="display: inline-block;">Off</sl-radio>
-      </sl-radio-group>
-
-     <div id="remove-front-container">
-        <sl-input id="remove_front" class="fw-io-input" label="Remove Front Pages" placeholder="0 (The first page is 0)" type="number">
-          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
-        </sl-input>
-     </div>
-
-     <div id="toc-range-container">
-        <sl-input id="toc_range" class="fw-io-input" label="TOC Range" placeholder="e.g., 1, 69">
-          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
-        </sl-input>
-     </div>
-
-     <div id="remove-ranges-container">
-        <sl-input id="remove_ranges" class="fw-io-input" label="Remove Ranges" placeholder="[(4, 12), (217, 234)] Multiple ranges ok">
-          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
-        </sl-input>
-     </div>
-
-     <div id="remove-back-container">
-        <sl-input id="remove_back" class="fw-io-input" label="Remove Back Pages" placeholder="1" type="number">
-          <sl-icon slot="prefix" name="folder" library="custom"></sl-icon>
-        </sl-input>
-     </div>
-
-    <sl-textarea id="status-display" label="Notes" placeholder="Configuration notes will appear here" readonly resize="none" rows="3"></sl-textarea>
-  </div>
-
-  <!-- Second column -->
-  <div class="fw-column2">
-    <div class="fw-panel-label">File reader</div>
-    <div class="fields">
-      <sl-textarea id="crawl_pdfconfig" class="filereader-textarea" resize="auto"
-        placeholder="Loading file. . . ">
-      </sl-textarea>
+        <div class="config-field"><sl-radio-group id="crawl-pdf-run_docling" data-config-key="RUN_DOCLING" size="small" label="Run Docling" name="crawl_pdf_run_docling" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-pdf-run_toc_fixer" data-config-key="RUN_TOC_FIXER" size="small" label="Run TOC Fixer" name="crawl_pdf_run_toc_fixer" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-pdf-run_code_fixer" data-config-key="RUN_CODE_FIXER" size="small" label="Run Code Fixer" name="crawl_pdf_run_code_fixer" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-radio-group id="crawl-pdf-run_pdf_trim" data-config-key="RUN_PDF_TRIM" size="small" label="Run PDF Trim" name="crawl_pdf_run_pdf_trim" value="true"><sl-radio value="true">True</sl-radio><sl-radio value="false">False</sl-radio></sl-radio-group></div>
+        <div class="config-field"><sl-input id="crawl-pdf-remove_front" data-config-key="REMOVE_FRONT" label="Remove Front Pages" type="number" min="0"></sl-input></div>
+        <div class="config-field"><sl-input id="crawl-pdf-toc_range" data-config-key="TOC_RANGE" label="TOC Range" disabled></sl-input></div>
+        <div class="config-field"><sl-input id="crawl-pdf-remove_ranges" data-config-key="REMOVE_RANGES" label="Remove Ranges" disabled></sl-input></div>
+        <div class="config-field"><sl-input id="crawl-pdf-remove_back" data-config-key="REMOVE_BACK" label="Remove Back Pages" type="number" min="0"></sl-input></div>
+        <sl-textarea id="crawl-pdf-status-display" class="config-status-display" label="Notes" placeholder="Configuration notes will appear here" readonly resize="none" rows="3"></sl-textarea>
+      </div>
+      <div class="config-form-column config-form-column--viewer">
+        <div class="config-form-panel-label">File reader</div>
+        <div class="fields"><sl-textarea id="crawl-pdf-config-viewer" class="config-file-viewer" resize="auto" placeholder="Loading file..."></sl-textarea></div>
+      </div>
     </div>
-    </div>
-  </div>
-</div>
   </form>
 </section>
-
-
