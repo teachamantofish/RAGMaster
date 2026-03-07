@@ -10,6 +10,7 @@
 # Choose Deploy -> Inference endpoint -> Create endpoint
 # Copy the endpoint url below
 import os, sys, subprocess
+from pathlib import Path
 from huggingface_hub import get_inference_endpoint
 
 # === CONFIG CONSTANTS ===
@@ -19,6 +20,8 @@ if not HF_TOKEN:
 ENDPOINT_NAME = "qwen3-next-80b-a3b-instruct-hmt"    # name of your endpoint on HF
 TRANSFORMERS_CACHE = os.path.abspath(".hf_cache")
 AUTO_PAUSE_ENDPOINT = True  # Set to True to auto-pause endpoint after each run (saves $ but adds 5+ min startup next time)
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+RUNNER_SCRIPT = PROJECT_ROOT / "run_python_entry.py"
 
 # =========================
 
@@ -78,7 +81,8 @@ def main():
     try:
         # === Run your existing summary script as-is ===
         subprocess.run(
-            [sys.executable, "4.01summary.py", *sys.argv[1:]],
+            [sys.executable, str(RUNNER_SCRIPT), "Get_and_Chunk/4.01summary.py", *sys.argv[1:]],
+            cwd=PROJECT_ROOT,
             env=env,
             check=True
         )

@@ -12,6 +12,7 @@ const getAndChunkDir = path.resolve(projectRoot, '..', 'Get_and_Chunk')
 const vectorDBDir = path.resolve(projectRoot, '..', 'VectorDB')
 const appPathsPath = path.resolve(projectRoot, 'config', 'paths.json')
 const appPaths = JSON.parse(fs.readFileSync(appPathsPath, 'utf8'))
+const backupsRoot = path.resolve(projectRoot, 'config', 'backups')
 
 const staticBuildEntries = [
   'home.html',
@@ -63,6 +64,46 @@ function copyStaticBuildResources() {
       }
     },
   }
+}
+
+function buildBackupPath(targetPath) {
+  const safeTimestamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const relPath = path.relative(repoRoot, targetPath)
+  return path.resolve(backupsRoot, `${relPath}.${safeTimestamp}.bak`)
+}
+
+function createBackupSnapshot(targetPath, callback) {
+  fs.stat(targetPath, (statErr, statInfo) => {
+    if (statErr) {
+      if (statErr.code === 'ENOENT') {
+        callback(null, null)
+        return
+      }
+      callback(statErr)
+      return
+    }
+
+    if (!statInfo.isFile()) {
+      callback(new Error(`Backup source is not a file: ${targetPath}`))
+      return
+    }
+
+    const backupPath = buildBackupPath(targetPath)
+    fs.mkdir(path.dirname(backupPath), { recursive: true }, mkdirErr => {
+      if (mkdirErr) {
+        callback(mkdirErr)
+        return
+      }
+
+      fs.copyFile(targetPath, backupPath, copyErr => {
+        if (copyErr) {
+          callback(copyErr)
+          return
+        }
+        callback(null, backupPath)
+      })
+    })
+  })
 }
 
 /**
@@ -164,15 +205,23 @@ function createWriteProxy(urlPrefix, baseDir, pluginName) {
         let body = ''
         req.on('data', chunk => { body += chunk })
         req.on('end', () => {
-          fs.writeFile(normalized, body, 'utf8', (err) => {
+          createBackupSnapshot(normalized, (backupErr, backupPath) => {
             res.setHeader('Content-Type', 'application/json; charset=utf-8')
-            if (err) {
+            if (backupErr) {
               res.statusCode = 500
-              res.end(JSON.stringify({ success: false, error: err.message }))
-            } else {
-              res.statusCode = 200
-              res.end(JSON.stringify({ success: true }))
+              res.end(JSON.stringify({ success: false, error: `Backup failed: ${backupErr.message}` }))
+              return
             }
+
+            fs.writeFile(normalized, body, 'utf8', (err) => {
+              if (err) {
+                res.statusCode = 500
+                res.end(JSON.stringify({ success: false, error: err.message }))
+              } else {
+                res.statusCode = 200
+                res.end(JSON.stringify({ success: true, backupPath }))
+              }
+            })
           })
         })
       })
@@ -198,6 +247,70 @@ function vectorDBFileProxy() {
 
 function vectorDBWriteProxy() {
   return createWriteProxy('/VectorDB/', vectorDBDir, 'vectordb-write-proxy')
+}
+
+/**
+ * Run-settings API: GET/PUT /api/run-settings
+ * Provides read/write access to repo-root run_settings.py during dev.
+ */
+function createRunSettingsApi() {
+  const runSettingsPath = path.resolve(repoRoot, 'run_settings.py')
+
+  return {
+    name: 'run-settings-api',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url !== '/api/run-settings') {
+          next()
+          return
+        }
+
+        if (req.method === 'GET' || req.method === 'HEAD') {
+          fs.readFile(runSettingsPath, (err, data) => {
+            if (err) {
+              res.statusCode = err.code === 'ENOENT' ? 404 : 500
+              res.end(`Unable to read run_settings.py: ${err.message}`)
+              return
+            }
+            res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+            res.end(data)
+          })
+          return
+        }
+
+        if (req.method === 'PUT') {
+          let body = ''
+          req.on('data', chunk => { body += chunk })
+          req.on('end', () => {
+            createBackupSnapshot(runSettingsPath, (backupErr, backupPath) => {
+              res.setHeader('Content-Type', 'application/json; charset=utf-8')
+              if (backupErr) {
+                res.statusCode = 500
+                res.end(JSON.stringify({ success: false, error: `Backup failed: ${backupErr.message}` }))
+                return
+              }
+
+              fs.writeFile(runSettingsPath, body, 'utf8', err => {
+                if (err) {
+                  res.statusCode = 500
+                  res.end(JSON.stringify({ success: false, error: err.message }))
+                } else {
+                  res.statusCode = 200
+                  res.end(JSON.stringify({ success: true, backupPath }))
+                }
+              })
+            })
+          })
+          return
+        }
+
+        res.statusCode = 405
+        res.setHeader('Content-Type', 'application/json; charset=utf-8')
+        res.end(JSON.stringify({ success: false, error: 'Method not allowed.' }))
+      })
+    },
+  }
 }
 
 /**
@@ -267,7 +380,8 @@ function createRunScriptApi() {
 
           // Spawn Python process
           const pythonCmd = process.platform === 'win32' ? 'python' : 'python3'
-          const child = spawn(pythonCmd, [normalized], {
+          const launcherPath = path.resolve(repoRoot, 'run_python_entry.py')
+          const child = spawn(pythonCmd, [launcherPath, normalized], {
             cwd: repoRoot,
             env: { ...process.env },
             stdio: ['ignore', 'pipe', 'pipe'],
@@ -298,6 +412,123 @@ function createRunScriptApi() {
   }
 }
 
+/**
+ * Log-tail API: GET /api/log-tail?script=Get_and_Chunk/3.00chunker.py&lines=120
+ * Returns the latest N lines from the script's CSV log file under LOG_DIR.
+ * Only available during dev (apply: 'serve').
+ */
+function createLogTailApi() {
+  const allowedPrefixes = ['Get_and_Chunk/', 'VectorDB/']
+
+  function resolveLogDir() {
+    const fallback = path.resolve(repoRoot, 'Logger', 'logs')
+    const runSettingsPath = path.resolve(repoRoot, 'run_settings.py')
+    if (!fs.existsSync(runSettingsPath)) {
+      return fallback
+    }
+
+    try {
+      const text = fs.readFileSync(runSettingsPath, 'utf8')
+      const match = text.match(/LOG_DIR\s*=\s*Path\(\s*r?["']([^"']+)["']\s*\)/)
+      if (!match || !match[1]) {
+        return fallback
+      }
+
+      // run_settings.py may contain doubled backslashes in the literal text.
+      const rawPath = String(match[1]).replace(/\\\\/g, '\\')
+      if (path.isAbsolute(rawPath)) {
+        return path.normalize(rawPath)
+      }
+      return path.resolve(repoRoot, rawPath)
+    } catch {
+      return fallback
+    }
+  }
+
+  return {
+    name: 'log-tail-api',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!req.url || !req.url.startsWith('/api/log-tail') || req.method !== 'GET') {
+          next()
+          return
+        }
+
+        let parsed
+        try {
+          parsed = new URL(req.url, 'http://localhost')
+        } catch {
+          res.statusCode = 400
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ success: false, error: 'Invalid request URL.' }))
+          return
+        }
+
+        const script = parsed.searchParams.get('script') || ''
+        const linesParam = parsed.searchParams.get('lines')
+        const lines = Math.max(1, Math.min(1000, Number.parseInt(linesParam || '120', 10) || 120))
+
+        if (!script || typeof script !== 'string') {
+          res.statusCode = 400
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ success: false, error: 'Missing "script" query parameter.' }))
+          return
+        }
+
+        if (!allowedPrefixes.some(p => script.startsWith(p))) {
+          res.statusCode = 403
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ success: false, error: `Script path not allowed: ${script}` }))
+          return
+        }
+
+        const scriptBase = path.basename(script, path.extname(script))
+        const logDir = resolveLogDir()
+        const logPath = path.resolve(logDir, `a_${scriptBase}.log`)
+
+        if (!logPath.startsWith(path.normalize(logDir))) {
+          res.statusCode = 403
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ success: false, error: 'Computed log path is outside LOG_DIR.' }))
+          return
+        }
+
+        if (!fs.existsSync(logPath)) {
+          res.statusCode = 200
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ success: true, exists: false, output: '' }))
+          return
+        }
+
+        fs.readFile(logPath, 'utf8', (err, data) => {
+          if (err) {
+            res.statusCode = 500
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: false, error: `Unable to read log file: ${err.message}` }))
+            return
+          }
+
+          const allLines = String(data || '').split(/\r?\n/)
+          if (allLines.length > 0 && allLines[allLines.length - 1] === '') {
+            allLines.pop()
+          }
+          const tail = allLines.slice(-lines).join('\n')
+
+          res.statusCode = 200
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({
+            success: true,
+            exists: true,
+            output: tail,
+            lineCount: allLines.length,
+          }))
+        })
+      })
+    },
+  }
+}
+
 export default defineConfig({
   root: '..', // your source is web/
   base: './',
@@ -309,7 +540,9 @@ export default defineConfig({
     getAndChunkWriteProxy(),
     vectorDBFileProxy(),
     vectorDBWriteProxy(),
+    createRunSettingsApi(),
     createRunScriptApi(),
+    createLogTailApi(),
     copyStaticBuildResources(),
   ],
   define: {

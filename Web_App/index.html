@@ -270,7 +270,12 @@ function loadTab(tab) {
             });
 
             // Initialize tab-specific handlers
-            if (tab === 'source') setTimeout(() => loadSourceTab(), 50);
+            if (tab === 'source') {
+              import('./js/source/source-init.js').then(mod => {
+                const container = document.getElementById('tab-content-source');
+                if (container) mod.initSourceTab(container);
+              }).catch(err => console.error('[index] Failed to init source tab:', err));
+            }
             if (tab === 'chunk') {
               import('./js/chunk/chunk-init.js').then(mod => {
                 const container = document.getElementById('tab-content-chunk');

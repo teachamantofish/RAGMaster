@@ -35,6 +35,7 @@ from scripts.custom_logger import setup_global_logger
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent
+RUNNER_SCRIPT = PROJECT_ROOT.parent / "run_python_entry.py"
 
 
 logger = setup_global_logger(
@@ -74,6 +75,11 @@ def _python_executable() -> str:
     return sys.executable
 
 
+def _repo_python_cmd(python_exe: str, script_name: str, *script_args: str) -> List[str]:
+    repo_script = f"Train_Reranker_Model/{script_name}"
+    return [python_exe, str(RUNNER_SCRIPT), repo_script, *script_args]
+
+
 def _run(cmd: List[str], description: str, dry_run: bool) -> Tuple[bool, float]:
     logger.info("Stage %s", description, extra={"Stage": description, "Command": " ".join(cmd)})
     start = time.perf_counter()
@@ -99,14 +105,14 @@ def _run_data_stage(
     stats_output: Path | None = None,
 ) -> Tuple[bool, float]:
     if args.use_legacy_triplets:
-        cmd = [python_exe, "1create_training_data.py"]
+        cmd = _repo_python_cmd(python_exe, "1create_training_data.py")
         if args.data_regenerate_triplets:
             cmd.append("--regenerate-triplets")
             if args.data_chunks_file:
                 cmd.extend(["--chunks-file", str(args.data_chunks_file)])
         description = "Generate reranker data (legacy triplets)"
     else:
-        cmd = [python_exe, "build_retrieval_candidates.py"]
+        cmd = _repo_python_cmd(python_exe, "build_retrieval_candidates.py")
         if args.data_queries_file:
             cmd.extend(["--queries-file", str(args.data_queries_file)])
         if args.data_top_k:
@@ -132,7 +138,7 @@ def _run_data_stage(
 
 
 def _run_train_stage(python_exe: str, args, dry_run: bool) -> Tuple[bool, float]:
-    cmd = [python_exe, "2cross_encoder_trainer.py", "--action", "train", "--device", args.device]
+    cmd = _repo_python_cmd(python_exe, "2cross_encoder_trainer.py", "--action", "train", "--device", args.device)
     if args.difficulties:
         cmd.extend(["--difficulties", *args.difficulties])
     if args.max_train:
@@ -153,7 +159,7 @@ def _run_train_stage(python_exe: str, args, dry_run: bool) -> Tuple[bool, float]
 
 
 def _run_eval_stage(python_exe: str, args, dry_run: bool, *, output_dir: Path) -> Tuple[bool, float]:
-    cmd = [python_exe, "3evaluate_model.py", "--split", args.split]
+    cmd = _repo_python_cmd(python_exe, "3evaluate_model.py", "--split", args.split)
     if args.difficulties:
         cmd.extend(["--difficulties", *args.difficulties])
     if args.model_path:
@@ -176,7 +182,7 @@ def _run_eval_stage(python_exe: str, args, dry_run: bool, *, output_dir: Path) -
     run_holdout = args.run_holdout_eval and holdout_path is not None and holdout_path.exists()
     if run_holdout:
         holdout_output_dir = Path(args.holdout_output_dir) if args.holdout_output_dir else (output_dir / "holdout")
-        holdout_cmd = [python_exe, "3evaluate_model.py", "--split", args.holdout_split]
+        holdout_cmd = _repo_python_cmd(python_exe, "3evaluate_model.py", "--split", args.holdout_split)
         if args.difficulties:
             holdout_cmd.extend(["--difficulties", *args.difficulties])
         if args.model_path:

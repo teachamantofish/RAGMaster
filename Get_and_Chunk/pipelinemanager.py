@@ -23,6 +23,9 @@ from pathlib import Path
 from common.run_context import get_run_context
 from Logger.custom_logger import setup_global_logger
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+RUNNER_SCRIPT = PROJECT_ROOT / "run_python_entry.py"
+
 # Get run configuration
 ctx = get_run_context()
 metadata = ctx['metadata']
@@ -66,8 +69,8 @@ def run_script(script_name: str, step_number: int = None) -> int:
     try:
         # Run the script using subprocess
         result = subprocess.run(
-            [sys.executable, script_name],
-            cwd=Path.cwd(),  # Run in current directory
+            [sys.executable, str(RUNNER_SCRIPT), script_name],
+            cwd=PROJECT_ROOT,
             capture_output=True,
             text=True,
             timeout=3600  # 1 hour timeout

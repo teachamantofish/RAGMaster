@@ -8,7 +8,9 @@ import sys
 from pathlib import Path
 from typing import Sequence
 
-REPO_ROOT = Path(__file__).resolve().parent
+TRAIN_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = TRAIN_DIR.parent
+RUNNER_SCRIPT = PROJECT_ROOT / "run_python_entry.py"
 SCRIPT_SEQUENCE: Sequence[Sequence[str]] = (
     ("1create_training_data.py",),
     ("2tokenize_triplets.py",),
@@ -19,13 +21,14 @@ SCRIPT_SEQUENCE: Sequence[Sequence[str]] = (
 
 
 def _run_step(step_cmd: Sequence[str], dry_run: bool) -> None:
-    cmd = [sys.executable, str(REPO_ROOT / step_cmd[0]), *step_cmd[1:]]
+    repo_script = str((TRAIN_DIR / step_cmd[0]).relative_to(PROJECT_ROOT))
+    cmd = [sys.executable, str(RUNNER_SCRIPT), repo_script, *step_cmd[1:]]
     display = " ".join(cmd)
     if dry_run:
         print(f"[DRY RUN] {display}")
         return
     print(f"▶ Running: {display}")
-    subprocess.run(cmd, check=True, cwd=REPO_ROOT)
+    subprocess.run(cmd, check=True, cwd=PROJECT_ROOT)
 
 
 def parse_args() -> argparse.Namespace:

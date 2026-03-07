@@ -13,6 +13,39 @@ import { writeConfig } from './config-writer.js';
 import { bindConfig } from './config-binder.js';
 import { showHelp } from './help-modal.js';
 
+const LOG_POLL_INTERVAL_MS = 1200;
+const LOG_TAIL_LINES = 120;
+
+async function fetchLogTail(script, lines = LOG_TAIL_LINES) {
+  const url = `/api/log-tail?script=${encodeURIComponent(script)}&lines=${encodeURIComponent(String(lines))}`;
+  const resp = await fetch(url, { cache: 'no-store' });
+  if (!resp.ok) {
+    const detail = await resp.text().catch(() => '');
+    throw new Error(`Log tail failed: HTTP ${resp.status}${detail ? ` - ${detail}` : ''}`);
+  }
+  const result = await resp.json();
+  if (!result || result.success !== true) {
+    throw new Error(result?.error || 'Unknown log tail error.');
+  }
+  return result;
+}
+
+function renderRunningLog(statusEl, script, tailPayload) {
+  if (!statusEl) return;
+  const logBody = tailPayload && tailPayload.exists
+    ? (tailPayload.output || '(log file exists but currently empty)')
+    : '(waiting for log file to be created)';
+  statusEl.value = `Running ${script}...\n\n${logBody}`;
+}
+
+function renderRunningLogToViewer(rawViewer, script, tailPayload) {
+  if (!rawViewer) return;
+  const logBody = tailPayload && tailPayload.exists
+    ? (tailPayload.output || '(log file exists but currently empty)')
+    : '(waiting for log file to be created)';
+  rawViewer.value = `# Live log: ${script}\n\n${logBody}`;
+}
+
 /**
  * Create a tab initializer.
  *
@@ -75,6 +108,22 @@ function wireButtons(container, prefix, getBinder, getOriginal, setOriginal, sch
   const reloadBtn = container.querySelector(`#${prefix}-reload-btn`);
   const runBtn = container.querySelector(`#${prefix}-run-btn`);
   const statusEl = container.querySelector(`#${prefix}-status-display`);
+  const rawViewer = container.querySelector(`#${prefix}-config-viewer`);
+  const defaultsBtn = ensureDefaultsButton(container, prefix);
+
+  const isDirty = () => {
+    const binder = getBinder();
+    if (!binder || !schema || !Array.isArray(schema.fields)) return false;
+    try {
+      const patch = binder.collectValues();
+      const candidate = writeConfig(getOriginal(), patch, schema.fields);
+      return candidate !== getOriginal();
+    } catch (_) {
+      return false;
+    }
+  };
+
+  if (reloadBtn) reloadBtn.title = 'Revert unsaved changes';
 
   if (saveBtn) {
     saveBtn.addEventListener('click', async () => {
@@ -105,6 +154,9 @@ function wireButtons(container, prefix, getBinder, getOriginal, setOriginal, sch
 
   if (reloadBtn) {
     reloadBtn.addEventListener('click', async () => {
+      if (isDirty() && !window.confirm('Discard unsaved changes and revert from disk?')) {
+        return;
+      }
       try {
         const resp = await fetch(configUrl);
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -119,9 +171,37 @@ function wireButtons(container, prefix, getBinder, getOriginal, setOriginal, sch
         const rawViewer = container.querySelector(`#${prefix}-config-viewer`);
         if (rawViewer) rawViewer.value = text;
 
-        if (statusEl) statusEl.value = 'Configuration reloaded.';
+        if (statusEl) statusEl.value = 'Changes reverted from disk.';
       } catch (err) {
         if (statusEl) statusEl.value = `Reload failed: ${err.message}`;
+      }
+    });
+  }
+
+  if (defaultsBtn) {
+    defaultsBtn.addEventListener('click', async () => {
+      if (!window.confirm('Reset this tab to saved defaults? This will overwrite current settings.')) {
+        return;
+      }
+      try {
+        const defaultConfigUrl = buildDefaultConfigUrl(configUrl);
+        const defaultResp = await fetch(defaultConfigUrl, { cache: 'no-store' });
+        if (!defaultResp.ok) throw new Error(`HTTP ${defaultResp.status} while loading defaults`);
+        const defaultText = await defaultResp.text();
+
+        await saveConfigText(configUrl, defaultText);
+        setOriginal(defaultText);
+
+        const parsed = parseConfig(defaultText);
+        setModel(parsed.values);
+        setBinder(bindConfig(container, schema, parsed.values, showHelp));
+
+        const rawViewer = container.querySelector(`#${prefix}-config-viewer`);
+        if (rawViewer) rawViewer.value = defaultText;
+
+        if (statusEl) statusEl.value = 'Configuration reset to defaults.';
+      } catch (err) {
+        if (statusEl) statusEl.value = `Reset to defaults failed: ${err.message}`;
       }
     });
   }
@@ -132,10 +212,32 @@ function wireButtons(container, prefix, getBinder, getOriginal, setOriginal, sch
         if (statusEl) statusEl.value = 'Run: no pipeline script configured for this tab.';
         return;
       }
+
+      let pollTimer = null;
+      let lastTail = null;
+      let pollFailedAtLeastOnce = false;
+
+      const pollOnce = async () => {
+        try {
+          const tail = await fetchLogTail(runScript, LOG_TAIL_LINES);
+          lastTail = tail;
+          renderRunningLog(statusEl, runScript, tail);
+          renderRunningLogToViewer(rawViewer, runScript, tail);
+        } catch (e) {
+          pollFailedAtLeastOnce = true;
+          if (statusEl) {
+            statusEl.value = `Running ${runScript}...\n\nLive log unavailable right now (${e?.message || 'poll failed'}).`;
+          }
+        }
+      };
+
       try {
         runBtn.disabled = true;
         runBtn.loading = true;
         if (statusEl) statusEl.value = `Running ${runScript}…`;
+
+        await pollOnce();
+        pollTimer = window.setInterval(pollOnce, LOG_POLL_INTERVAL_MS);
 
         const resp = await fetch('/api/run-script', {
           method: 'POST',
@@ -144,14 +246,43 @@ function wireButtons(container, prefix, getBinder, getOriginal, setOriginal, sch
         });
         const result = await resp.json();
 
+        await pollOnce();
+
+        const finalLogText = lastTail && lastTail.exists
+          ? (lastTail.output || '(log file exists but currently empty)')
+          : '';
+
         if (result.success) {
-          if (statusEl) statusEl.value = `✓ ${runScript} completed successfully.\n\n${result.output || ''}`;
+          if (statusEl) {
+            statusEl.value = `✓ ${runScript} completed successfully.\n\n${finalLogText || result.output || ''}`;
+          }
+          if (rawViewer) {
+            rawViewer.value = finalLogText
+              ? `# Live log: ${runScript}\n\n${finalLogText}`
+              : (result.output || rawViewer.value);
+          }
         } else {
-          if (statusEl) statusEl.value = `✗ ${runScript} failed (exit code ${result.exitCode}).\n\n${result.output || result.error || ''}`;
+          if (statusEl) {
+            const failureOutput = [finalLogText, result.output, result.error].filter(Boolean).join('\n\n');
+            statusEl.value = `✗ ${runScript} failed (exit code ${result.exitCode}).\n\n${failureOutput}`;
+          }
+          if (rawViewer) {
+            const failureOutput = [finalLogText, result.output, result.error].filter(Boolean).join('\n\n');
+            rawViewer.value = `# Live log: ${runScript}\n\n${failureOutput}`;
+          }
         }
       } catch (err) {
         if (statusEl) statusEl.value = `Run failed: ${err.message}`;
+        if (rawViewer) {
+          rawViewer.value = `# Live log: ${runScript}\n\nRun failed: ${err.message}`;
+        }
       } finally {
+        if (pollTimer !== null) {
+          window.clearInterval(pollTimer);
+        }
+        if (pollFailedAtLeastOnce && !lastTail && rawViewer) {
+          rawViewer.value = `${rawViewer.value}\n\n(Tip: restart Vite dev server so /api/log-tail is active.)`;
+        }
         runBtn.disabled = false;
         runBtn.loading = false;
       }
@@ -176,4 +307,31 @@ async function saveConfigText(url, text) {
   if (result && !result.success) {
     throw new Error(result.error || 'Save failed');
   }
+}
+
+function buildDefaultConfigUrl(configUrl) {
+  const normalized = String(configUrl || '').replace(/\\/g, '/');
+  const fileName = normalized.split('/').filter(Boolean).pop() || '';
+  if (!fileName) {
+    throw new Error(`Cannot resolve defaults path for ${configUrl}`);
+  }
+  return `./config/defaults/${fileName}`;
+}
+
+function ensureDefaultsButton(container, prefix) {
+  let btn = container.querySelector(`#${prefix}-defaults-btn`);
+  if (btn) return btn;
+
+  const actions = container.querySelector('.config-action-buttons');
+  if (!actions) return null;
+
+  btn = document.createElement('sl-button');
+  btn.variant = 'primary';
+  btn.id = `${prefix}-defaults-btn`;
+  btn.title = 'Reset configuration to saved defaults';
+  const icon = document.createElement('sl-icon');
+  icon.name = 'arrow-counterclockwise';
+  btn.appendChild(icon);
+  actions.appendChild(btn);
+  return btn;
 }

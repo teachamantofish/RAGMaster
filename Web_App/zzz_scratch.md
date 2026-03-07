@@ -14,3 +14,4 @@ show summary log
 show eval log
 show script
 
+npm vite dev
