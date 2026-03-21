@@ -1,3 +1,11 @@
+try:
+	from crawl4ai import CacheMode
+except Exception:
+	class _CacheModeFallback:
+		BYPASS = "BYPASS"
+
+	CacheMode = _CacheModeFallback
+
 # ====== Crawling source ====== 
 WEB_CRAWL = "Get any web page or website. This method requires lots of configuration."
 GIT_CRAWL = "Get a Github doc repo. The dir structure is preserved. Files are already in Markdown format."
@@ -38,11 +46,12 @@ STRIP_MATH = False
 
 # ====== CrawlerRunConfig parameters ======
 MARKDOWN_GENERATOR = "md_generator"
-EXCLUDED_TAGS = ["form", "script", "style", "footer", "header", "nav"] # OMIT tags with needed links (e.g. nav)
+CACHE_MODE=CacheMode.BYPASS
+EXCLUDED_TAGS = ["form", "script", "style", "footer", "header", "rustdoc-toolbar"] # OMIT tags with needed links (e.g. nav)
 REMOVE_FORMS = True                     # Specifically strip <form> elements
 REMOVE_OVERLAY_ELEMENTS = True          # Attempt to remove modals/popups
-CSS_SELECTOR = ".dexter-Position"  # Get this region only. Wildcards examples: '[id^="ad_"], [class*="sponsor"]'. Use any CSS selector.
-EXCLUDED_SELECTOR = ".language-Navigation, .dexter-Author-Hide"  # [class*="modal"]
+CSS_SELECTOR = ".main"                  # Get this region only. Wildcards examples: '[id^="ad_"], [class*="sponsor"]'. Use any CSS selector.
+EXCLUDED_SELECTOR = ".tracker, .feedback-modal-content, .menu, #menu, .sidebar, #sidebar, .content__toc, #toc_sidebar" # [class*="modal"]
 EXCLUDE_EXTERNAL_LINKS = True           # Remove external links from final content
 EXCLUDE_SOCIAL_MEDIA_LINKS = True       # Remove links to known social sites
 EXCLUDE_DOMAINS = ["ads.example.com"]   # Exclude links to these domains

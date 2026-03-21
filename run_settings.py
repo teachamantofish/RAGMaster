@@ -14,7 +14,7 @@ LOG_DIR = Path(r"C:\\\\GIT\\\\Z_Master_Rag\\\\Logger\\\\logs")
 METADATA = {
     "ID": "0",
     "PARSER": "crawlpdf",
-    "CRAWL_URL": "C:/GIT/Z_Master_Rag/Data/",
+    "CRAWL_URL": "https://helpx.adobe.com/adobe-connect/webservices/",
     "BASE_DIR": "connect",
     "METADATA_TITLE": "Adobe Connect Web Services",
     "METADATA_AUTHOR": "Adobe",

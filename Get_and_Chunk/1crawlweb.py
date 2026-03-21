@@ -3,11 +3,15 @@
 # while crawl behavior is still configured in crawlconfig.py.
 import os  # For directory and file operations
 import re
+import sys
+import gzip
 from pathlib import Path
 import logging  # For logging
 import traceback  # For detailed error information
 import asyncio  # For async crawling
-from urllib.parse import urlparse, urldefrag  # Only urldefrag still used in save_markdown
+from urllib.parse import urlparse, urldefrag, urljoin
+from urllib.request import Request, urlopen
+import xml.etree.ElementTree as ET
 from langdetect import detect, LangDetectException
 from crawl4ai import AsyncWebCrawler, CrawlerRunConfig
 from crawl4ai.content_filter_strategy import PruningContentFilter
@@ -32,6 +36,21 @@ CRAWL_URL = metadata['CRAWL_URL']
 script_base = os.path.splitext(os.path.basename(__file__))[0]
 LOG_HEADER = ["Date", "Level", "Message", "TBD", "TBD"]
 logger = setup_global_logger(script_name=script_base, log_level='INFO', headers=LOG_HEADER)
+
+
+def _configure_stdio_for_windows():
+    """Avoid UnicodeEncodeError on Windows cp1252 consoles (rich/crawl4ai logs)."""
+    for stream_name in ("stdout", "stderr"):
+        stream = getattr(sys, stream_name, None)
+        if stream and hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except Exception:
+                # If stream reconfiguration is unavailable, continue with existing encoding.
+                pass
+
+
+_configure_stdio_for_windows()
 
 # --- Save Markdown ---
 def save_markdown(markdown_content: str, save_dir: str, url: str):
@@ -68,7 +87,7 @@ def deep_crawl_urls():
         logger.info("Initializing Crawl4AI deep crawler with BFS strategy...")
         
         # Set up browser configuration - keeping your existing settings
-        browser_config = BrowserConfig(headless=True, ignore_https_errors=True)
+        browser_config = BrowserConfig(headless=True, ignore_https_errors=True, verbose=False)
 
 
         # URLPatternFilter - ensure we have a list of patterns
@@ -81,6 +100,7 @@ def deep_crawl_urls():
         deep_crawl_strategy = BFSDeepCrawlStrategy(
             max_depth=MAX_CRAWL_DEPTH,
             include_external=INCLUDE_EXTERNAL_DOMAIN,
+            max_pages=MAX_URLS,
             filter_chain=FilterChain(filters),
         )
         
@@ -189,28 +209,186 @@ def deep_crawl_urls():
     # Execute the async crawl function
     return asyncio.run(crawl())
 
+
+def _resolve_url_list_path(url_list_file: str):
+    """Resolve URL list location across common roots.
+
+    Accept absolute paths and try relative paths under:
+    1) current run output dir (CWD)
+    2) this script directory
+    """
+    candidate = Path(url_list_file)
+    if candidate.is_absolute() and candidate.exists():
+        return candidate
+
+    if not candidate.is_absolute():
+        for base in (CWD, Path(__file__).resolve().parent):
+            resolved = (base / candidate).resolve()
+            if resolved.exists():
+                return resolved
+
+    return None
+
+
+def _validate_crawl_url(url: str):
+    """Validate URL format before invoking crawl4ai for clearer errors."""
+    allowed_prefixes = ("http://", "https://", "file://", "raw:")
+    if not isinstance(url, str) or not url.startswith(allowed_prefixes):
+        err_msg = (
+            "URL must start with 'http://', 'https://', 'file://', or 'raw:'. "
+            "Verify the URL in run_settings.py"
+        )
+        logger.error(err_msg)
+        raise ValueError(err_msg)
+
+
+def _fetch_url_bytes(url: str, timeout: int = 20):
+    """Fetch URL bytes; returns None on fetch failures for candidate probing."""
+    try:
+        req = Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; Z_Master_Rag/1.0)"})
+        with urlopen(req, timeout=timeout) as response:
+            return response.read()
+    except Exception as e:
+        logger.info(f"Sitemap probe skipped: {url} ({str(e)})")
+        return None
+
+
+def _parse_sitemap_xml(xml_text: str, source_url: str):
+    """Parse sitemap XML and return (kind, locs) where kind is urlset/sitemapindex."""
+    try:
+        root = ET.fromstring(xml_text)
+    except ET.ParseError as e:
+        logger.info(f"Invalid sitemap XML at {source_url}: {str(e)}")
+        return None, []
+
+    tag = root.tag.split("}", 1)[-1].lower() if root.tag else ""
+    locs = [
+        (elem.text or "").strip()
+        for elem in root.findall(".//{*}loc")
+        if (elem.text or "").strip()
+    ]
+
+    if tag in ("urlset", "sitemapindex"):
+        return tag, locs
+
+    return None, locs
+
+
+def _discover_urls_from_sitemap(seed_url: str):
+    """Discover URLs under seed_url prefix from robots.txt + sitemap files."""
+    parsed = urlparse(seed_url)
+    site_root = f"{parsed.scheme}://{parsed.netloc}"
+    seed_prefix = seed_url if seed_url.endswith("/") else seed_url + "/"
+
+    default_candidates = [
+        urljoin(site_root + "/", "sitemap.xml"),
+        urljoin(site_root + "/", "sitemap_index.xml"),
+        urljoin(seed_prefix, "sitemap.xml"),
+    ]
+
+    configured_candidates = []
+    for candidate in globals().get("SITEMAP_CANDIDATES", []):
+        candidate = str(candidate).strip()
+        if not candidate:
+            continue
+        if candidate.startswith(("http://", "https://")):
+            configured_candidates.append(candidate)
+        else:
+            configured_candidates.append(urljoin(site_root + "/", candidate.lstrip("/")))
+
+    robots_sitemaps = []
+    robots_url = urljoin(site_root + "/", "robots.txt")
+    robots_bytes = _fetch_url_bytes(robots_url)
+    if robots_bytes:
+        robots_text = robots_bytes.decode("utf-8", "replace")
+        for line in robots_text.splitlines():
+            if line.lower().startswith("sitemap:"):
+                sitemap_url = line.split(":", 1)[1].strip()
+                if sitemap_url:
+                    robots_sitemaps.append(sitemap_url)
+
+    pending = []
+    for item in default_candidates + configured_candidates + robots_sitemaps:
+        if item not in pending:
+            pending.append(item)
+
+    seen_sitemaps = set()
+    discovered = []
+    seen_urls = set()
+
+    while pending:
+        sitemap_url = pending.pop(0)
+        if sitemap_url in seen_sitemaps:
+            continue
+        seen_sitemaps.add(sitemap_url)
+
+        raw = _fetch_url_bytes(sitemap_url)
+        if not raw:
+            continue
+
+        if sitemap_url.lower().endswith(".gz"):
+            try:
+                raw = gzip.decompress(raw)
+            except Exception as e:
+                logger.info(f"Could not decompress sitemap {sitemap_url}: {str(e)}")
+                continue
+
+        xml_text = raw.decode("utf-8", "replace")
+        kind, locs = _parse_sitemap_xml(xml_text, sitemap_url)
+        if kind == "sitemapindex":
+            for loc in locs:
+                loc = urljoin(sitemap_url, loc)
+                if loc not in seen_sitemaps and loc not in pending:
+                    pending.append(loc)
+            continue
+
+        if kind == "urlset":
+            for loc in locs:
+                loc = urljoin(sitemap_url, loc)
+                if loc.startswith(seed_prefix) and loc not in seen_urls:
+                    seen_urls.add(loc)
+                    discovered.append(loc)
+
+    logger.info(
+        f"Sitemap discovery complete. Seed prefix: {seed_prefix}. "
+        f"Found {len(discovered)} URLs across {len(seen_sitemaps)} sitemap candidates."
+    )
+    return discovered
+
 # ---- Command-line Interface ----
 def main():
     """
     Start the crawl process using configuration values from crawlconfig.py.
     All settings are read directly from config for consistency and simplicity.
     """
+    global CRAWL_URL, MAX_CRAWL_DEPTH
     
     if USE_URL_LIST:
         # URL List Mode - crawl specific URLs from file
-        url_list_path = os.path.join(os.path.dirname(__file__), URL_LIST_FILE)
-        if not os.path.exists(url_list_path):
-            logger.error(f"URL list file not found: {url_list_path}")
-            return
-        
+        url_list_path = _resolve_url_list_path(URL_LIST_FILE)
+        if not url_list_path:
+            err_msg = (
+                "USE_URL_LIST is true, but no URL list is provided. "
+                f"Expected URL list file: {URL_LIST_FILE}"
+            )
+            logger.error(err_msg)
+            raise FileNotFoundError(err_msg)
+
         with open(url_list_path, 'r', encoding='utf-8') as f:
             urls = [line.strip() for line in f if line.strip() and not line.strip().startswith('#')]
+
+        if not urls:
+            err_msg = (
+                "USE_URL_LIST is true, but no URL list is provided. "
+                f"URL list file exists but contains no crawlable URLs: {url_list_path}"
+            )
+            logger.error(err_msg)
+            raise ValueError(err_msg)
         
-        logger.info(f"URL List Mode: Found {len(urls)} URLs to crawl from {URL_LIST_FILE}")
+        logger.info(f"URL List Mode: Found {len(urls)} URLs to crawl from {url_list_path}")
         total_saved = 0
         
         # Temporarily override CRAWL_URL for each URL and call deep_crawl_urls
-        global CRAWL_URL
         original_url = CRAWL_URL
         
         for i, url in enumerate(urls, 1):
@@ -228,7 +406,36 @@ def main():
         
     else:
         # Standard Deep Crawl Mode
-        logger.info(f"Starting deep crawl with config: output_dir={CWD}, max_depth={MAX_CRAWL_DEPTH}")
+        _validate_crawl_url(CRAWL_URL)
+
+        if globals().get("DISCOVER_URLS_FROM_SITEMAP", False):
+            sitemap_urls = _discover_urls_from_sitemap(CRAWL_URL)
+            if not sitemap_urls:
+                err_msg = (
+                    "Sitemap discovery is enabled, but no URLs were discovered under "
+                    f"'{CRAWL_URL}'. Verify sitemap availability and URL scope."
+                )
+                logger.error(err_msg)
+                raise ValueError(err_msg)
+
+            logger.info(f"Sitemap URL Mode: Crawling {len(sitemap_urls)} URLs discovered under {CRAWL_URL}")
+            total_saved = 0
+            original_url = CRAWL_URL
+            original_depth = MAX_CRAWL_DEPTH
+            MAX_CRAWL_DEPTH = 0
+            try:
+                for i, url in enumerate(sitemap_urls, 1):
+                    logger.info(f"Processing sitemap URL {i}/{len(sitemap_urls)}: {url}")
+                    CRAWL_URL = url
+                    saved_pages = deep_crawl_urls()
+                    total_saved += saved_pages
+                logger.info(f"Sitemap URL crawl completed. Total saved pages: {total_saved}")
+            finally:
+                CRAWL_URL = original_url
+                MAX_CRAWL_DEPTH = original_depth
+            return
+
+        logger.info(f"Starting crawl with config: output_dir={CWD}, max_depth={MAX_CRAWL_DEPTH}")
         try:
             saved_pages = deep_crawl_urls()
             logger.info(f"Crawl completed. Saved pages: {saved_pages}")
