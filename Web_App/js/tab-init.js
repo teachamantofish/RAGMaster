@@ -63,6 +63,7 @@ export function createTabInit({ phase, schemaUrl, configUrl, prefix }) {
     let schema = null;
     let model = {};
     let runScript = null;
+    const resolvedConfigUrl = toRootRelativeUrl(configUrl);
 
     try {
       // 1. Load schema
@@ -72,7 +73,7 @@ export function createTabInit({ phase, schemaUrl, configUrl, prefix }) {
       runScript = schema.runScript || null;
 
       // 2. Load config file text
-      const configResp = await fetch(configUrl);
+      const configResp = await fetch(resolvedConfigUrl);
       if (!configResp.ok) throw new Error(`Failed to fetch config: HTTP ${configResp.status}`);
       originalText = await configResp.text();
 
@@ -89,7 +90,7 @@ export function createTabInit({ phase, schemaUrl, configUrl, prefix }) {
 
       // 6. Wire action buttons
       wireButtons(container, prefix, () => binder, () => originalText, (t) => { originalText = t; },
-        schema, configUrl, (b) => { binder = b; }, (m) => { model = m; }, runScript);
+        schema, resolvedConfigUrl, (b) => { binder = b; }, (m) => { model = m; }, runScript);
 
       console.log(`[${phase}-init] Tab initialized successfully.`);
     } catch (err) {
@@ -100,6 +101,15 @@ export function createTabInit({ phase, schemaUrl, configUrl, prefix }) {
   };
 }
 
+function toRootRelativeUrl(url) {
+  const normalized = String(url || '').replace(/\\/g, '/').trim();
+  if (!normalized) return normalized;
+  if (/^(https?:)?\/\//i.test(normalized)) return normalized;
+  if (normalized.startsWith('/')) return normalized;
+  if (normalized.startsWith('./')) return `/${normalized.slice(2)}`;
+  return `/${normalized}`;
+}
+
 /**
  * Wire save, reload, and run buttons.
  */
@@ -107,9 +117,12 @@ function wireButtons(container, prefix, getBinder, getOriginal, setOriginal, sch
   const saveBtn = container.querySelector(`#${prefix}-save-btn`);
   const reloadBtn = container.querySelector(`#${prefix}-reload-btn`);
   const runBtn = container.querySelector(`#${prefix}-run-btn`);
+  const stopBtn = container.querySelector(`#${prefix}-stop-btn`);
   const statusEl = container.querySelector(`#${prefix}-status-display`);
   const rawViewer = container.querySelector(`#${prefix}-config-viewer`);
   const defaultsBtn = ensureDefaultsButton(container, prefix);
+  let currentRunController = null;
+  let currentRunScript = null;
 
   const isDirty = () => {
     const binder = getBinder();
@@ -216,6 +229,9 @@ function wireButtons(container, prefix, getBinder, getOriginal, setOriginal, sch
       let pollTimer = null;
       let lastTail = null;
       let pollFailedAtLeastOnce = false;
+      const runController = new AbortController();
+      currentRunController = runController;
+      currentRunScript = runScript;
 
       const pollOnce = async () => {
         try {
@@ -234,6 +250,7 @@ function wireButtons(container, prefix, getBinder, getOriginal, setOriginal, sch
       try {
         runBtn.disabled = true;
         runBtn.loading = true;
+        if (stopBtn) stopBtn.disabled = false;
         if (statusEl) statusEl.value = `Running ${runScript}…`;
 
         await pollOnce();
@@ -242,6 +259,7 @@ function wireButtons(container, prefix, getBinder, getOriginal, setOriginal, sch
         const resp = await fetch('/api/run-script', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: runController.signal,
           body: JSON.stringify({ script: runScript }),
         });
         const result = await resp.json();
@@ -272,9 +290,17 @@ function wireButtons(container, prefix, getBinder, getOriginal, setOriginal, sch
           }
         }
       } catch (err) {
-        if (statusEl) statusEl.value = `Run failed: ${err.message}`;
-        if (rawViewer) {
-          rawViewer.value = `# Live log: ${runScript}\n\nRun failed: ${err.message}`;
+        const wasStopped = err?.name === 'AbortError';
+        if (wasStopped) {
+          if (statusEl) statusEl.value = `Stopped ${runScript}.`;
+          if (rawViewer) {
+            rawViewer.value = `# Live log: ${runScript}\n\nRun stopped by user.`;
+          }
+        } else {
+          if (statusEl) statusEl.value = `Run failed: ${err.message}`;
+          if (rawViewer) {
+            rawViewer.value = `# Live log: ${runScript}\n\nRun failed: ${err.message}`;
+          }
         }
       } finally {
         if (pollTimer !== null) {
@@ -285,6 +311,33 @@ function wireButtons(container, prefix, getBinder, getOriginal, setOriginal, sch
         }
         runBtn.disabled = false;
         runBtn.loading = false;
+        if (stopBtn) stopBtn.disabled = true;
+        if (currentRunController === runController) {
+          currentRunController = null;
+          currentRunScript = null;
+        }
+      }
+    });
+  }
+
+  if (stopBtn) {
+    stopBtn.addEventListener('click', async () => {
+      if (!currentRunScript) return;
+      stopBtn.disabled = true;
+      if (statusEl) statusEl.value = `Stopping ${currentRunScript}...`;
+
+      try {
+        await fetch('/api/stop-script', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ script: currentRunScript }),
+        });
+      } catch (_) {
+        // Keep stop flow best-effort: abort client-side request even if stop API fails.
+      }
+
+      if (currentRunController) {
+        currentRunController.abort();
       }
     });
   }

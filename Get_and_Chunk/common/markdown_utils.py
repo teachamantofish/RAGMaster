@@ -364,14 +364,24 @@ def remove_code_line_numbers(markdown: str) -> str:
     - Stops when the closing ``` fence is hit.
     """
     out = []
-    # Remove line numbers at the start of lines: 1-3 digits followed by anything
-    strip_re = re.compile(r'^\d{1,3}')
+    in_fence = False
+    fence_re = re.compile(r'^```')
+    # Remove line numbers at start of code lines: optional indent, 1-3 digits, optional : or ., then spaces.
+    strip_re = re.compile(r'^(\s*)\d{1,3}(?:[:.])?\s+')
 
     for idx, line in enumerate(markdown.splitlines()):
-        new_line = strip_re.sub('', line)
-        if new_line != line:
-            print(f"DEBUG: Removed line number at {idx}: {repr(line)} -> {repr(new_line)}")
-        out.append(new_line)
+        if fence_re.match(line):
+            in_fence = not in_fence
+            out.append(line)
+            continue
+
+        if in_fence:
+            new_line = strip_re.sub(r'\1', line)
+            if new_line != line:
+                print(f"DEBUG: Removed line number at {idx}: {repr(line)} -> {repr(new_line)}")
+            out.append(new_line)
+        else:
+            out.append(line)
 
     return "\n".join(out)
 
@@ -380,8 +390,18 @@ def fix_no_toplevel_heading(markdown: str) -> str:
     Fix missing headers: when the file starts wih content and there is no header: 
     Add # <insert title string from frontmatter Title.  
     """
-    fm, body = re.match(r'(?s)\A---\r?\n(.*?)\r?\n---\r?\n(.*)', markdown).groups()
-    title = re.search(r'(?mi)^\s*title\s*:\s*(.+)$', fm).group(1)
+    fm_match = re.match(r'(?s)\A---\r?\n(.*?)\r?\n---\r?\n(.*)', markdown)
+    if not fm_match:
+        # No YAML front matter to source a title from; keep content unchanged.
+        return markdown
+
+    fm, body = fm_match.groups()
+    title_match = re.search(r'(?mi)^\s*title\s*:\s*(.+)$', fm)
+    if not title_match:
+        # Front matter exists but Title is missing; avoid injecting a blank H1.
+        return markdown
+
+    title = title_match.group(1).strip()
     if re.match(r'\s*#', body):  # next non-blank char is '#'? leave as-is
         return markdown
     return f"---\n{fm}\n---\n\n# {title}\n\n{body}"

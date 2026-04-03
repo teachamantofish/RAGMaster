@@ -482,11 +482,9 @@ const handleTabChange = event => {
   loadTab(tab);
   if (tab === 'source') loadSourceTab();
   
-  if (configTabsToAutoLoad.includes(tab)) {
-    setTimeout(() => {
-      loadConfigForTab(tab);
-    }, 300);
-  } else {
+  // Schema-driven config tabs now self-load via their tab init modules.
+  // Keep legacy loader disabled to avoid conflicting I/O paths.
+  if (!configTabsToAutoLoad.includes(tab)) {
     console.log(`[DEBUG] Skipping config load for tab: ${tab}`);
   }
 };
@@ -514,9 +512,7 @@ loadTab('source');
 loadTab('crawl');
 setTimeout(() => loadSourceTab(), 100);
 // Also attempt to auto-load the default tab's config if it's in the list
-if (configTabsToAutoLoad.includes('crawl')) {
-  setTimeout(() => loadConfigForTab('crawl'), 300);
-}
+// Legacy config preloading intentionally disabled for schema-driven tabs.
 </script>
 </html>
 

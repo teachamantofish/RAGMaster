@@ -13,6 +13,7 @@ const vectorDBDir = path.resolve(projectRoot, '..', 'VectorDB')
 const appPathsPath = path.resolve(projectRoot, 'config', 'paths.json')
 const appPaths = JSON.parse(fs.readFileSync(appPathsPath, 'utf8'))
 const backupsRoot = path.resolve(projectRoot, 'config', 'backups')
+const activeScriptProcesses = new Map()
 
 const staticBuildEntries = [
   'home.html',
@@ -354,6 +355,13 @@ function createRunScriptApi() {
             return
           }
 
+          if (activeScriptProcesses.has(script)) {
+            res.statusCode = 409
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: false, error: `Script is already running: ${script}` }))
+            return
+          }
+
           // Security: only allow scripts under known prefixes
           if (!allowedPrefixes.some(p => script.startsWith(p))) {
             res.statusCode = 403
@@ -386,18 +394,25 @@ function createRunScriptApi() {
             env: { ...process.env },
             stdio: ['ignore', 'pipe', 'pipe'],
           })
+          activeScriptProcesses.set(script, child)
 
           let output = ''
           child.stdout.on('data', d => { output += d.toString() })
           child.stderr.on('data', d => { output += d.toString() })
 
           child.on('error', err => {
+            if (activeScriptProcesses.get(script) === child) {
+              activeScriptProcesses.delete(script)
+            }
             res.statusCode = 500
             res.setHeader('Content-Type', 'application/json')
             res.end(JSON.stringify({ success: false, error: `Failed to spawn: ${err.message}` }))
           })
 
           child.on('close', code => {
+            if (activeScriptProcesses.get(script) === child) {
+              activeScriptProcesses.delete(script)
+            }
             res.setHeader('Content-Type', 'application/json')
             res.statusCode = code === 0 ? 200 : 500
             res.end(JSON.stringify({
@@ -406,6 +421,79 @@ function createRunScriptApi() {
               output: output,
             }))
           })
+        })
+      })
+    },
+  }
+}
+
+/**
+ * Stop-script API: POST /api/stop-script
+ * Body: { "script": "Get_and_Chunk/1crawlweb.py" }
+ * Stops a currently running script started through /api/run-script.
+ */
+function createStopScriptApi() {
+  const allowedPrefixes = ['Get_and_Chunk/', 'VectorDB/']
+
+  return {
+    name: 'stop-script-api',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url !== '/api/stop-script' || req.method !== 'POST') {
+          next()
+          return
+        }
+
+        let body = ''
+        req.on('data', chunk => { body += chunk })
+        req.on('end', () => {
+          let payload
+          try {
+            payload = JSON.parse(body || '{}')
+          } catch {
+            res.statusCode = 400
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: false, error: 'Invalid JSON body.' }))
+            return
+          }
+
+          const script = payload.script
+          if (!script || typeof script !== 'string') {
+            res.statusCode = 400
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: false, error: 'Missing "script" field.' }))
+            return
+          }
+
+          if (!allowedPrefixes.some(p => script.startsWith(p))) {
+            res.statusCode = 403
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: false, error: `Script path not allowed: ${script}` }))
+            return
+          }
+
+          const child = activeScriptProcesses.get(script)
+          if (!child) {
+            res.statusCode = 404
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: false, error: `No active process found for ${script}` }))
+            return
+          }
+
+          let stopped = false
+          try {
+            stopped = child.kill('SIGTERM')
+          } catch (err) {
+            res.statusCode = 500
+            res.setHeader('Content-Type', 'application/json')
+            res.end(JSON.stringify({ success: false, error: `Failed to stop process: ${err.message}` }))
+            return
+          }
+
+          res.statusCode = 200
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ success: true, stopped }))
         })
       })
     },
@@ -542,6 +630,7 @@ export default defineConfig({
     vectorDBWriteProxy(),
     createRunSettingsApi(),
     createRunScriptApi(),
+    createStopScriptApi(),
     createLogTailApi(),
     copyStaticBuildResources(),
   ],

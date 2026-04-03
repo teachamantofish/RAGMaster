@@ -5,6 +5,7 @@ import os  # For directory and file operations
 import re
 import sys
 import gzip
+import html as html_lib
 from pathlib import Path
 import logging  # For logging
 import traceback  # For detailed error information
@@ -53,7 +54,60 @@ def _configure_stdio_for_windows():
 _configure_stdio_for_windows()
 
 # --- Save Markdown ---
-def save_markdown(markdown_content: str, save_dir: str, url: str):
+def _extract_h1_title_from_html(html_text: str) -> str | None:
+    """Extract page title from HTML H1, preferring h1.page-title when present."""
+    if not html_text:
+        return None
+
+    # Prefer explicit page-title class used by Adobe HelpX pages.
+    m = re.search(
+        r'<h1\b[^>]*class=["\"][^"\"]*\bpage-title\b[^"\"]*["\"][^>]*>(.*?)</h1>',
+        html_text,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if not m:
+        # Fallback to first h1 if page-title class is absent.
+        m = re.search(r'<h1\b[^>]*>(.*?)</h1>', html_text, flags=re.IGNORECASE | re.DOTALL)
+    if not m:
+        return None
+
+    text = re.sub(r'<[^>]+>', ' ', m.group(1))
+    text = html_lib.unescape(text)
+    text = ' '.join(text.split()).strip()
+    return text or None
+
+
+def _ensure_top_level_h1(markdown_body: str, title: str | None) -> str:
+    """Ensure markdown begins with '# <title>' using the resolved page title."""
+    if not title:
+        return markdown_body
+
+    normalized_title = ' '.join(title.split()).strip()
+    if not normalized_title:
+        return markdown_body
+
+    lines = markdown_body.splitlines()
+    first_content_idx = None
+    for i, line in enumerate(lines):
+        if line.strip():
+            first_content_idx = i
+            break
+
+    heading_line = f"# {normalized_title}"
+    if first_content_idx is not None and re.match(r"^#\s+", lines[first_content_idx]):
+        lines[first_content_idx] = heading_line
+        updated = "\n".join(lines)
+        if markdown_body.endswith("\n"):
+            updated += "\n"
+        return updated
+
+    body = markdown_body.lstrip("\n")
+    if body:
+        return f"{heading_line}\n\n{body}"
+    return f"{heading_line}\n"
+
+
+def save_markdown(markdown_content: str, save_dir: str, url: str, page_title: str | None = None):
     """Save markdown applying standardized front matter merge.
 
     We generate a filename from the URL's last path segment and then prepend
@@ -70,7 +124,10 @@ def save_markdown(markdown_content: str, save_dir: str, url: str):
     # Per-page Source URL: override CRAWL_URL so front matter points to the page actually crawled.
     page_meta = dict(metadata)
     page_meta['CRAWL_URL'] = clean_url
+    if page_title:
+        page_meta['METADATA_TITLE'] = page_title
     merged_front, cleaned_body = merge_page_metadata(page_meta, markdown_content)
+    cleaned_body = _ensure_top_level_h1(cleaned_body, page_title or page_meta.get('METADATA_TITLE'))
     full_content = merged_front + cleaned_body
 
     with open(filepath, 'w', encoding='utf-8', newline='\n') as f:
@@ -135,9 +192,9 @@ def deep_crawl_urls():
             exclude_social_media_links=EXCLUDE_SOCIAL_MEDIA_LINKS,
             exclude_domains=EXCLUDE_DOMAINS,
             exclude_social_media_domains=EXCLUDE_SOCIAL_MEDIA_DOMAINS,
-            deep_crawl_strategy=deep_crawl_strategy # Use BFS deep crawling
+            deep_crawl_strategy=deep_crawl_strategy, # Use BFS deep crawling
             #cache_mode=CacheMode.BYPASS,
-            #css_selector=CSS_SELECTOR,
+            css_selector=CSS_SELECTOR,
         )
         # Tracking counters only (no in-memory result aggregation)
         total_processed = 0
@@ -199,7 +256,14 @@ def deep_crawl_urls():
                         logger.info(f"Skipping {url}: Language could not be detected, skipping to be safe.")
                         continue
 
-                save_markdown(markdown_content, CWD, url)
+                page_html = (
+                    getattr(result, 'html', None)
+                    or getattr(result, 'cleaned_html', None)
+                    or getattr(result, 'raw_html', None)
+                    or ''
+                )
+                page_title = _extract_h1_title_from_html(page_html)
+                save_markdown(markdown_content, CWD, url, page_title=page_title)
                 saved_count += 1
                 logger.info(f"Successfully saved: {url}")
 

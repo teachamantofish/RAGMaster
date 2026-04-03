@@ -1,7 +1,17 @@
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from run_settings import CWD as SETTINGS_CWD, METADATA as SETTINGS_METADATA
+import sys
+
+try:
+    from run_settings import CWD as SETTINGS_CWD, METADATA as SETTINGS_METADATA
+except ModuleNotFoundError:
+    # Allow scripts under Get_and_Chunk to run from either repo root or subfolders.
+    repo_root = Path(__file__).resolve().parents[2]
+    repo_root_str = str(repo_root)
+    if repo_root_str not in sys.path:
+        sys.path.insert(0, repo_root_str)
+    from run_settings import CWD as SETTINGS_CWD, METADATA as SETTINGS_METADATA
 
 
 def get_run_context(output_name: Optional[str] = None) -> Dict[str, Any]:
