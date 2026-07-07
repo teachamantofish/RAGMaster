@@ -504,7 +504,7 @@ def persist_outputs(chunks, model, embedded_count) -> None:
     - USE_PARQUET=True: vectors go to the Parquet sidecar; the chunks JSON
       stays lightweight (embedding=None) for the upsert step to merge.
     - USE_PARQUET=False: vectors are written INTO a_chunks.json, which is what
-      upsert_to_vectorydb.py reads when there is no sidecar. (A previous
+      upsert_to_vectordb.py reads when there is no sidecar. (A previous
       version dropped the vectors entirely in this mode.)
     """
     strip_json = bool(globals().get('STRIP_EMBEDDINGS_IN_JSON', True)) and USE_PARQUET

@@ -70,7 +70,7 @@ PIPELINE_STEPS = [
     *(FRIENDLY_NAME_STEPS if RUN_FRIENDLY_NAME_STEPS else []),
     SUMMARY_SCRIPT,
     'VectorDB/embedding.py',
-    'VectorDB/upsert_to_vectorydb.py'
+    'VectorDB/upsert_to_vectordb.py'
 ]
 
 # Per-script timeout in seconds. None = no timeout. Crawls and summarization
