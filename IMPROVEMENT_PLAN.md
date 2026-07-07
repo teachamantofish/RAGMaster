@@ -1,5 +1,16 @@
 # RAG Pipeline — Analysis & Improvement Plan
 
+> **Implementation status (2026-07-07):** the plan below has been implemented on this branch.
+> - Phase 1 (correctness) + Phase 2 (performance): commit `183ee00`
+> - Consolidation (configs, chunker refactor, tests, hygiene): commit `0e41b09`
+> - Web app: commit `d2d5522`
+>
+> Not done, by design: Shoelace self-hosting (§4.5 — still CDN), moving scratch scripts
+> (`2crawlwebtest.py`, `xxcrawlwebtest.py`), untracking `MkDocs/site/` (left in case it is
+> deployed from the repo), and the 1crawlpdf page-range off-by-one audit (§2.8 — the
+> URL-vs-path validation was added; verify TOC_RANGE/REMOVE_RANGES semantics with a real PDF).
+> Test suites: `pytest Get_and_Chunk/tests` (27) and `Web_App/vite: npx vitest run` (72) both pass.
+
 Date: 2026-07-07
 Scope: full repo review — pipeline scripts (`Get_and_Chunk/`, `VectorDB/`, `Logger/`, root launchers) and web app (`Web_App/`, Vite dev server).
 
